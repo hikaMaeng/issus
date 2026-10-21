@@ -42,7 +42,7 @@ try {
  const bp=await port(),wp=await port(),sp=await port(),origin=`http://127.0.0.1:${bp}`;
  const source={DATABASE_URL:url.toString(),PORT:String(bp),AGENT_QUEUE:queueName(QUEUES.intake),AGENT_DATABASE_POOL_MAX:'4',QUEUE_POLL_SECONDS:'1',AGENT_LOG_TAIL_POLL_MS:'50',AGENT_RECONCILE_MS:'60000'};
  const token=randomBytes(32).toString('base64url');
- broker=createBroker({config:{DATABASE_URL:url.toString(),ISSUS_OWNER:'tester',ISSUS_BOOTSTRAP_TOKEN_FILE:'unused-memory-bootstrap',ISSUS_ORIGIN:origin,PORT:bp,HOST:'127.0.0.1',ISSUS_SESSION_TTL_SECONDS:86400},env:readEnv(source),baselineSql:await readFile(new URL('../../../../packages/issus_domain/src/server/backend/schema/0001-domain-baseline.sql',import.meta.url),'utf8'),bootstrapTokenHash:sha256(token),schema,queueName});
+ broker=createBroker({config:{DATABASE_URL:url.toString(),ISSUS_OWNER:'tester',ISSUS_BOOTSTRAP_TOKEN_FILE:'unused-memory-bootstrap',ISSUS_ORIGIN:origin,PORT:bp,HOST:'127.0.0.1',ISSUS_SESSION_TTL_SECONDS:86400},env:readEnv(source),baselineSql:await readFile(new URL('../../../../packages/issus_domain/src/server/backend/schema/0001-domain-baseline.sql',import.meta.url),'utf8'),...(!sourceRoot?{migrationsDirectory:fileURLToPath(new URL('apps/issus/dist/migrations/extra/',entryRoot))}:{}),bootstrapTokenHash:sha256(token),schema,queueName});
  broker.intake.uow.options.clock=clock;
  await broker.service.start();
  worker=createIssusWorker({schema,queueName,clock},{...source,PORT:String(wp)});await worker.start();
@@ -53,7 +53,20 @@ try {
  }
  async function http(path,body,credential=token,method=body===undefined?'GET':'POST',headers={}) {
   const r=await fetch(origin+path,{method,headers:{...(credential?{authorization:`Bearer ${credential}`} :{}),'content-type':'application/json','idempotency-key':randomUUID(),prefer:'wait=5',...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
-  const value=r.status===204?null:await r.json();return {status:r.status,body:value};
+  const value=r.status===204?null:await r.json();
+  // §7 permits queued completion only for these commands. Alias remains a strict immediate201/200 assertion.
+  const asynchronous=method==='POST'&&(/^\/v1\/repos$/.test(path)||/\/issues$|\/comments$|\/(?:close|reopen)$|\/deliveries\/receipts$|\/deliveries\/[^/]+\/application$/.test(path));
+  if(r.status===202&&asynchronous) {
+    assert.equal(value.posted,null);assert.equal(value.status,'queued');assert.match(value.operationId,/^[0-9a-f-]{36}$/i);
+    const statusUrl=`/v1/operations/${value.operationId}`;assert.equal(value.statusUrl,statusUrl);
+    console.log(JSON.stringify({event:'acceptance.command.queued',path,operationId:value.operationId}));
+    return until(async()=>{
+      const operation=await fetch(origin+statusUrl,{headers:{authorization:`Bearer ${credential}`}});assert.equal(operation.status,200,'accepted operation remains readable');
+      const result=await operation.json();assert.equal(result.operationId,value.operationId);
+      return typeof result.httpStatus==='number'?{status:result.httpStatus,body:result.response}:undefined;
+    },'durable command completion '+path);
+  }
+  return {status:r.status,body:value};
  }
  pass('inbox unauthenticated',(await http('/v1/inbox',undefined,'')).status,401);
  pass('validate remains public',(await http('/v1/validate',{mode:'comment',body:'invalid'},'')).status,422);

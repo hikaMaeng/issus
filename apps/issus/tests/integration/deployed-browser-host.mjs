@@ -26,19 +26,34 @@ const token = randomBytes(32).toString('base64url'), artifacts = {};
 let broker, worker, scheduler, childCode = 1;
 try {
   // Presence and hashes prove that the browser target serves production build assets.
-  for (const path of ['apps/issus/dist/front/index.html', 'apps/issus/dist/manifest.json', 'apps/issus/dist/server/entry/broker/index.js', 'apps/issus-worker/dist/server/entry/index.js', 'apps/issus-scheduler/dist/server/entry/index.js']) artifacts[path] = createHash('sha256').update(await readFile(new URL(path, root))).digest('hex');
+  for (const path of ['apps/issus/dist/front/index.html', 'apps/issus/dist/manifest.json', 'apps/issus/dist/server/entry/broker/index.js', 'apps/issus/dist/migrations/extra/0004-core-read-indexes.sql', 'apps/issus-worker/dist/server/entry/index.js', 'apps/issus-scheduler/dist/server/entry/index.js']) artifacts[path] = createHash('sha256').update(await readFile(new URL(path, root))).digest('hex');
   const html = await readFile(new URL('apps/issus/dist/front/index.html', root), 'utf8');
   assert.ok(html.includes('/assets/'), 'deployed Vite assets are required'); assert.ok(!html.includes('/src/front/'), 'dev shell forbidden');
   await admin.query(`CREATE SCHEMA "${brokerSchema}"`);
   const source = {...process.env, DATABASE_URL: url.toString(), PORT: String(port), AGENT_QUEUE: queueName(QUEUES.intake), AGENT_DATABASE_POOL_MAX: '4', QUEUE_POLL_SECONDS: '1'};
-  broker = createBroker({config: {DATABASE_URL: url.toString(), ISSUS_OWNER: 'tester', ISSUS_BOOTSTRAP_TOKEN_FILE: 'unused-memory-bootstrap', ISSUS_ORIGIN: target.origin, PORT: port, HOST: '127.0.0.1', ISSUS_SESSION_TTL_SECONDS: 86400}, env: readEnv(source), baselineSql: await readFile(new URL('apps/issus/dist/migrations/0001-domain-baseline.sql', root), 'utf8'), bootstrapTokenHash: sha256(token), schema, queueName});
+  broker = createBroker({config: {DATABASE_URL: url.toString(), ISSUS_OWNER: 'tester', ISSUS_BOOTSTRAP_TOKEN_FILE: 'unused-memory-bootstrap', ISSUS_ORIGIN: target.origin, PORT: port, HOST: '127.0.0.1', ISSUS_SESSION_TTL_SECONDS: 86400}, env: readEnv(source), baselineSql: await readFile(new URL('apps/issus/dist/migrations/0001-domain-baseline.sql', root), 'utf8'), migrationsDirectory: fileURLToPath(new URL('apps/issus/dist/migrations/extra/', root)), bootstrapTokenHash: sha256(token), schema, queueName});
   await broker.service.start();
   // Private health ports are allocated by the same documented range; occupied ports fail explicitly.
   assert.ok(port <= 59997, 'reserve target port and next two ports');
   worker = createIssusWorker({schema, queueName}, {...source, PORT: String(port+1)}); await worker.start();
   scheduler = createIssusScheduler({schema, queueName}, {...source, PORT: String(port+2)}); await scheduler.start();
   assert.equal((await fetch(target.origin+'/ready')).status, 200);
-  childCode = await new Promise((resolve, reject) => {
+  if (process.argv.includes('--fixture-only')) {
+    Object.assign(process.env, {ISSUS_TEST_SERVER_URL: target.origin, ISSUS_TEST_SCHEMA: schema, ISSUS_TEST_BROKER_SCHEMA: brokerSchema, ISSUS_TEST_BOOTSTRAP_TOKEN: token, ISSUS_TEST_OWNER: 'tester'});
+    const first = await fetch(target.origin+'/v1/auth/me', {headers: {authorization: `Bearer ${token}`}});
+    console.log(JSON.stringify({event: 'fixture.first-auth', status: first.status}));
+    assert.equal(first.status, 200, 'first authenticated request must complete');
+    const migrationIds = (await admin.query(`SELECT id FROM "${schema}".schema_migration ORDER BY id`)).rows.map(row => row.id);
+    assert.ok(migrationIds.includes('0004-core-read-indexes'), 'dist extra migrations must apply to the disposable domain schema');
+    const indexCount = Number((await admin.query('SELECT count(*) FROM pg_indexes WHERE schemaname=$1 AND indexname=ANY($2::text[])', [schema, ['alias_registry_listing','issue_listing_updated','comment_participating_aliases','claim_alias_open']])).rows[0].count);
+    assert.equal(indexCount, 4);console.log(JSON.stringify({event: 'fixture.migrations', migrationIds, readIndexes: indexCount}));
+    const {provisionBrowserFixture} = await import('../browser/fixture.mjs');
+    const fixture = await provisionBrowserFixture();
+    try {
+      assert.equal((await fixture.B.client.request('/v1/auth/me')).status, 200, 'reader authentication remains valid after fixture inbox delivery');
+      console.log(JSON.stringify({event: 'fixture.provisioned', number: fixture.number, readerAuth: 200})); childCode = 0;
+    } finally {await fixture.cleanup();}
+  } else childCode = await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['--test','--test-isolation=none',fileURLToPath(new URL('../browser/ui.test.mjs', import.meta.url))], {windowsHide: true, stdio: ['ignore','pipe','pipe'], env: {...process.env, ISSUS_TEST_SERVER_URL: target.origin, ISSUS_TEST_SCHEMA: schema, ISSUS_TEST_BROKER_SCHEMA: brokerSchema, ISSUS_TEST_BOOTSTRAP_TOKEN: token, ISSUS_TEST_OWNER: 'tester'}});
     let log = ''; child.stdout.on('data', chunk => {log += chunk; process.stdout.write(chunk);}); child.stderr.on('data', chunk => {log += chunk; process.stderr.write(chunk);});
     const timer = setTimeout(() => child.kill(), 180000);

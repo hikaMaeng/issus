@@ -24,9 +24,10 @@ export async function lookupRepo(tx:EventTransaction,p:CorePrincipal,req:Request
   const row=(await tx.client.query(`SELECT r.*,o.name AS owner FROM ${tx.table('repo')} r JOIN ${tx.table('owner')} o ON o.id=r.owner_id WHERE lower(o.name)=lower($1) AND r.slug=$2 AND r.owner_id=$3`,[param(req,'owner'),param(req,'repo'),p.ownerId])).rows[0];if(!row) throw new CoreError(404,'NOT_FOUND');return row;
 }
 export async function repoId(options:CoreHttpOptions,req:Request,res:Response):Promise<string> {return options.intake.uow.read(async tx=>(await lookupRepo(tx,principal(res),req)).id);}
-/** Durable queue acceptance; Prefer waits for the original operation and never performs a second command. */
+/** Alias writes complete in the request transaction; queued actions retain the §7 Prefer/operation contract. */
 export async function submit(options:CoreHttpOptions,req:Request,res:Response,action:CommandAction,payload:Record<string,unknown>):Promise<void> {
-  let result=await options.intake.submit({principal:principal(res),action,payload,idempotencyKey:idempotency(req)});
+  const command={principal:principal(res),action,payload,idempotencyKey:idempotency(req)};
+  let result=await (action==='issus.alias.register'||action==='issus.alias.rename'?options.intake.execute(command):options.intake.submit(command));
   if(result.httpStatus===202&&/(?:^|[,;\s])wait=5(?:$|[,;\s])/.test(req.header('prefer')??'')) {
     const deadline=Date.now()+5000;
     while(Date.now()<deadline) {

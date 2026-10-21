@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createDatabasePool, createEventBroker, EventStore, PgmqClient, readEnv, type AgentEnv, type EventBrokerOptions, type Service } from 'agent/broker';
 import { QUEUES } from 'issus_domain/common';
-import { compactPublication, DeliveryCommandService, InboxService, EventUnitOfWork, IntakeService, sha256 } from 'issus_domain/server';
+import { compactPublication, DeliveryCommandService, InboxService, IntakeService, sha256 } from 'issus_domain/server';
 import { createHealth, parseRuntimeConfig, runMigrations, RuntimeAuth, type RuntimeConfig } from 'issus_runtime/server';
 import { createCoreHttpRouter, coreAuthentication, coreHttpError, type CoreHttpOptions } from '../../http/auth/index.js';
 import { installCompactRoutes } from '../../http/compact/index.js';
@@ -13,6 +13,7 @@ import { createStreamCallbacks } from '../../stream/callbacks/index.js';
 import { createSseRouter, createSseRuntime, type SseRuntime } from '../../stream/sse/index.js';
 import { reactions, reactionsName } from '../../reactions/table/index.js';
 import { ingressQueues, ingressQueueFor } from '../../reactions/queues/index.js';
+import { BrokerUnitOfWork } from './snapshot.js';
 
 export interface BrokerServices extends DeliveryHttpServices {
   stream: ReturnType<typeof createStreamCallbacks>;
@@ -67,7 +68,7 @@ export function createBroker(input: BrokerInput) {
   const pool = createDatabasePool(config.DATABASE_URL, env.databasePoolMax);
   const eventStore = new EventStore(pool, undefined, { retentionDays: null, cursorTtlDays: env.cursorTtlDays });
   const queue = new PgmqClient(pool);
-  const uow = new EventUnitOfWork({ pool, eventStore, queue, schema: input.schema, queueName: input.queueName });
+  const uow = new BrokerUnitOfWork({ pool, eventStore, queue, schema: input.schema, queueName: input.queueName });
   const auth = new RuntimeAuth({ uow, sessionTtlSeconds: config.ISSUS_SESSION_TTL_SECONDS });
   const intake = new IntakeService({ uow, resolvePrincipal: actor => auth.resolveActor(actor), publication: compactPublication });
   const deliveries = new DeliveryCommandService({ uow, resolvePrincipal: actor => auth.resolveActor(actor) });
