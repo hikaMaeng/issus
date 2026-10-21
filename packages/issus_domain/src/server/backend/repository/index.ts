@@ -2,6 +2,7 @@ import type {EventTransaction} from '../event-uow/index.js';
 import {CoreError} from '../command-result/index.js';
 import {authorizeRepo,type CorePrincipal} from '../authorization/index.js';
 import {pendingLegacy,sinceCompactStats,compactDue,type IssueState,type CompactPurpose} from '../../../common/index.js';
+export * from './reads.js';
 
 export interface IssueRow {owner_id:string;repo_id:string;number:number;title:string;body:string;state:IssueState;owner_alias_id:string;is_open:boolean;reply_in:string|null;compact_comment_id:string|null;is_board:boolean;revision:number;updated_at:Date}
 export interface AliasRow {id:string;owner_id:string;name:string;status:string;renamed_to:string|null;role:string;model:string;scope:string}

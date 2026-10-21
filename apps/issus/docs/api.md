@@ -7,7 +7,7 @@
 | POST /v1/repos | owner,slug,projectCode,autoBoard=true,boardOwner?; bootstrap |201 repo+board 또는202;409 충돌 |
 | GET /v1/repos / R | cursor?,limit1–500 |items/nextCursor 또는 detail |
 | POST R/issues |title,body |201 number/revision 또는202;422 body |
-| GET R/issues |state=open/closed/all,cursor?,limit? |요약 목록 |
+| GET R/issues |state=open/closed/all,owner?,alias?,q?,sort=updated/created/number,order=asc/desc,cursor?,limit1–500 |items/nextCursor, 아래 Q2 계약; 지원 외 query400+reasons |
 | GET I |— |issue/body/envelope/revision/stats/pendingLegacy/ackState/activeHolds/claims; ETag |
 | PATCH I/body |body, If-Match revision |200 revision 또는202;428 누락/412 stale/422 |
 | POST I/comments |아래 metadata 표 |201 commentId/eventId/revision 또는202;422/409 |
@@ -16,6 +16,8 @@
 | POST /v1/validate |mode=comment/issue-body,body |200 valid/chars/envelope;422 정본 reasons, DB 사용 없음 |
 | POST I/preflight |mode,request; body 모드는 If-Match |200 valid/posted:false/context/compact; 실제 게시와 같은 거부 |
 | POST /v1/owners/:owner/aliases/check |name,deep? |available/collisions, owner 전체·tombstone 포함 |
+| GET /v1/owners/:owner/aliases |q?,cursor?,limit1–500 |items/nextCursor, 같은 owner principal; 타owner403 |
+| GET /v1/owners/:owner/aliases/:name |query 없음 |alias/recentIssues/openClaimCount; 타owner403·없음404 |
 | POST /v1/owners/:owner/aliases |name,role,model,scope,repos,announcementIssue?,announcementBody; bootstrap |201 alias+ALIAS comment 또는202;409 충돌 |
 | POST /v1/aliases/:id/rename |newName,announcementIssue?,announcementBody |200 alias/oldName 또는202;409 충돌/개명 |
 | POST /v1/sessions |alias,sid,resumeFrom?,reissueOf?; bootstrap |최초201 token/sessionId/expiresAt/alias/sid; 재시도409 예외 |
@@ -48,6 +50,29 @@ metadata wrapper·unknown key는422다. COMPACT는 OWNER만, packet의 owner/iss
 202는 `{operationId,status:"queued",statusUrl,posted:null}`이며 게시 확정이 아니다. `Prefer:wait=5`면 최대5초 같은 결과를 기다린다. 오류는 `{error:{code,message?,reasons?,details?},posted:false,requestId}`이며 reasons.message와 순서는 정본과 같다.400 JSON/형식,401 인증,403 권한,404 없음,409 상태,410 만료,412 revision,413 상한,422 규약,428 If-Match,503 DB/queue다.
 
 preflight는 Idempotency-Key·operation 없이 즉시200 또는 실제 validator 오류를 반환한다. `context={repoId,issueNumber,revision,checkedAt}`, `compact={due,reasons,count,chars,previousCompactId}`다. 클라이언트 시각을 받지 않으며 read-only snapshot에서 성공·실패 모두 DB/이벤트/큐 쓰기0이다.
+
+## Q1·Q2 읽기 조회 (DECISION 6314143095)
+
+세 경로는 기존 bearer/cookie 세션 인증을 재사용한다. 성공·거부 모두 read-only transaction이며 fact·큐·command_result·history_snapshot 쓰기0이다. 인덱스는 `0004-core-read-indexes.sql` 순번 migration으로만 추가한다. GET은 Idempotency-Key가 필요 없다.
+
+| UI §8 참조 | 응답 shape |
+| --- | --- |
+| Q1 목록 | `{items:AliasRegistryItem[],nextCursor:string\|null}` |
+| AliasRegistryItem | `{id,name,role,model,scope,sid:string\|null,repos:string[],registeredAt:ISO8601,renamedFrom:string[],status:"active"\|"renamed",renamedTo:string\|null}` |
+| Q1 상세 | `{alias:AliasRegistryItem,recentIssues:RecentIssue[],openClaimCount:number}` |
+| RecentIssue | `{repoId,owner,repo,number,title,state,isOpen,lastActivityAt:ISO8601,lastCommentId:string}` |
+| Q2 목록 | `{items:IssueSummary[],nextCursor:string\|null}` |
+| IssueSummary | `{number,title,state,isOpen,ownerAliasId,ownerAlias,compact:string\|null,isBoard,revision,updatedAt:ISO8601}` |
+
+Q1은 같은 owner의 bootstrap/session principal에 owner 전체 레지스트리·활동·CLAIM 조회를 허용한다(본인 alias나 repo membership으로 목록을 축소하지 않는다). path owner 불일치는403, 같은 owner에서 없는 name은404다. 토큰·token hash·세션 id는 응답하지 않는다. `repos`는 repo UUID 목록이다. `sid`는 폐기되지 않고 만료 전인 현재 writer 세션, 없으면 null이다. system service의 srv도 같은 기준이다. `renamedFrom`은 현재 stable alias id를 가리키는 이전 이름 목록이다. 개명 tombstone도 목록·상세에 포함하고 `status/renamedTo`로 구분한다. tombstone의 repos/sid/CLAIM은 해당 tombstone row 기준이다.
+
+Q1 목록은 이름의 소문자값을 C collation 오름차순으로 정렬한다. q는 name·role·model·scope에 대한 대소문자 무시 **리터럴 부분문자열** 검색이다. 빈 q는 전체, 최대200자다. 상세 recentIssues는 유효 v2 댓글의 FROM(`/sid` 제외)·TO·CC에 참여한 최근20개 이슈, 마지막 참여 댓글 시각·id 내림차순이다. 현재 별칭과 renamedFrom을 함께 조회하며 OWNER만 맡고 댓글 참여가 없는 이슈는 포함하지 않는다. `openClaimCount`는 owner 전체에서 그 stable alias id의 미RELEASE CLAIM 수이며 이슈 닫힘·DUE 경과만으로 차감하지 않는다.
+
+Q2 필터는 AND 결합한다. `owner`는 현재 이슈 OWNER 별칭, `alias`는 이슈 전체 유효 v2 댓글의 원 FROM(`/sid` 제외)·TO·CC 정확 일치다. 모두 대소문자를 무시한다. 부분 이름·본문 mention·OWNER만의 관계·`TO:ALL` 방송은 참여 별칭으로 계산하지 않는다. 과거 댓글 이름을 개명 후 소급 변경하지 않으므로 alias 필터에 이전 이름을 지정하면 원 참여가 조회된다. 미등록/불일치 별칭은 빈 목록이다. q는 제목 리터럴 부분문자열 검색 또는 양의 정수/`#정수`의 정확한 이슈 번호 검색이며 최대200자다. `%`·`_`는 와일드카드가 아니다. 작업 STATE용 `workState`는 지원하지 않으며400이다.
+
+Q2 기본값은 `state=open&sort=number&order=asc`로 기존 동작을 유지한다. state는 이슈 열림/닫힘 축이고 응답 state는 작업 STATE다. `sort=updated`는 issue 투영의 updated_at과 번호를 같은 order로 정렬하며 댓글 시각으로 대체하지 않는다. `sort=created`는 repo 행 잠금 하의 단조 이슈 번호 할당 순서로 생성 순서를 표현한다(number와 동일). updatedAt은 DB microsecond 정밀도를 보존한다.
+
+공통 limit 기본100·범위1–500. nextCursor를 그대로 넘기며 null이면 현재 조건의 마지막 페이지다. cursor는 저장하지 않는 keyset이며 변경 중 목록을 고정 snapshot이라고 보장하지 않는다. Q1/확장 Q2의 opaque cursor는 principal·조회 조건에 묶인다(limit 변경 허용). 기존 번호 오름차순 조회는 numeric cursor를 유지하며 number/created 정렬은 numeric 위치도 허용한다. cursor=0은 시작이다. 지원 외 키·중복/구조화 값·잘못된 enum/limit/cursor는400 `{error:{code:"INVALID_QUERY"|"UNKNOWN_QUERY",reasons:[{code,path:"query.<key>",message}]},posted:false,requestId}`다. 기존 session 인증이 차단하는 query token은 기존 QUERY_TOKEN_FORBIDDEN을 유지한다.
 
 P5 inbox 병합 builder는 `createInboxHistoryReader(inbox)`를 historyReader에 주입한다. HTTP 조립은 `createDeliveryHttpRouter`, SSE는 `createSseRouter`, WS는 `createStreamCallbacks`이며 production entry 연결은 P1 소유다. /metrics operator 설정·운영 조립은 P1/P5 경계이며 미설정 시404다.
 

@@ -28,6 +28,10 @@ if (result.status !== 0) process.exit(result.status ?? 1);
 if (isBroker) {
   mkdirSync(join(cwd, 'dist/migrations'), { recursive: true });
   copyFileSync(join(root, 'packages/issus_domain/dist/server/backend/schema/0001-domain-baseline.sql'), join(cwd, 'dist/migrations/0001-domain-baseline.sql'));
+  // 0002+ 순번 migration은 dist/migrations/extra에 바이트 그대로 복사한다. broker가 runMigrations({directory})로 적용한다(core/s5 0004 등).
+  const schemaDir = join(root, 'packages/issus_domain/dist/server/backend/schema');
+  mkdirSync(join(cwd, 'dist/migrations/extra'), { recursive: true });
+  for (const file of readdirSync(schemaDir).filter((f) => /^\d{4}-.+\.sql$/.test(f) && !f.startsWith('0001-')).sort()) copyFileSync(join(schemaDir, file), join(cwd, 'dist/migrations/extra', file));
 }
 const files = [];
 function collect(directory) {

@@ -52,6 +52,8 @@ export interface BrokerInput {
   config: RuntimeConfig;
   env: AgentEnv;
   baselineSql: string;
+  /** 0002+ 순번 migration 디렉터리(dist/migrations/extra). 없으면 baseline+runtime 내장만. */
+  migrationsDirectory?: string;
   bootstrapTokenHash: string;
   /** Dedicated integration namespace; production uses issus. */
   schema?: string;
@@ -106,7 +108,7 @@ export function createBroker(input: BrokerInput) {
   const service: Service = {
     async start() {
       try {
-        await runMigrations({ pool, schema: input.schema, queueName: input.queueName, baselineSql: input.baselineSql, ensureBroker: () => eventStore.ensureSchema() });
+        await runMigrations({ pool, schema: input.schema, queueName: input.queueName, baselineSql: input.baselineSql, directory: input.migrationsDirectory, ensureBroker: () => eventStore.ensureSchema() });
         await auth.installBootstrap(config.ISSUS_OWNER, input.bootstrapTokenHash);
         broker = createEventBroker(options);
         await broker.start();
@@ -136,7 +138,7 @@ export async function start() {
   const token = (await readFile(config.ISSUS_BOOTSTRAP_TOKEN_FILE, 'utf8')).trim();
   if (!token) throw new Error('bootstrap token file is empty');
   const baselineSql = await readFile(new URL('../../../migrations/0001-domain-baseline.sql', import.meta.url), 'utf8');
-  const runtime = createBroker({ config, env, baselineSql, bootstrapTokenHash: sha256(token) });
+  const runtime = createBroker({ config, env, baselineSql, migrationsDirectory: fileURLToPath(new URL('../../../migrations/extra/', import.meta.url)), bootstrapTokenHash: sha256(token) });
   for (const signal of ['SIGTERM', 'SIGINT'] as const) process.once(signal, () => {
     const deadline = setTimeout(() => process.exit(1), 25000);
     deadline.unref();
