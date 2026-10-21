@@ -1,4 +1,4 @@
-issus-scheduler 서비스 골격.
+issus 5초 tick·ACK 기한·재전달 scheduler.
 
 | 목적 | 파일 |
 | --- | --- |
@@ -6,3 +6,5 @@ issus-scheduler 서비스 골격.
 | API | [api](docs/api.md) |
 | 제약 | [constraints](docs/constraints.md) |
 | 시험 | [testing](docs/testing.md) |
+
+[구조](docs/architecture.md) · [사용](docs/usage.md) · [내부](docs/internals.md)

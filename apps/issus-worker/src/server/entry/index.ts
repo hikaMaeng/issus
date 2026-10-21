@@ -1,28 +1,23 @@
-import express from 'express';
-import envSchema from 'env-schema';
-import { pathToFileURL } from 'node:url';
-/** P1 scaffold server; functional readiness is installed by P4/P5. */
-export function createApp() {
-  const app = express();
-  app.get('/health', (_req, res) => res.status(200).json({ ok: true, service: 'issus-worker' }));
-  app.get('/ready', (_req, res) => res.status(200).json({ ok: true, stage: 'scaffold' }));
-  return app;
-}
+import {pathToFileURL} from 'node:url';
+import {createWorkerServer,readEnv,runService,type Service} from 'agent/broker';
+import {QUEUES} from 'issus_domain/common';
+import {applyCompactReaction,compactPublication} from 'issus_domain/server';
+import {createWorkerBindings,type BindingOptions,type WorkerBindings,type RoleExecute} from 'issus_runtime/server';
+import {intakeRole} from '../roles/intake/index.js';
+import {routingRole} from '../roles/routing/index.js';
+import {deliveryRole} from '../roles/delivery/index.js';
+import {compactRole} from '../roles/compact/index.js';
 
-/** Validate runtime listener configuration before opening a socket. */
-export function start() {
-  const config = envSchema<{ PORT: number; HOST: string }>({
-    schema: { type: 'object', required: ['PORT'], properties: {
-      PORT: { type: 'integer', minimum: 10000, maximum: 59999 },
-      HOST: { type: 'string', default: '0.0.0.0', minLength: 1 }
-    } }
-  });
-  const server = createApp().listen(config.PORT, config.HOST, () => console.log('issus-worker listening'));
-  for (const signal of ['SIGTERM', 'SIGINT'] as const) process.once(signal, () => {
-    server.close(() => process.exit(0));
-    setTimeout(() => process.exit(1), 25000).unref();
-  });
-  return server;
+/** Queue routing lives in this role binding, never in domain handlers. */
+export function workerExecute(b:WorkerBindings,queueName:(name:string)=>string=(n=>n)):RoleExecute {
+ const roles:Record<string,RoleExecute>={[queueName(QUEUES.intake)]:intakeRole(b),[queueName(QUEUES.route)]:routingRole(b),[queueName(QUEUES.delivery)]:deliveryRole(b),[queueName(QUEUES.compact)]:compactRole(b)};
+ return (event,signal,emit,context)=>{const role=roles[context.queue];if(!role) throw new Error('unknown worker queue');return role(event,signal,emit,context);};
 }
-
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) start();
+/** The worker frame owns pool, execution fence, queue consumer and health listener. */
+export function createIssusWorker(options:BindingOptions={},source:NodeJS.ProcessEnv=process.env):Service {
+ const env=readEnv({...source,AGENT_ROLE:'worker'}),queues=[QUEUES.intake,QUEUES.route,QUEUES.delivery,QUEUES.compact].map(n=>options.queueName?.(n)??n);
+ const bindings={compactReaction:applyCompactReaction,publication:compactPublication,...options};
+ return createWorkerServer({env,queues,reactionQueues:[QUEUES.route,QUEUES.compact].map(n=>options.queueName?.(n)??n),maxConcurrent:8,executeWith:pool=>workerExecute(createWorkerBindings(pool,bindings),options.queueName)});
+}
+export const start=()=>runService(createIssusWorker());
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) void start();

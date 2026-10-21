@@ -1,28 +1,16 @@
-import express from 'express';
-import envSchema from 'env-schema';
-import { pathToFileURL } from 'node:url';
-/** P1 scaffold server; functional readiness is installed by P4/P5. */
-export function createApp() {
-  const app = express();
-  app.get('/health', (_req, res) => res.status(200).json({ ok: true, service: 'issus-scheduler' }));
-  app.get('/ready', (_req, res) => res.status(200).json({ ok: true, stage: 'scaffold' }));
-  return app;
-}
+import {pathToFileURL} from 'node:url';
+import {createWorkerServer,readEnv,runService,combineServices,type Service} from 'agent/broker';
+import {QUEUES} from 'issus_domain/common';
+import {createRuntimePool,createWorkerBindings,createSchedulerProducer,type BindingOptions} from 'issus_runtime/server';
+import {tickRole} from '../roles/tick/index.js';
 
-/** Validate runtime listener configuration before opening a socket. */
-export function start() {
-  const config = envSchema<{ PORT: number; HOST: string }>({
-    schema: { type: 'object', required: ['PORT'], properties: {
-      PORT: { type: 'integer', minimum: 10000, maximum: 59999 },
-      HOST: { type: 'string', default: '0.0.0.0', minLength: 1 }
-    } }
-  });
-  const server = createApp().listen(config.PORT, config.HOST, () => console.log('issus-scheduler listening'));
-  for (const signal of ['SIGTERM', 'SIGINT'] as const) process.once(signal, () => {
-    server.close(() => process.exit(0));
-    setTimeout(() => process.exit(1), 25000).unref();
-  });
-  return server;
+/** Five-second producer and scheduler queue consumer shut down as one service. */
+export function createIssusScheduler(options:BindingOptions={},source:NodeJS.ProcessEnv=process.env):Service {
+ const env=readEnv({...source,AGENT_ROLE:'worker'}),pool=createRuntimePool(env.databaseUrl),name=options.queueName?.(QUEUES.schedule)??QUEUES.schedule;
+ const producer=createSchedulerProducer({pool,schema:options.schema,queueName:options.queueName,clock:options.clock,onError:()=>console.error(JSON.stringify({event:'scheduler.producer.failed'}))});
+ const worker=createWorkerServer({env,queues:[name],maxConcurrent:2,executeWith:database=>tickRole(createWorkerBindings(database,options))});
+ const service=combineServices(worker,producer);
+ return {start:()=>service.start(),async stop(){await service.stop();await pool.end();}};
 }
-
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) start();
+export const start=()=>runService(createIssusScheduler());
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) void start();
