@@ -2,7 +2,7 @@
 export const sessionKo = {
   sessions: '세션', current: '현재 세션', sid: '세션 ID', sessionId: '세션 식별자', expires: '만료 시각',
   issue: '세션 발급', managementToken: '관리 토큰', issueExecute: '발급', resumeFrom: '승계할 세션 ID',
-  issued: '세션 토큰이 발급되었습니다. 이 화면에서 한 번만 확인할 수 있습니다', issuedToken: '발급 토큰',
+  issued: '세션 토큰이 발급되었습니다. 이 화면에서 한 번만 확인할 수 있습니다', issuedToken: '발급 토큰', issuedResult: '발급 세션 결과',
   reveal: '토큰 표시', mask: '토큰 숨기기', copy: '토큰 복사', copied: '토큰을 복사했습니다', connectIssued: '발급 토큰 연결',
   discard: '발급 토큰 지우기', reissue: '세션 재발급 확인', reissueExecute: '재발급 실행', newSid: '새 세션 ID',
   reissueOf: '기존 세션 ID', revokeImpact: '재발급하면 기존 세션 토큰이 철회됩니다. 미사용 새 세션 ID를 입력하세요',

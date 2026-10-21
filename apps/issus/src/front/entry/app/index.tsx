@@ -7,6 +7,11 @@ import {ko, sessionKo} from '../../resources/index.js';
 import {resolveAppRoute} from './routes.js';
 import {appRouteView} from './view.js';
 
+/** The form exists during recovery and after login; the authenticated disclosure starts closed. */
+export function SessionConnection({principal, loading, onConnected}: {principal: Principal|null; loading: boolean; onConnected: (value: Principal) => void}) {
+  return <details key={principal?.sessionId ?? 'anonymous'} open={!principal && !loading}><summary role="button">{ko.connection}</summary><ConnectionForm onConnected={onConnected}/></details>;
+}
+
 /** Same-origin route shell; native links preserve browser navigation semantics. */
 export function App() {
   const client = useMemo(() => createBrowserClient(), []);
@@ -49,7 +54,7 @@ export function App() {
   }
   const route = resolveAppRoute(location.pathname, location.search), repo = route.repo;
   const view = loading ? <><h1>{ko.app}</h1><Feedback loading/></> : appRouteView(route, client, principal, connected);
-  return <SessionDraftProvider memory={drafts} scope={scope.current}><AppShell principal={principal} repo={repo} aside={principal && 'number' in route ? <IssueContext client={client} repo={route.repo} number={route.number}/> : undefined} session={<details key={principal?.sessionId ?? 'anonymous'} open={!principal && !loading}><summary role="button">{ko.connection}</summary><ConnectionForm onConnected={connected}/></details>}>
+  return <SessionDraftProvider memory={drafts} scope={scope.current}><AppShell principal={principal} repo={repo} aside={principal && 'number' in route ? <IssueContext client={client} repo={route.repo} number={route.number}/> : undefined} session={<SessionConnection principal={principal} loading={loading} onConnected={connected}/>}>
     <Feedback errors={errors}/>{principal && !hasBrowserCsrf() && <p role="status">{ko.csrfMissing}</p>}
     {principal && <DraftRecovery pending={drafts.hasPending(scope.current)} message={draftMessage} onRestore={() => {if (drafts.restore(scope.current)) {setVersion(count => count + 1); setDraftMessage(sessionKo.draftRestored);}}} onDiscard={() => {drafts.discard(scope.current); setDraftMessage(sessionKo.draftDiscarded);}}/>}
     <div key={`${principal?.sessionId ?? 'anonymous'}:${version}:${pagePath}`}>{view}</div>

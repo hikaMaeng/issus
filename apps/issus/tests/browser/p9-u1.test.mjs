@@ -20,7 +20,8 @@ async function login(target, token, path = '/repos') {
   await target.getByLabel('세션 토큰', {exact: true}).fill(token);
   await target.getByRole('button', {name: '연결', exact: true}).click();
   await eventually(() => target.getByLabel('세션 토큰', {exact: true}).inputValue().then(value => value === ''), 'bearer erased');
-  await eventually(async () => await target.getByRole('form', {name: '세션 연결', exact: true}).getAttribute('aria-busy') === 'false', 'server identity confirmed after bearer exchange');
+  // Authentication replaces/closes the disclosure; completion still inspects its real form.
+  await eventually(async () => await target.getByRole('form', {name: '세션 연결', exact: true, includeHidden: true}).getAttribute('aria-busy') === 'false', 'server identity confirmed after bearer exchange');
   await eventually(() => target.getByRole('navigation', {name: '주 탐색', exact: true}).getByRole('link', {name: '저장소', exact: true}).count(), 'shell ready');
 }
 before(async () => {
@@ -157,8 +158,9 @@ async function reconnectDraft(token) {
   if (!await form.isVisible()) await page.getByRole('button', {name: '세션 연결', exact: true}).click();
   await form.getByLabel('세션 토큰', {exact: true}).fill(token);
   await form.getByRole('button', {name: '연결', exact: true}).click();
-  await eventually(() => form.getByLabel('세션 토큰', {exact: true}).inputValue().then(value => value === ''), 'reconnection bearer erased');
-  await eventually(async () => await form.getAttribute('aria-busy') === 'false', 'reauthentication fully completed');
+  const completed = page.getByRole('form', {name: '세션 연결', exact: true, includeHidden: true});
+  await eventually(() => completed.getByLabel('세션 토큰', {exact: true}).inputValue().then(value => value === ''), 'reconnection bearer erased');
+  await eventually(async () => await completed.getAttribute('aria-busy') === 'false', 'reauthentication fully completed');
 }
 async function expireCookieDraft() {
   await context.clearCookies({name: 'issus_session'});

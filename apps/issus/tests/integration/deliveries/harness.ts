@@ -14,6 +14,7 @@ import {SubscriptionService} from '../../../src/server/http/subscriptions/index.
 import {createStreamCallbacks} from '../../../src/server/stream/callbacks/index.js';
 import {createSseRuntime,createSseRouter} from '../../../src/server/stream/sse/index.js';
 import {reactions} from '../../../src/server/reactions/table/index.js';
+import {completeQueuedWrite} from './queued-write.js';
 
 /** Real PostgreSQL/pgmq, independent P5 composition; no production/public table is used. */
 export async function startDeliveryHarness(harnessOptions:{compactReaction?:CompactReaction}={}) {
@@ -67,8 +68,12 @@ export async function startDeliveryHarness(harnessOptions:{compactReaction?:Comp
   const env=readEnv({DATABASE_URL:url,PORT:'18140'});
   transport=attachWebSocketTransport(server,env,queue,sse.hub,store,new MetricsRegistry(),callbacks.socketPolicy);
   async function http(path:string,body?:unknown,token=bootstrapToken,options:{method?:string;key?:string;headers?:Record<string,string>;wait?:boolean}={}) {
-   const response=await fetch(base+path,{method:options.method??(body===undefined?'GET':'POST'),headers:{'content-type':'application/json',...(token?{authorization:`Bearer ${token}`} :{}),'idempotency-key':options.key??randomUUID(),...(options.wait===false?{}:{prefer:'wait=5'}),...options.headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
-   return {status:response.status,body:await response.json() as any};
+   const method=options.method??(body===undefined?'GET':'POST'),authorization=options.headers?.authorization??(token?`Bearer ${token}`:undefined);
+   const response=await fetch(base+path,{method,headers:{'content-type':'application/json',...(authorization?{authorization}:{}),'idempotency-key':options.key??randomUUID(),...(options.wait===false?{}:{prefer:'wait=5'}),...options.headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
+   return completeQueuedWrite(path,method,{status:response.status,body:await response.json()},async(statusUrl,signal)=>{
+    const operation=await fetch(base+statusUrl,{signal,headers:authorization?{authorization}:{}});
+    return {status:operation.status,body:await operation.json()};
+   });
   }
   async function settle(){for(let i=0;i<50;i++){await active;await drain();if(!active) break;}if(failures.length) throw failures[0];}
   async function ws(token:string) {

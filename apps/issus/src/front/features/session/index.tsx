@@ -102,7 +102,7 @@ export function SessionIssueForm({onConnected, principal}: {onConnected: (princi
       <label htmlFor="issue-resume">{sessionKo.resumeFrom}</label><input id="issue-resume" value={resumeFrom} onChange={event => setResumeFrom(event.target.value)}/></fieldset>
     <button disabled={busy}>{pending.current ? sessionKo.retry : sessionKo.issueExecute}</button>
     <Feedback errors={errors} status={status}/>
-  </form>{result && <section aria-label={sessionKo.issuedToken}><dl><div><dt>{sessionKo.sessionId}</dt><dd>{result.sessionId}</dd></div><div><dt>{ko.alias}</dt><dd>{result.alias}</dd></div><div><dt>{sessionKo.sid}</dt><dd>{result.sid}</dd></div></dl>
+  </form>{result && <section aria-label={sessionKo.issuedResult}><dl><div><dt>{sessionKo.sessionId}</dt><dd>{result.sessionId}</dd></div><div><dt>{ko.alias}</dt><dd>{result.alias}</dd></div><div><dt>{sessionKo.sid}</dt><dd>{result.sid}</dd></div></dl>
     {result.token && <><label htmlFor="issued-token">{sessionKo.issuedToken}</label><input id="issued-token" readOnly autoComplete="off" type={reveal ? 'text' : 'password'} value={result.token}/>
       <button onClick={() => setReveal(value => !value)}>{reveal ? sessionKo.mask : sessionKo.reveal}</button>
       <button onClick={() => {void navigator.clipboard.writeText(result.token!).then(() => setStatus(sessionKo.copied)).catch(() => setErrors([ko.failure]));}}>{sessionKo.copy}</button>

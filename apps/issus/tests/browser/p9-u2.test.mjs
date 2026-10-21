@@ -20,6 +20,8 @@ const form = target => target.getByRole('form', {name: '댓글 작성', exact: t
 const article = (target, id) => target.getByRole('article', {name: `댓글 ${id}`, exact: true});
 async function login(target, token) {
   await target.goto(server + '/login?returnTo=/repos');
+  await target.getByRole('heading', {level: 1, name: '세션 연결', exact: true}).waitFor();
+  if (!await target.getByLabel('세션 토큰', {exact: true}).isVisible()) await target.getByRole('button', {name: '세션 연결', exact: true}).click();
   await target.getByLabel('세션 토큰', {exact: true}).fill(token);
   await target.getByRole('button', {name: '연결', exact: true}).click();
   await target.waitForURL(server + '/repos');
@@ -171,8 +173,10 @@ test('P9-14 U2 create201 and competing edit412 preserve draft until explicit mer
   await create.getByLabel('제목', {exact: true}).fill('U2 create412'); await create.getByLabel('이슈 본문', {exact: true}).fill(body);
   const validation = page.waitForResponse(response => new URL(response.url()).pathname === '/v1/validate' && response.status() === 200); await create.getByRole('button', {name: '문법 검사', exact: true}).click(); await validation;
   const made = page.waitForResponse(response => new URL(response.url()).pathname === `/v1/repos/${fixture.repo}/issues` && response.status() === 201); await create.getByRole('button', {name: '이슈 개설', exact: true}).click(); const {number} = await (await made).json();
-  const second = await readerContext.newPage(); second.on('pageerror', error => pageErrors.push(error.message));
+  const secondContext = await browser.newContext({viewport: {width: 1440, height: 1000}}), second = await secondContext.newPage(); second.on('pageerror', error => pageErrors.push(error.message));
   try {
+    // Each editor gets its own cookie/CSRF pair; reconnecting in a shared context rotates the first pair.
+    await login(second, fixture.B.token);
     await page.goto(ui(number) + '/edit'); await second.goto(ui(number) + '/edit'); const firstForm = page.getByRole('form', {name: '본문 편집', exact: true}), secondForm = second.getByRole('form', {name: '본문 편집', exact: true}); await firstForm.waitFor(); await secondForm.waitFor();
     const baseline = await firstForm.getByLabel('이슈 본문', {exact: true}).inputValue(); const first = baseline + '\nNEXT: first', mine = baseline + '\nNEXT: second';
     await firstForm.getByLabel('이슈 본문', {exact: true}).fill(first); await secondForm.getByLabel('이슈 본문', {exact: true}).fill(mine);
@@ -183,7 +187,7 @@ test('P9-14 U2 create201 and competing edit412 preserve draft until explicit mer
     await secondForm.getByRole('button', {name: '문맥 검사', exact: true}).click(); await eventually(() => secondForm.getByRole('button', {name: '본문 저장', exact: true}).isEnabled(), 'rechecked merge');
     const merged = second.waitForResponse(response => response.request().method() === 'PATCH' && response.status() === 200); await secondForm.getByRole('button', {name: '본문 저장', exact: true}).click(); await merged; assert.ok((await view(number)).body.endsWith('NEXT: merged second'));
     observations.push({id: 'P9-14', number, conflict: 412, draftPreserved: true});
-  } finally {await second.close();}
+  } finally {await secondContext.close();}
 });
 
 test('P9-15 U2 HANDOFF directTO ACK accept and OWNER latestrevision complete are separate phases', async () => {

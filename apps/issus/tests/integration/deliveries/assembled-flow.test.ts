@@ -7,7 +7,8 @@ import {eventually,startAssembledHarness} from './assembled-harness.js';
 test('I-01–06 two sessions: assembled broker→worker→scheduler→COMPACT→close',{timeout:180000},async t=>{
  const h=await startAssembledHarness();
  try {
-  const repo=await h.http('/v1/repos',{owner:'tester',slug:'delivery',projectCode:'p5',autoBoard:true});assert.equal(repo.status,201,JSON.stringify(repo));const repoId=repo.body.repoId;
+  // Admission-only response exercises operation polling through the real broker/worker.
+  const repo=await h.http('/v1/repos',{owner:'tester',slug:'delivery',projectCode:'p5',autoBoard:true},undefined,{headers:{prefer:'wait=0'}});assert.equal(repo.status,201,JSON.stringify(repo));const repoId=repo.body.repoId;
   async function session(alias:string) {
    const registered=await h.http('/v1/owners/tester/aliases',{name:alias,role:'test',model:'fake',scope:'assembled delivery integration',repos:[repoId],announcementBody:`FROM:${alias}/by-p5-system TO:ALL TYPE:ALIAS\n${alias} | 시험 | fake | integration | s1\n---\n근거: assembled test`});assert.equal(registered.status,201,JSON.stringify(registered));
    const s=await h.http('/v1/sessions',{alias,sid:'s1'});assert.equal(s.status,201,JSON.stringify(s));return {...s.body,aliasId:registered.body.aliasId};

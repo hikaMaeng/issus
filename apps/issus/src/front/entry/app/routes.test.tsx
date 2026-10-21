@@ -4,12 +4,23 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import type {IssusClient} from 'issus_domain/front';
 import {resolveAppRoute} from './routes.js';
 import {appRouteView} from './view.js';
+import {SessionConnection} from './index.js';
 import {Board} from '../../pages/board/index.js';
 import {IssueCreate} from '../../pages/issue-create/index.js';
 import {IssueEdit} from '../../pages/issue-edit/index.js';
 import {Compact} from '../../pages/compact/index.js';
 import {Login} from '../../pages/login/index.js';
 const client = {} as IssusClient, principal = {kind: 'session', ownerId: 'owner', alias: 'tt-1-alpha', sid: 's1'};
+
+test('connection form persists across auth recovery while disclosure visibility changes', () => {
+  for (const [identity, loading, open] of [[null, true, false], [null, false, true], [{...principal, sessionId: 'confirmed'}, false, false]] as const) {
+    const html = renderToStaticMarkup(<SessionConnection principal={identity} loading={loading} onConnected={() => {}}/>);
+    assert.equal(html.startsWith('<details open="">'), open);
+    assert.equal((html.match(/<form aria-label="세션 연결"/g) ?? []).length, 1);
+    assert.ok(html.includes('aria-busy="false"')); assert.ok(html.includes('<label for="session-token">세션 토큰</label>'));
+    assert.ok(html.includes('type="password"')); assert.ok(html.includes('value=""'));
+  }
+});
 
 test('all four previously unassembled URLs resolve to the actual public production component', () => {
   const cases = [

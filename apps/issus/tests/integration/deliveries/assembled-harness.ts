@@ -8,6 +8,7 @@ import {createRuntimePool,parseRuntimeConfig} from 'issus_runtime/server';
 import {createBroker} from '../../../src/server/entry/broker/index.js';
 import {createIssusWorker} from '../../../../issus-worker/src/server/entry/index.js';
 import {createIssusScheduler} from '../../../../issus-scheduler/src/server/entry/index.js';
+import {completeQueuedWrite} from './queued-write.js';
 
 /** Allocate only a test listener port; deployed ports still come from validated env. */
 export async function unusedPort():Promise<number> {
@@ -48,8 +49,13 @@ export async function startAssembledHarness() {
   await broker.service.start();await worker.start();await scheduler.start();
   for(const port of [brokerPort,workerPort,schedulerPort]) await eventually(async()=>(await fetch(`http://127.0.0.1:${port}/ready`)).status,s=>s===200);
   async function http(path:string,body?:unknown,bearer=token,extra:{method?:string;headers?:Record<string,string>}={}) {
-   const response=await fetch(base+path,{method:extra.method??(body===undefined?'GET':'POST'),headers:{'content-type':'application/json',authorization:`Bearer ${bearer}`,'idempotency-key':randomUUID(),prefer:'wait=5',...extra.headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
-   const text=await response.text();return {status:response.status,body:text?JSON.parse(text):null};
+   const method=extra.method??(body===undefined?'GET':'POST'),authorization=extra.headers?.authorization??`Bearer ${bearer}`;
+   const response=await fetch(base+path,{method,headers:{'content-type':'application/json',authorization,'idempotency-key':randomUUID(),prefer:'wait=5',...extra.headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
+   const text=await response.text();
+   return completeQueuedWrite(path,method,{status:response.status,body:text?JSON.parse(text):null},async(statusUrl,signal)=>{
+    const operation=await fetch(base+statusUrl,{signal,headers:{authorization}});
+    return {status:operation.status,body:await operation.json()};
+   });
   }
   async function ws(bearer:string,subscriptionId:string,cursor:string) {
    const socket=new WebSocket(`${base.replace('http','ws')}/ws?subscription=${subscriptionId}&cursor=${cursor}`,['issus.v1',`issus.bearer.${bearer}`]),frames:any[]=[],lines:string[]=[];sockets.push(socket);

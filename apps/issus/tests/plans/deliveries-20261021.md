@@ -39,6 +39,7 @@ P4 UoW·intake/auth/HTTP와 P2 agent transport가 설치돼 있어야 한다. sc
 | wave3 ready | 두 앱 엔트리의 정상200→migration0003 기록 누락503→복구200→필수 큐 제거503→복구200. 접속불가 DB로 초기화 실패해도 health200/ready503. producer 최신 실패·복구·종료도 단위 검증 |
 | Monitor 고정 URL | DECISION6312785235: 파라미터 없는 /ws+subprotocol bearer→alias-only subscribed→댓글 frame. 열린 구독 재사용, 미영수 연결종료→새 id 재생, 영수 확정 queued 재생0, 닫힌 id 접속도 새 id 승계. 뒤 알림 영수로 앞 미영수 gap 건너뛰기0 |
 | canonical history | 작성자 GET I/comments는 자기 댓글 전문 포함, 자기 inbox/watch에는 own-FROM 생략 유지. 두 cursor scope 혼용409. 기존 frozen page/refresh/COMPACT 경계 회귀 유지 |
+| s3 queued 쓰기 | §7 허용 POST(repo/issue/comment·receipt/application·close/reopen)의 202는 원 actor로 statusUrl을 최대15초 GET 폴링해 최종 httpStatus/response를 단언한다. 별칭·세션·구독·preflight·PATCH 등 동기 API의202는 즉시 실패. 최종422·조회403·operation id/URL 불일치·미완료 timeout·조회 정지 abort도 회귀로 확인. 실DB intake 일시정지→queued 관측→재개→댓글1건/201 및 assembled repo admission-only 응답으로 두 harness를 검증 |
 
 각 시험은 tests/integration/deliveries/* 및 각 소유 패키지의 src tests에 있다. 패키지/앱별 npm test·lint를 실행한다. sandbox의 test-worker/tsx spawn EPERM이면 명령/실패 로그를 보존하고 tsc emit+node --test --test-isolation=none을 실행하며 원시험을 PASS로 쓰지 않는다. esbuild 서버 bundle은 보조 검증이다.
 
@@ -51,6 +52,8 @@ P4 UoW·intake/auth/HTTP와 P2 agent transport가 설치돼 있어야 한다. sc
 .cache/p5/{typecheck,integration,npm-*,bundle-*,cleanup,barrier}.log 및 tests/reports/deliveries/<stamp>.md. report에 명령·exit/pass/fail/skip·namespace잔류를 적는다.
 
 wave3/s2는 .cache/deliver-s2/{source-typecheck,units,integration,npm-*,bundle-*}.log에 원 명령·결과를 보존한다. Node 격리 spawn EPERM이면 검증 스크립트 validate.py가 source 경계로 TS emit 후 node --test --test-isolation=none을 실행한다. 이 결과와 원 npm test 실패를 분리한다.
+
+s3는 `.cache/deliver-s3/{npm-test,npm-lint,npm-integration,emit,regression,original-integration,app-source}.log`에 명령·exit·원 출력을 보존한다. 기본 DB·public seed를 사용하며 기존54건과 신규 queued 회귀9건을 분리 집계한다. 사전 namespace 목록과 종료 목록을 resources-before/after.json으로 비교하고 기존 잔류는 삭제하지 않는다.
 
 ## Locator Contract
 
