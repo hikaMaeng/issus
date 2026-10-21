@@ -9,7 +9,7 @@ import {startCoreHarness} from './testing.js';
 const root=new URL('../../../../../../packages/issus_domain/tests/fixtures/issue-board-v2/good/',import.meta.url);
 /** Raw canonical fixtures stay immutable. Legacy aliases/references and historical Clock are explicit prerequisites. */
 test('fixture HTTP live writes: comment28 + body4',{skip:!process.env.ISSUS_TEST_DATABASE_URL},async t=>{
-  const files=(await readdir(root)).filter(f=>f.endsWith('.md')).sort();let posted=0,edited=0;
+  const files=(await readdir(root)).filter(f=>f.endsWith('.md')).sort();assert.equal(files.length,32);let posted=0,edited=0;
   for(const filename of files) await t.test(filename,async()=>{
     const original=await readFile(new URL(filename,root),'utf8'),isBody=original.startsWith('STATE:');
     const e=isBody?bodyEnvelope(original).envelope! as unknown as Record<string,string>:envelope(original.split('\n')[0]);
@@ -63,5 +63,5 @@ test('fixture HTTP live writes: comment28 + body4',{skip:!process.env.ISSUS_TEST
       assert.deepEqual(h.failures,[]);
     }finally{await h.cleanup();}
   });
-  assert.equal(posted,28);assert.equal(edited,4);
+  assert.equal(posted,28);assert.equal(edited,4);t.diagnostic(`DECISION 6310243238: POST comment 201=${posted}; PATCH issue body 200=${edited}`);
 });

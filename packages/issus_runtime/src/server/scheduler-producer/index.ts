@@ -1,5 +1,6 @@
 import type {Pool} from 'pg';
-import {PgmqClient,type Service} from 'agent/broker';
+import {EventStore,PgmqClient,type Service} from 'agent/broker';
+import type {EventDraft} from 'agent/common';
 import {deterministicEventId} from 'agent/server';
 import {QUEUES} from 'issus_domain/common';
 import type {Clock} from 'issus_domain/server';
@@ -16,10 +17,15 @@ export async function produceTick(options:ProducerOptions):Promise<boolean> {
   const locked=(await c.query(`SELECT pg_try_advisory_xact_lock(hashtextextended($1,0)) AS locked`,[`issus-tick:${schema}`])).rows[0].locked;
   if(!locked) {await c.query('ROLLBACK');return false;}
   const now=options.clock?.now()??new Date((await c.query('SELECT now() AS now')).rows[0].now),slot=tickSlot(now);
+  const owner=(await c.query(`SELECT id FROM "${schema}".owner ORDER BY id LIMIT 1`)).rows[0];
+  if(!owner) {await c.query('ROLLBACK');return false;}
   const inserted=await c.query(`INSERT INTO "${schema}".schedule(kind,entity_id,generation,run_at,state) VALUES('clock',$1::text,0,$1::text::timestamptz,'done') ON CONFLICT DO NOTHING RETURNING entity_id`,[slot]);
   if(!inserted.rowCount) {await c.query('COMMIT');return false;}
   const id=deterministicEventId(`issus-clock:${schema}:${slot}`);
-  await new PgmqClient(options.pool).sendOn(c,options.queueName?.(QUEUES.schedule)??QUEUES.schedule,{eventId:id,action:'issus.clock.tick',transactionKey:id,channel:'internal:schedule',source:'scheduler',audience:'worker',createdAt:now.toISOString(),payload:{ownerId:'scheduler',slot}});
+  const event:EventDraft={eventId:id,eventVersion:1,kind:'command',streamId:'channel:internal:schedule',action:'issus.clock.tick',transactionKey:id,correlationId:id,channel:'internal:schedule',source:'scheduler',audience:'worker',createdAt:now.toISOString(),payload:{ownerId:owner.id,slot}};
+  // The consumer's generic ingress converter reuses this canonical id, preserving scheduler provenance.
+  await new EventStore(options.pool).appendManyOn(c,[event]);
+  await new PgmqClient(options.pool).sendOn(c,options.queueName?.(QUEUES.schedule)??QUEUES.schedule,event);
   await c.query('COMMIT');return true;
  }catch(e){await c.query('ROLLBACK');throw e;}finally{c.release();}
 }

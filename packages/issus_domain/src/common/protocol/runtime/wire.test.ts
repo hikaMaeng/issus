@@ -30,7 +30,7 @@ const commands={
  'issus.clock.tick':{slot:'2026-10-21T05:00:00Z'}
 } satisfies {[K in keyof CommandPayloadMap]:CommandPayloadMap[K]};
 const closed={...iss,reason:'done',body,actor};
-const aliased={...repo,aliasId,name:'aa-reader',repos:[repoId],role:'reader',scope:'repo',actor};
+const aliased={...repo,aliasId,name:'aa-reader',repos:[repoId],role:'reader',model:'codex',scope:'repo',actor};
 const subscription={...own,subscriptionId:eventId,aliasId,sid:'s1',sessionId,channels:[aliasChannel(ownerId,aliasId)],transport:'websocket' as const};
 const session={...own,sessionId,aliasId,sid:'s1'};
 const facts={

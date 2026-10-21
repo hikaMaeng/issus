@@ -14,9 +14,9 @@ export async function startCoreHarness(options:{beforeQueueDelete?:()=>Promise<v
   const queueName=(name:string)=>queuePrefix+name;
   const admin=createRuntimePool(url),pool=createRuntimePool(url,brokerSchema);
   await admin.query(`CREATE SCHEMA ${identifier(brokerSchema)}`);
-  let now=new Date('2026-10-21T04:00:00Z'),failAppend=false,failSend=false;
+  let now=new Date('2026-10-21T04:00:00Z'),failAppend=false,failSend=false,failAppendAction:string|undefined;
   const store=new EventStore(pool,undefined,{retentionDays:null}),queue=new PgmqClient(pool);
-  const uow=new EventUnitOfWork({pool,schema,clock:{now:()=>new Date(now)},eventStore:{appendManyOn:async(...args)=>{if(failAppend) throw new Error('injected append failure');return store.appendManyOn(...args);}},queue:{sendOn:async(...args)=>{if(failSend) throw new Error('injected queue failure');return queue.sendOn(...args);}},queueName,reactions:{'issus.comment.posted':[QUEUES.route]}});
+  const uow=new EventUnitOfWork({pool,schema,clock:{now:()=>new Date(now)},eventStore:{appendManyOn:async(...args)=>{if(failAppend||args[1].some(d=>d.action===failAppendAction)) throw new Error('injected append failure');return store.appendManyOn(...args);}},queue:{sendOn:async(...args)=>{if(failSend) throw new Error('injected queue failure');return queue.sendOn(...args);}},queueName,reactions:{'issus.comment.posted':[QUEUES.route]}});
   const baseline=await readFile(new URL('../../../../../../packages/issus_domain/src/server/backend/schema/0001-domain-baseline.sql',import.meta.url),'utf8');
   try {
     await runMigrations({pool,schema,queueName,migrations:[{id:'0001-domain-baseline',sql:baseline},runtimeAuthMigration,runtimeHistoryMigration],ensureBroker:()=>store.ensureSchema()});
@@ -43,6 +43,6 @@ export async function startCoreHarness(options:{beforeQueueDelete?:()=>Promise<v
       for(const name of names) await admin.query('SELECT pgmq.drop_queue($1)',[name]);
       await admin.query(`DROP SCHEMA ${identifier(schema)} CASCADE`);await admin.query(`DROP SCHEMA ${identifier(brokerSchema)} CASCADE`);await pool.end();await admin.end();
     }
-    return {pool,uow,auth,intake,store,queue,schema,brokerSchema,queueName,bootstrap,bootstrapToken,http,base,failures,setClock:(date:Date)=>{now=date;},setFailAppend:(value:boolean)=>{failAppend=value;},setFailSend:(value:boolean)=>{failSend=value;},pause:()=>{paused=true;},resume:async()=>{paused=false;await drain();},drain,waitForIdle,cleanup};
+    return {pool,uow,auth,intake,store,queue,schema,brokerSchema,queueName,bootstrap,bootstrapToken,http,base,failures,setClock:(date:Date)=>{now=date;},setFailAppend:(value:boolean)=>{failAppend=value;},setFailAppendAction:(value:string|undefined)=>{failAppendAction=value;},setFailSend:(value:boolean)=>{failSend=value;},pause:()=>{paused=true;},resume:async()=>{paused=false;await drain();},drain,waitForIdle,cleanup};
   }catch(error){await pool.end();await admin.query(`DROP SCHEMA IF EXISTS ${identifier(schema)} CASCADE`);await admin.query(`DROP SCHEMA IF EXISTS ${identifier(brokerSchema)} CASCADE`);await admin.end();throw error;}
 }

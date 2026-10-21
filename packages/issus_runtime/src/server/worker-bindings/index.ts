@@ -9,7 +9,10 @@ export interface BindingOptions {schema?:string;clock?:Clock;queueName?:(name:st
 /** All role handlers share the worker server's pool and P4 transaction boundary. */
 export function createWorkerBindings(pool:Pool,options:BindingOptions={}) {
  const store=new EventStore(pool,undefined,{retentionDays:null}),queue=new PgmqClient(pool);
- const uow=new EventUnitOfWork({pool,eventStore:store,queue,...options}),auth=new RuntimeAuth({uow});
+ const physical=new Set(Object.values(options.reactions??{}).flat().map(q=>options.queueName?.(q)??q));
+ const queueName=(q:string)=>physical.has(q)?q:options.queueName?.(q)??q;
+ const reactions=options.reactions?Object.fromEntries(Object.entries(options.reactions).map(([a,qs])=>[a,qs.map(queueName)])):undefined;
+ const uow=new EventUnitOfWork({pool,eventStore:store,queue,...options,queueName,reactions}),auth=new RuntimeAuth({uow});
  const intake=new IntakeService({uow,resolvePrincipal:a=>auth.resolveActor(a),publication:options.publication});
  const deliveries=new DeliveryCommandService({uow,resolvePrincipal:a=>auth.resolveActor(a)});
  const routing=new RoutingService(uow),references=new DeliveryReferenceService(uow),retry=new RetryService(uow),deadline=new DeadlineService(uow),tick=new TickService(uow),inbox=new InboxService(uow);

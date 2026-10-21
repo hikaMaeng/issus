@@ -1,5 +1,7 @@
 # 내부 계약
 
+P5 라우팅 수신자·상태기계·pendingLegacy/ackState·H/A/E cursor의 저장/동시성 계약은 [delivery](delivery.md)에 있다. alias fact sequence와 delivery 투영은 같은 P4 UoW client로 원자 저장한다.
+
 `header`는 `{values, _type, _from, _to, _cc, _re, _sup, _first, _noenv}`다. `values`는 원 봉투 키를 보존하고 underscore 필드는 watcher 정규화 값이다. TYPE 레거시 mapping과 첫 값 우선 중복 처리는 정본대로다.
 
 `pendingLegacy`는 입력 구간에 대한 순수 집합 연산이다. COMMENT·COMPACT를 삭제하지 않는다. `ackState`의 superseded/applied projection 필드는 이미 서버가 권한/근거를 확인했다는 입력 계약이며 이 함수가 권한을 부여하지 않는다. 최초 직접 ACK는 comment bigint 순서로 고정한다.

@@ -1,21 +1,21 @@
 import {randomUUID} from 'node:crypto';
 import type {IngressEvent} from 'agent/common';
 import {parseCommandPayload,parseCommentRequest,checkComment,checkIssueBody,parseEnvelope,splitlines,charCount,QUEUES,type CommandAction,type Actor} from '../../common/index.js';
-import {CoreError,validation,requestHash,requireIdempotencyKey,reserveCommand,recorded,accepted,finishCommand,actorOf,authorizePrincipal,authorizeRepo,requireBootstrap,issueById,issueDiagnostics,sha256,type CommandRecord,type EventTransaction,type CorePrincipal,type EventUnitOfWork,type HttpResult} from '../backend/index.js';
+import {CoreError,validation,requestHash,requireIdempotencyKey,reserveCommand,recorded,accepted,finishCommand,actorOf,authorizePrincipal,authorizeRepo,requireBootstrap,requireOwner,issueById,issueDiagnostics,sha256,type CommandRecord,type EventTransaction,type CorePrincipal,type EventUnitOfWork,type HttpResult} from '../backend/index.js';
 import {createRepo} from './repo/index.js';
 import {openIssue,editIssueBody,checkBodyContext} from './issue/index.js';
 import {postComment,checkCommentContext,type CompactPublication} from './comment/index.js';
 import {registerAlias,renameAlias} from './alias/index.js';
 import {ensureBoard} from './board/index.js';
 import {acceptHandoff,completeHandoff} from './handoff/index.js';
-import {closeIssue,reopenIssue} from './closing/index.js';
+import {closeIssue,reopenIssue,refreshBeforeClose,type BeforeCloseRefresh} from './closing/index.js';
 export * from './comment/index.js';
 export * from './issue/index.js';
 export * from './alias/index.js';
 export * from './closing/index.js';
 
 export interface CoreCommand {principal:CorePrincipal;action:CommandAction;payload:Record<string,unknown>;idempotencyKey:string}
-export interface IntakeOptions {uow:EventUnitOfWork;publication?:CompactPublication;onAccepted?:(event:IngressEvent)=>void;resolvePrincipal?:(actor:Actor)=>Promise<CorePrincipal>}
+export interface IntakeOptions {uow:EventUnitOfWork;publication?:CompactPublication;refreshCompactSegment?:BeforeCloseRefresh;onAccepted?:(event:IngressEvent)=>void;resolvePrincipal?:(actor:Actor)=>Promise<CorePrincipal>}
 const CORE_ACTIONS=new Set(['issus.repo.create','issus.issue.open','issus.issue.body.edit','issus.comment.post','issus.alias.register','issus.alias.rename','issus.board.ensure','issus.handoff.accept','issus.handoff.complete','issus.issue.close','issus.issue.reopen']);
 /** Durable admission and worker finalization. P5 delivery commands use the same backend primitives. */
 export class IntakeService {
@@ -62,6 +62,7 @@ export class IntakeService {
   }
   async execute(command:CoreCommand,fence?:()=>Promise<void>):Promise<HttpResult> {
     await fence?.();const key=requireIdempotencyKey(command.idempotencyKey);
+    if(command.action==='issus.issue.close') await this.observeBeforeClose(command,key,fence);
     return this.uow.run(async tx=>{
       const {record}=await reserveCommand(tx.client,tx.table('command_result'),command.principal.id,key,requestHash(command.action,command.payload));
       if(record.http_status!==null) return recorded(record);
@@ -80,6 +81,24 @@ export class IntakeService {
       }
       await finishCommand(tx.client,tx.table('command_result'),record,result);return result;
     },key,command.principal.id);
+  }
+  /** Separate control transaction: a blocked/rolled-back close cannot erase the due observation. */
+  private async observeBeforeClose(command:CoreCommand,key:string,fence?:()=>Promise<void>):Promise<void> {
+    await this.uow.run(async tx=>{
+      const {principal:p,payload:x}=command;
+      const issue=await (async()=>{
+        try {
+          this.decode(command.action,x);await authorizePrincipal(tx,p);
+          await tx.client.query(`SELECT id FROM ${tx.table('owner')} WHERE id=$1 FOR UPDATE`,[p.ownerId]);
+          await tx.client.query(`SELECT id FROM ${tx.table('repo')} WHERE id=$1 FOR UPDATE`,[x.repoId]);
+          const target=await issueById(tx,p,String(x.repoId),Number(x.issueNumber),true);
+          const previous=(await tx.client.query<CommandRecord>(`SELECT * FROM ${tx.table('command_result')} WHERE principal_id=$1 AND idempotency_key=$2`,[p.id,key])).rows[0];
+          if(previous) {if(previous.request_hash!==requestHash(command.action,x)) throw new CoreError(409,'IDEMPOTENCY_CONFLICT');if(previous.http_status!==null) return;}
+          await requireOwner(tx,p,target.owner_alias_id);return target.is_open?target:undefined;
+        } catch(error) {if(error instanceof CoreError) return;throw error;}
+      })();
+      if(issue) {await (this.options.refreshCompactSegment??refreshBeforeClose)(tx,issue,'before-close');await fence?.();}
+    },`before-close:${key}`,command.principal.id);
   }
   private async dispatch(tx:EventTransaction,{principal:p,action,payload:x}:CoreCommand):Promise<Record<string,unknown>> {
     const typed=x as any;

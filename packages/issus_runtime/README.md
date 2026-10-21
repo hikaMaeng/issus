@@ -1,5 +1,7 @@
 issus의 환경 검증·해시 인증·세션 발급·스키마 migration·준비 상태.
 
+P5 [워커 바인딩·스케줄 producer·adapters](docs/adapters.md): `createWorkerBindings`, `reactionCoordinates`, `produceTick`, `tickSlot`, `createSchedulerProducer`, `disabledWakeAdapter` 및 선택 adapter factories.
+
 | 목적 | 파일 |
 | --- | --- |
 | 개요 | [overview](docs/overview.md) |

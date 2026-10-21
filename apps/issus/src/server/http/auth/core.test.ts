@@ -4,7 +4,7 @@ import {randomUUID,randomBytes} from 'node:crypto';
 import {readFile,readdir} from 'node:fs/promises';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {spawnSync} from 'node:child_process';
-import {requestHash,sha256,CoreError,issueById,applyProjection,type CorePrincipal} from 'issus_domain/server';
+import {requestHash,sha256,CoreError,issueById,applyProjection,rebuildAliasProfiles,type AliasProfileFact,type CorePrincipal} from 'issus_domain/server';
 import {corePrincipal,runMigrations,runtimeAuthMigration,runtimeHistoryMigration} from 'issus_runtime/server';
 import {QUEUES,parseFactPayload,type FactAction} from 'issus_domain/common';
 import {startCoreHarness} from './testing.js';
@@ -125,7 +125,20 @@ test('P4 real DB + listening HTTP acceptance',{skip:!enabled},async t=>{
       const claim=await post('tt-1-alpha/s1','ALL','CLAIM','자원 점유.','DUE:2026-10-21T04:30:00+00:00 SEEN:0',alphaToken!,source);assert.equal(claim.status,201,JSON.stringify(claim.body));
       const handoff=await post('tt-1-alpha/s1','tt-1-bravo','HANDOFF','책임 이관.',`ACK-BY:2026-10-21T04:05:00+00:00 REPLY-IN:#${target}`,alphaToken!,source,{compactDeferredReason:'긴급 이관'});assert.equal(handoff.status,201,JSON.stringify(handoff.body));
       const report=await post('tt-1-alpha/s1','ALL','REPORT','최종 결과.','STATE:cancelled',alphaToken!,source);assert.equal(report.status,201);
+      await h.waitForIdle();const observationKey=randomUUID(),refresh=h.intake.options.refreshCompactSegment;
+      h.intake.options.refreshCompactSegment=async()=>{throw new CoreError(503,'OBSERVATION_UNAVAILABLE');};
+      try {await assert.rejects(()=>h.intake.execute({principal:alpha!,action:'issus.issue.close',payload:{repoId,issueNumber:source,reason:'observation failed',finalReportId:report.body.commentId,expectedRevision:1},idempotencyKey:observationKey}),(e:unknown)=>e instanceof CoreError&&e.code==='OBSERVATION_UNAVAILABLE');}
+      finally {h.intake.options.refreshCompactSegment=refresh;}
+      assert.equal((await h.pool.query(`SELECT count(*)::int n FROM ${q('command_result')} WHERE principal_id=$1 AND idempotency_key=$2`,[alpha!.id,observationKey])).rows[0].n,0,'failed observation does not begin the close command transaction');
+      const forbidden=await h.http(`${R}/issues/${source}/close`,{reason:'not owner',finalReportId:report.body.commentId},bravoToken!,{headers:{'if-match':'1'}});assert.equal(forbidden.status,403);
+      assert.equal((await h.pool.query(`SELECT count(*)::int n FROM ${q('compact_segment')} WHERE repo_id=$1 AND issue_number=$2`,[repoId,source])).rows[0].n,0,'unauthorized close cannot record a due observation');
       const blocked=await h.http(`${R}/issues/${source}/close`,{reason:'done',finalReportId:report.body.commentId},alphaToken!,{headers:{'if-match':'1'}});assert.equal(blocked.status,409);assert.equal(blocked.body.error.code,'CLOSE_BLOCKED');assert.ok(blocked.body.error.details.claims.includes(claim.body.commentId));assert.ok(blocked.body.error.details.handoffs.includes(handoff.body.commentId));
+      const due=(await h.pool.query("SELECT payload FROM event_store WHERE action='issus.compact.due' AND payload->'issue'->>'repoId'=$1 AND payload->'issue'->>'issueNumber'=$2",[repoId,String(source)])).rows;
+      assert.equal(due.length,1);assert.ok(due[0].payload.reasons.includes('before-close'));
+      assert.ok((await h.pool.query(`SELECT due_reasons FROM ${q('compact_segment')} WHERE repo_id=$1 AND issue_number=$2`,[repoId,source])).rows[0].due_reasons.includes('before-close'));
+      assert.equal((await h.pool.query(`SELECT is_open,revision FROM ${q('issue')} WHERE repo_id=$1 AND number=$2`,[repoId,source])).rows[0].is_open,true);
+      const duplicateClose=await h.http(`${R}/issues/${source}/close`,{reason:'retry blocked',finalReportId:report.body.commentId},alphaToken!,{headers:{'if-match':'1'}});assert.equal(duplicateClose.status,409);
+      assert.equal((await h.pool.query("SELECT count(*)::int n FROM event_store WHERE action='issus.compact.due' AND payload->'issue'->>'repoId'=$1 AND payload->'issue'->>'issueNumber'=$2",[repoId,String(source)])).rows[0].n,1,'before-close fact is emitted once per segment');
       const early=await h.http(`${R}/issues/${source}/handoffs/${handoff.body.commentId}/complete`,{expectedRevision:1},alphaToken!);assert.equal(early.status,409);
       const ack=await post('tt-1-bravo/s1','tt-1-alpha','ACK','이관 수신.',`RE:${handoff.body.commentId}`,bravoToken!,target);assert.equal(ack.status,201);
       assert.equal((await h.pool.query(`SELECT status FROM ${q('handoff')} WHERE comment_id=$1`,[handoff.body.commentId])).rows[0].status,'pending');
@@ -133,24 +146,31 @@ test('P4 real DB + listening HTTP acceptance',{skip:!enabled},async t=>{
       const complete=await h.http(`${R}/issues/${source}/handoffs/${handoff.body.commentId}/complete`,{expectedRevision:2},alphaToken!);assert.equal(complete.status,200);assert.match(complete.body.body,/STATE:cancelled/);assert.match(complete.body.body,new RegExp(`REPLY-IN:#${target}`));
       assert.equal((await post('tt-1-alpha/s1','ALL','RELEASE','자원 해제.',`RE:${claim.body.commentId}`,alphaToken!,source)).status,201);
       const final=await post('tt-1-alpha/s1','ALL','REPORT','이관 완료 최종 결과.','STATE:cancelled',alphaToken!,source);assert.equal(final.status,201);const summary=await compact(source);
+      await h.waitForIdle();const failedCloseKey=randomUUID();h.setFailAppendAction('issus.issue.closed');
+      try {await assert.rejects(()=>h.intake.execute({principal:alpha!,action:'issus.issue.close',payload:{repoId,issueNumber:source,reason:'append failure',finalReportId:final.body.commentId,expectedRevision:summary.body.revision},idempotencyKey:failedCloseKey}),/injected append failure/);}
+      finally {h.setFailAppendAction(undefined);}
+      assert.equal((await h.pool.query(`SELECT is_open FROM ${q('issue')} WHERE repo_id=$1 AND number=$2`,[repoId,source])).rows[0].is_open,true);
+      assert.equal((await h.pool.query(`SELECT count(*)::int n FROM ${q('command_result')} WHERE principal_id=$1 AND idempotency_key=$2`,[alpha!.id,failedCloseKey])).rows[0].n,0,'close command transaction rolled back');
+      const persistedDue=(await h.pool.query("SELECT payload FROM event_store WHERE action='issus.compact.due' AND payload->'issue'->>'repoId'=$1 AND payload->'issue'->>'issueNumber'=$2 AND payload->>'previousCompactId'=$3",[repoId,String(source),summary.body.commentId])).rows;
+      assert.equal(persistedDue.length,1);assert.ok(persistedDue[0].payload.reasons.includes('before-close'),'control transaction survived close append rollback');
       const closed=await h.http(`${R}/issues/${source}/close`,{reason:'not planned',finalReportId:final.body.commentId},alphaToken!,{headers:{'if-match':String(summary.body.revision)}});assert.equal(closed.status,200,JSON.stringify(closed.body));
       assert.equal((await post('tt-1-alpha/s1','ALL','NOTE','새 작업.','',alphaToken!,source)).status,409);assert.equal((await h.pool.query(`SELECT count(*)::int n FROM ${q('comment')} WHERE repo_id=$1 AND issue_number=1 AND body LIKE $2`,[repoId,`%완료 공유 #${source}:%`])).rows[0].n,1);
     });
-    await t.test('HTTP authentication, CSRF, body cap, unknown metadata and operation scope',async t=>{
+    await t.test('HTTP authentication, CSRF, body cap, unknown metadata and operation scope',async()=>{
       assert.equal((await h.http(`${R}/issues/${issueNumber}`,undefined,'')).status,401);
       assert.equal((await h.http('/v1/repos',{owner:'tester',slug:'forbidden',projectCode:'qq'},alphaToken!)).status,403);
       const browser=await h.http('/v1/auth/browser-session',{},alphaToken!,{headers:{origin:'http://127.0.0.1:18140'}});assert.equal(browser.status,200);const cookie=browser.headers.get('set-cookie')!.split(';')[0];assert.match(browser.headers.get('set-cookie')!,/HttpOnly/);
       const noCsrf=await h.http(`${R}/issues/${issueNumber}/preflight`,{mode:'comment',request:{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\ncsrf'}},'',{headers:{cookie,origin:'http://127.0.0.1:18140'}});assert.equal(noCsrf.status,403);
       const csrf=await h.http(`${R}/issues/${issueNumber}/preflight`,{mode:'comment',request:{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\ncsrf'}},'',{headers:{cookie,origin:'http://127.0.0.1:18140','x-csrf-token':browser.body.csrfToken}});assert.equal(csrf.status,200);
       assert.equal((await h.http(`${R}/issues/${issueNumber}/comments`,{body:'x'.repeat(66000)},alphaToken!)).status,413);
-      const cookieClock=new Date('2026-10-21T04:00:00Z');t.mock.timers.enable({apis:['Date'],now:cookieClock});
-      try {
+      const cookieClock=new Date('2026-10-21T04:00:00Z');h.setClock(cookieClock);
+      {
         const key=randomUUID();const first=await h.http('/v1/auth/browser-session',{},alphaToken!,{key,headers:{origin:'http://127.0.0.1:18140'}});assert.equal(first.status,200);
         await new Promise(resolve=>setTimeout(resolve,1100));
         const retry=await h.http('/v1/auth/browser-session',{},alphaToken!,{key,headers:{origin:'http://127.0.0.1:18140'}});assert.equal(retry.status,200);assert.deepEqual(retry.body,first.body);
-        const stableCookie=(header:string|null)=>{assert.ok(header);const expires=header.match(/; Expires=([^;]+)/i);assert.ok(expires);assert.equal(Date.parse(expires[1]),cookieClock.getTime()+86400000);assert.match(header,/; Max-Age=86400;/);assert.match(header,/; Path=\//);assert.match(header,/; HttpOnly/);assert.match(header,/; SameSite=Strict/);return header;};
-        assert.equal(stableCookie(retry.headers.get('set-cookie')),stableCookie(first.headers.get('set-cookie')));
-      } finally {t.mock.timers.reset();}
+        const stableCookie=(header:string|null)=>{assert.ok(header);const [token,...attributes]=header.split(';').map(s=>s.trim());assert.match(token,/^issus_session=.+$/);const attrs=new Map(attributes.map(s=>{const i=s.indexOf('=');return i<0?[s.toLowerCase(),'']:[s.slice(0,i).toLowerCase(),s.slice(i+1)];}));assert.equal(Date.parse(attrs.get('expires')!),cookieClock.getTime()+86400000);assert.equal(attrs.get('path'),'/');assert.equal(attrs.has('httponly'),true);assert.equal(attrs.get('samesite'),'Strict');return token;};
+        assert.equal(sha256(stableCookie(retry.headers.get('set-cookie'))),sha256(stableCookie(first.headers.get('set-cookie'))));
+      }
       assert.equal((await h.http(`${R}/issues/${issueNumber}/comments`,{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\nserver key',repoId},alphaToken!)).status,422);
       assert.equal((await h.http(`${R}/issues/not-a-number`,undefined,alphaToken!)).status,400);
     });
@@ -212,15 +232,31 @@ test('P4 real DB + listening HTTP acceptance',{skip:!enabled},async t=>{
       const old=await h.http('/v1/owners/tester/aliases/check',{name:'tt-1-alpha'});assert.equal(old.body.available,false);
       const renamed=await h.http(`${R}/issues/${issueNumber}/comments`,{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\nold alias blocked'},alphaToken!);assert.equal(renamed.status,409);assert.equal(renamed.body.error.code,'ALIAS_RENAMED');
     });
+    await t.test('alias registration/rename facts restore model and ROSTER profiles',async()=>{
+      const aliasId=(alpha! as {aliasId:string}).aliasId;
+      const rows=(await h.pool.query("SELECT action,payload FROM event_store WHERE action IN ('issus.alias.registered','issus.alias.renamed') AND payload->>'aliasId'=$1 ORDER BY CASE action WHEN 'issus.alias.registered' THEN 0 ELSE 1 END,sequence",[aliasId])).rows as AliasProfileFact[];
+      assert.equal(rows.length,2);assert.deepEqual(rows.map(f=>f.payload.model),['fixture','fixture']);
+      await h.uow.run(async tx=>{
+        await tx.client.query(`UPDATE ${tx.table('alias')} SET role='',model='',scope='' WHERE id=$1 OR renamed_to=$1`,[aliasId]);
+        await rebuildAliasProfiles(tx,h.bootstrap.ownerId,rows.slice(0,1));
+        assert.equal((await tx.client.query(`SELECT model FROM ${tx.table('alias')} WHERE id=$1`,[aliasId])).rows[0].model,'fixture','registration replay alone restores model');
+        await rebuildAliasProfiles(tx,h.bootstrap.ownerId,rows);
+        await rebuildAliasProfiles(tx,h.bootstrap.ownerId,rows);
+      });
+      const restored=(await h.pool.query(`SELECT name,role,model,scope FROM ${q('alias')} WHERE id=$1 OR renamed_to=$1 ORDER BY name`,[aliasId])).rows;
+      assert.equal(restored.length,2);for(const row of restored) assert.deepEqual({role:row.role,model:row.model,scope:row.scope},{role:'test',model:'fixture',scope:'core'});
+      assert.deepEqual(restored.map(r=>r.name),['tt-1-alpha','tt-1-zephyr']);
+    });
     await t.test('bad fixture HTTP422 reasons exactly equal golden, zero posting/events',async()=>{
       const root=new URL('../../../../../../packages/issus_domain/tests/fixtures/issue-board-v2/',import.meta.url);const golden=JSON.parse(await readFile(new URL('golden-errors.json',root),'utf8')) as Record<string,string[]>;
+      assert.equal(Object.keys(golden).length,5);
       for(const [filename,expected] of Object.entries(golden)){const body=await readFile(new URL('bad/'+filename,root),'utf8');const before=await fingerprint();const r=await h.http(`${R}/issues/${issueNumber}/comments`,{body},alphaToken!);assert.equal(r.status,422,filename);assert.deepEqual(r.body.error.reasons.map((x:any)=>x.message),expected,filename);assert.equal(await fingerprint(),before);}
     });
     await t.test('canonical good32 syntax HTTP200 including historical/legacy fixtures',async()=>{
       const root=new URL('../../../../../../packages/issus_domain/tests/fixtures/issue-board-v2/good/',import.meta.url);const files=(await readdir(root)).filter(f=>f.endsWith('.md'));assert.equal(files.length,32);
       for(const file of files){const body=await readFile(new URL(file,root),'utf8');const r=await h.http('/v1/validate',{mode:body.startsWith('STATE:')?'issue-body':'comment',body},'');assert.equal(r.status,200,file+JSON.stringify(r.body));}
     });
-    await t.test('every persisted P4 fact/failure passes the unchanged P3 strict wire decoder',async()=>{
+    await t.test('every persisted P4 fact/failure passes the strict wire decoder',async()=>{
       const rows=(await h.pool.query("SELECT action,payload FROM event_store WHERE kind IN ('fact','failure') ORDER BY action,event_id")).rows;assert.ok(rows.length>30);
       for(const row of rows) assert.equal(parseFactPayload(row.action as FactAction,row.payload).ok,true,row.action+JSON.stringify(row.payload));
     });

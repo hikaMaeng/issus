@@ -2,6 +2,7 @@ import {randomUUID,randomBytes} from 'node:crypto';
 import {checkAlias,aliasOk,aliasCollisions,type AliasRegisterRequest,type AliasRenameRequest} from '../../../common/index.js';
 import {CoreError,validation,sha256,requireBootstrap,requireOwner,aliasByName,issueById,authorizeRepo,rewriteBody,issueChannel,type IssueRow,type AliasRow,type CorePrincipal,type EventTransaction,actorOf} from '../../backend/index.js';
 import {postComment} from '../comment/index.js';
+export * from './rebuild.js';
 
 export async function checkAliasRegistry(tx:EventTransaction,p:CorePrincipal,name:string):Promise<{available:boolean;collisions:ReturnType<typeof aliasCollisions>}> {
   validation(checkAlias(name));
@@ -31,7 +32,7 @@ export async function registerAlias(tx:EventTransaction,p:CorePrincipal,input:Al
   for(const repoId of [...new Set(input.repos)]) await tx.client.query(`INSERT INTO ${tx.table('alias_repo')}(owner_id,alias_id,repo_id) VALUES($1,$2,$3)`,[p.ownerId,id,repoId]);
   if(!input.announcementBody.startsWith(`FROM:${input.name}/`)||!input.announcementBody.split('\n')[0].includes('TYPE:ALIAS')) throw new CoreError(422,'ALIAS_ANNOUNCEMENT');
   const posted=await postComment(tx,p,issue,{body:input.announcementBody});
-  for(const repoId of [...new Set([...input.repos,issue.repo_id])]) tx.fact('issus.alias.registered',`repo:${repoId}:all`,{ownerId:p.ownerId,repoId,aliasId:id,name:input.name,repos:input.repos,role:input.role,scope:input.scope,actor:actorOf(p)},`alias:${id}:${repoId}`);
+  for(const repoId of [...new Set([...input.repos,issue.repo_id])]) tx.fact('issus.alias.registered',`repo:${repoId}:all`,{ownerId:p.ownerId,repoId,aliasId:id,name:input.name,repos:input.repos,role:input.role,model:input.model,scope:input.scope,actor:actorOf(p)},`alias:${id}:${repoId}`);
   return {aliasId:id,name:input.name,commentId:posted.commentId,posted:true};
 }
 export async function renameAlias(tx:EventTransaction,p:CorePrincipal,input:AliasRenameRequest):Promise<Record<string,unknown>> {
@@ -52,6 +53,6 @@ export async function renameAlias(tx:EventTransaction,p:CorePrincipal,input:Alia
     await tx.client.query(`UPDATE ${tx.table('issue')} SET body=$3,revision=revision+1,updated_at=$4 WHERE repo_id=$1 AND number=$2`,[ownedIssue.repo_id,ownedIssue.number,body,tx.now]);
     tx.fact('issus.issue.body.edited',issueChannel(ownedIssue.repo_id,ownedIssue.number),{ownerId:p.ownerId,repoId:ownedIssue.repo_id,issueNumber:ownedIssue.number,revision:ownedIssue.revision+1,previousRevision:ownedIssue.revision,body,reason:'alias-rename',actor:actorOf(p)},`rename-owner:${ownedIssue.repo_id}:${ownedIssue.number}`);
   }
-  for(const repoId of repos) tx.fact('issus.alias.renamed',`repo:${repoId}:all`,{ownerId:p.ownerId,repoId,aliasId:old.id,name:input.newName,oldName:old.name,repos,role:old.role,scope:old.scope,actor:actorOf(p)},`rename:${old.id}:${repoId}`);
+  for(const repoId of repos) tx.fact('issus.alias.renamed',`repo:${repoId}:all`,{ownerId:p.ownerId,repoId,aliasId:old.id,name:input.newName,oldName:old.name,repos,role:old.role,model:old.model,scope:old.scope,actor:actorOf(p)},`rename:${old.id}:${repoId}`);
   return {aliasId:old.id,name:input.newName,oldName:old.name,commentId:posted.commentId,posted:true};
 }

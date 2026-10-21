@@ -1,5 +1,7 @@
 issus의 봉투 v2·wire 계약·검증/집계·SQL baseline·원자 명령 처리.
 
+P5 [라우팅·전달·스케줄](docs/delivery.md): `RoutingService`, `DeliveryCommandService`, `DeliveryReferenceService`, `InboxService`, `DeadlineService`, `RetryService`, `TickService`. P4 UoW를 호출하며 별도 트랜잭션/외부 발행 경계를 만들지 않는다.
+
 | 목적 | 파일 |
 | --- | --- |
 | 개요 | [overview](docs/overview.md) |

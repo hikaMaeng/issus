@@ -1,6 +1,11 @@
 import {CoreError,requireOwner,checkRevision,commentById,commentsFor,issueById,issueChannel,rewriteBody,actorOf,type CorePrincipal,type EventTransaction,type IssueRow} from '../../backend/index.js';
 import {postComment} from '../comment/index.js';
 import type {IssueState} from '../../../common/index.js';
+import {refreshCompactSegment} from '../../compact/segment/index.js';
+
+/** P6 owns the implementation; P4 commits the observation before the close command transaction. */
+export type BeforeCloseRefresh=(tx:EventTransaction,issue:IssueRow,purpose:'before-close')=>Promise<unknown>;
+export const refreshBeforeClose:BeforeCloseRefresh=refreshCompactSegment;
 
 /** Safety gates use immediate indexes, independently of reaction/route lag. */
 export async function closeBlockers(tx:EventTransaction,p:CorePrincipal,issue:IssueRow,finalReportId:string):Promise<Record<string,unknown>> {

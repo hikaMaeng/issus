@@ -15,3 +15,5 @@ Codex 샌드박스에서 node test worker spawn EPERM이면 `.cache/p3/test-tsco
 P4 단위는 backend/command-result/index.test.ts의 key·canonical hash·metadata/개행 보존이다. 실제 원자성·멱등·auth·HTTP 시험은 apps/issus/src/server/http/auth/{core,fixtures}.test.ts가 이 공개 API를 사용한다. append/send 실패의 전체 롤백, 동일key 동시 요청, 다른 actor의 동일UUID, projection source 검증/1회 적용, HANDOFF·강화 ACK·close, 실제 워커 프로세스 crash3지점, preflight 전체 DB/PGMQ 차분0을 검증한다. 계획/실행 기록은 apps/issus/tests/{plans,reports}/core 경계다.
 
 P6 [계획](../tests/plans/compact-20261021.md): `src/server/compact/{packet/packet,publication/integration}.test.ts`와 앱 HTTP compact 시험. DB URL 필수·skip 없음, 고유 schema/queue를 정리한다. Python packet parity는 `python tests/compact/generate-packet-parity.py`로 hash 고정 정본에서 재생성한다. 실DB/하네스 결과와 호스트 표준 npm test·배포/P5 전달 수용을 분리한다.
+
+P6 s2는 정본 패킷31건·거부사유5건·ROT13 MASKS29건, 페이지 사이 새 COMPACT의 고정 경계, prepare 실패의 due/packet/command_result 롤백까지 검사한다. 임시 JS emit 단일 프로세스의 P6 domain83/83·HTTP4/4, 전체 domain441/441·app62/62를 확인했다. 표준 npm test의 spawn EPERM은 호스트 재실행 항목이다. [실행 기록](../tests/reports/compact/20261021_162100.md)에 명령·원 실패·재실행·수용 경계를 기록한다.

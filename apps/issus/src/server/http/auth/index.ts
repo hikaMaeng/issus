@@ -39,7 +39,8 @@ export function createCoreHttpRouter(o:CoreHttpOptions):express.Router {
     const url=new URL(o.origin);if(url.protocol!=='https:'&&!['localhost','127.0.0.1','[::1]'].includes(url.hostname)) throw new CoreError(403,'INSECURE_COOKIE_ORIGIN');
     const bearer=req.header('authorization')?.match(/^Bearer (\S+)$/)?.[1];if(!bearer) throw new CoreError(401,'SESSION_BEARER_REQUIRED');
     const result=await o.auth.browserSession(principal(res),o.origin,idempotency(req),bearer);
-    if(result.cookieToken) res.cookie('issus_session',result.cookieToken,{httpOnly:true,sameSite:'strict',secure:url.protocol==='https:',path:'/',maxAge:86400000});res.status(result.httpStatus).json(result.response);
+    const now=o.intake.uow.options.clock?.now()??new Date();
+    if(result.cookieToken) res.cookie('issus_session',result.cookieToken,{httpOnly:true,sameSite:'strict',secure:url.protocol==='https:',path:'/',expires:new Date(now.getTime()+86400000)});res.status(result.httpStatus).json(result.response);
   }));
   installRepoRoutes(router,o);installIssueRoutes(router,o);installCommentRoutes(router,o);installPreflightRoutes(router,o);installAliasRoutes(router,o);installSessionRoutes(router,o);installBoardRoutes(router,o);installHandoffRoutes(router,o);installOperationRoutes(router,o);
   router.use(coreHttpError);return router;

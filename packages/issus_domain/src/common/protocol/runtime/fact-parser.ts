@@ -12,7 +12,7 @@ const transport:Test=v=>typeof v==='string'&&['websocket','sse','http','ack-evid
 const own={ownerId:nonempty}, repo={...own,repoId:nonempty}, iss={...repo,issueNumber:number,revision:number};
 const source={sourceEventId:nonempty,sourceStreamId:nonempty,sourceSequence:decimal};
 const closed:Shape={required:{...iss,reason:text,body:text,actor},optional:{finalReportId:decimal,compactId:decimal}};
-const aliased:Shape={required:{...repo,aliasId:nonempty,name:nonempty,repos:texts,role:text,scope:text,actor},optional:{oldName:nonempty}};
+const aliased:Shape={required:{...repo,aliasId:nonempty,name:nonempty,repos:texts,role:text,model:text,scope:text,actor},optional:{oldName:nonempty}};
 const subscribed:Shape={required:{...own,subscriptionId:nonempty,aliasId:nonempty,sid:nonempty,sessionId:nonempty,channels:texts,transport:v=>v==='websocket'||v==='sse'},optional:{reason:text}};
 const session:Shape={required:{...own,sessionId:nonempty,aliasId:nonempty,sid:nonempty},optional:{expiresAt:nonempty,reason:text}};
 const SHAPES:Record<FactAction,Shape>={
