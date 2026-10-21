@@ -15,7 +15,7 @@ export function SessionConnection({principal, loading, onConnected}: {principal:
 
 /** Same-origin route shell; native links preserve browser navigation semantics. */
 export function App() {
-  const client = useMemo(() => createBrowserClient(), []);
+  const [client, setClient] = useState(() => createBrowserClient());
   const drafts = useMemo(() => new SessionDraftMemory(), []), identity = useRef<Principal|null>(null), scope = useRef<string|null>(null), authGeneration = useRef(0);
   const [principal, setPrincipal] = useState<Principal|null>(null), [loading, setLoading] = useState(true), [version, setVersion] = useState(0), [errors, setErrors] = useState<string[]>([]);
   const [draftMessage, setDraftMessage] = useState('');
@@ -49,6 +49,8 @@ export function App() {
   }, [principal]);
   function connected(value: Principal) {
     authGeneration.current++; authenticated(value);
+    // A cookie-only view may have stopped its writes/stream before CSRF was established.
+    setClient(createBrowserClient());
     if (location.pathname === '/login') location.replace(safeReturnPath(new URLSearchParams(location.search).get('returnTo'), location.origin));
   }
   const route = resolveAppRoute(location.pathname, location.search), repo = route.repo;

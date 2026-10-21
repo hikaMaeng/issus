@@ -217,7 +217,7 @@ test('P9-15 U2 HANDOFF directTO ACK accept and OWNER latestrevision complete are
   await dialogA.getByRole('button', {name: '이관 닫기', exact: true}).click(); await dialogB.getByRole('button', {name: '이관 닫기', exact: true}).click(); observations.push({id: 'P9-15', handoffId: id, rejectedThirdParty: true, finalRevision: final.revision});
 });
 
-test('P9-16 U2 CLAIM due expiry does not release; own RELEASE only; close blockers then final compact close200', {timeout: 90000}, async () => {
+test('P9-16 U2 CLAIM due expiry does not release; own RELEASE only; close blockers then final compact close200', {timeout: 90000}, async t => {
   const {number} = await newIssue(), seed = await post(number, `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:NOTE\nclaim seed`); await open(page, number);
   const claimBody = `FROM:${fixture.B.alias}/s1 TO:ALL TYPE:CLAIM DUE:${future()} SEEN:${seed.commentId}\n자원: U2전용·원복 담당 본인.`;
   await invalidBoth(page, number, claimBody.replace(/ DUE:\S+/, '')); await invalidBoth(page, number, claimBody.replace(/ SEEN:\S+/, ''));
@@ -228,13 +228,24 @@ test('P9-16 U2 CLAIM due expiry does not release; own RELEASE only; close blocke
   await validPost(page, number, `FROM:${fixture.B.alias}/s1 TO:ALL TYPE:RELEASE RE:${claim}\n원복 완료, 다음 담당 착수 가능.`); assert.ok(!(await view(number)).claims.includes(claim)); assert.ok((await view(number)).claims.includes(foreign.commentId));
   const report = await post(number, `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:REPORT STATE:done\nU2 완료 근거.`); await open(ownerPage, number); await ownerPage.getByRole('button', {name: '이슈 닫기', exact: true}).click(); const dialog = ownerPage.getByRole('dialog', {name: '이슈 닫기 확인', exact: true});
   await dialog.getByLabel('최종 REPORT id', {exact: true}).fill(report.commentId); await dialog.getByLabel('닫기 사유', {exact: true}).fill('U2 acceptance'); const blocked = ownerPage.waitForResponse(response => response.url().endsWith('/close') && response.status() === 409); await dialog.getByRole('button', {name: '닫기 실행', exact: true}).click(); await blocked;
-  await dialog.getByRole('region', {name: '서버 닫기 차단 항목', exact: true}).getByRole('link', {name: `참조 댓글 ${foreign.commentId}`, exact: true}).waitFor(); assert.ok((await fixture.A.client.request(issuePath(fixture.repo, number) + '/compact/status')).data.reasons.includes('before-close'));
+  await dialog.getByRole('region', {name: '서버 닫기 차단 항목', exact: true}).getByRole('link', {name: `참조 댓글 ${foreign.commentId}`, exact: true}).waitFor();
+  const compactStatus = (await fixture.A.client.request(issuePath(fixture.repo, number) + '/compact/status')).data;
+  const persistedDue = (await fixture.pool.query(`SELECT due_reasons FROM "${fixture.schema}".compact_segment WHERE repo_id=$1 AND issue_number=$2`, [fixture.repoId, number])).rows[0]?.due_reasons ?? [];
+  const dueFacts = (await fixture.pool.query(`SELECT payload->'reasons' AS reasons FROM event_store WHERE action='issus.compact.due' AND payload->'issue'->>'repoId'=$1 AND payload->'issue'->>'issueNumber'=$2`, [fixture.repoId, String(number)])).rows;
+  const closeEvidence = {number, compactStatus, persistedDue, dueFacts, closed200: false};
+  await writeFile(new URL('claim-close-case.json', output), JSON.stringify(closeEvidence, null, 2) + '\n');
+  assert.ok(persistedDue.includes('before-close'), 'blocked close must preserve the before-close projection');
+  assert.ok(dueFacts.some(fact => fact.reasons.includes('before-close')), 'blocked close must preserve the before-close fact');
+  t.diagnostic('P9-16 durable before-close observation confirmed; HTTP status reasons=' + compactStatus.reasons.join(','));
   await post(number, `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:RELEASE RE:${foreign.commentId}\n원복 완료.`); const current = await view(number); await fixture.write(fixture.A.client, issuePath(fixture.repo, number) + '/body', {body: current.body.replace('STATE:running','STATE:done')}, {method: 'PATCH', revision: current.revision});
   const finalReport = await post(number, `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:REPORT STATE:done\n최종 근거·모든 점유 반납.`), summary = await compact(number);
   await eventually(async () => (await ownerPage.getByRole('region', {name: '이슈 현재 상태', exact: true}).innerText()).includes(summary.commentId), 'new body revision loaded');
   await dialog.getByLabel('최종 REPORT id', {exact: true}).fill(finalReport.commentId); const closed = ownerPage.waitForResponse(response => response.url().endsWith('/close') && response.status() === 200); await dialog.getByRole('button', {name: '닫기 실행', exact: true}).click(); await closed;
   await eventually(async () => !(await view(number)).issue.isOpen, 'closed200'); await ownerPage.getByRole('status').filter({hasText: /^이슈가 닫혔습니다$/}).waitFor();
   assert.equal(await form(ownerPage).count(), 0); await assert.rejects(() => post(number, `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:NOTE\nclosed comment`), error => error instanceof ClientError && error.status === 409);
+  closeEvidence.closed200 = true; await writeFile(new URL('claim-close-case.json', output), JSON.stringify(closeEvidence, null, 2) + '\n');
+  // Keep the HTTP assertion, after exercising the remaining close path and saving its evidence.
+  assert.ok(compactStatus.reasons.includes('before-close'), 'known failure: GET compact/status omits durable before-close reason');
   observations.push({id: 'P9-16', number, claim, dueExpiryReleased: false, closeStatus: 200});
 });
 

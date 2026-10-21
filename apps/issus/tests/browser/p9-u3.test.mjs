@@ -17,7 +17,10 @@ const write=(client,path,body)=>client.write(path,{method:'POST',key:randomUUID(
 async function setClock(value){await setP9Clock(process.env.ISSUS_TEST_CLOCK_FILE,value);}
 async function login(target,token,path='/repos'){
   await target.goto(server+path);if(!await target.getByLabel('세션 토큰',{exact:true}).isVisible())await target.getByRole('button',{name:'세션 연결',exact:true}).click();
-  await target.getByLabel('세션 토큰',{exact:true}).fill(token);await target.getByRole('button',{name:'연결',exact:true}).click();
+  await target.getByLabel('세션 토큰',{exact:true}).fill(token);
+  const exchanged=target.waitForResponse(response=>new URL(response.url()).pathname==='/v1/auth/browser-session'&&response.request().method()==='POST');
+  await target.getByRole('button',{name:'연결',exact:true}).click();assert.equal((await exchanged).status(),200);
+  await eventually(()=>target.getByRole('form',{name:'세션 연결',exact:true,includeHidden:true}).getAttribute('aria-busy').then(value=>value==='false'),'cookie principal confirmed after exchange');
   await eventually(()=>target.getByLabel('세션 토큰',{exact:true}).inputValue().then(value=>value===''),'bearer erased after session exchange');
   await eventually(()=>target.getByRole('navigation',{name:'주 탐색',exact:true}).count(),'authenticated shell');
 }
@@ -26,7 +29,14 @@ async function note(target,text='원문'){return write(fixture.A.client,target.p
 async function ask(target=fixture,source=fixture){return write(source.A.client,target.path+'/comments',{body:`FROM:${source.A.alias}/s1 TO:${source.B.alias} TYPE:ASK ACK-BY:${iso(Date.now()+3600000)}\nASK @${source.B.alias}: U3 반영 근거를 확인하세요.\nNEXT: 확인.`});}
 async function delivery(id,target=fixture,source=fixture){return eventually(async()=>{const result=(await source.B.client.request(`/v1/inbox?repo=${source.repo}&issues=${target.number}`)).data;return result.items.find(item=>item.commentId===id)?.delivery;},'delivery route');}
 function card(id,target=page){return target.getByRole('region',{name:'받은편지함',exact:true}).getByRole('article',{name:`전달 ${id}`,exact:true});}
-async function inbox(target=fixture,transport='ws',source=fixture){await page.goto(`${server}/inbox?repo=${source.repo}&issues=${target.number}&transport=${transport}`);await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();}
+function observeWs(target,frames){
+  const opened=socket=>socket.on('framereceived',event=>{try{
+    const frame=JSON.parse(String(event.payload));if(frame.type!=='event')return;
+    let source;try{source=JSON.parse(frame.event.payload.content?.body??'');}catch{}
+    frames.push({action:frame.event.action,commentId:frame.event.payload.commentId,sourceAction:source?.action,issueNumber:source?.issueNumber});
+  }catch{}});target.on('websocket',opened);return()=>target.off('websocket',opened);
+}
+async function inbox(target=fixture,transport='ws',source=fixture,view=page){await view.goto(`${server}/inbox?repo=${source.repo}&issues=${target.number}&transport=${transport}`);await view.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();}
 async function ackCard(item){await item.getByRole('button',{name:'수신 확인 작성',exact:true}).click();const dialog=page.getByRole('dialog',{name:'수신 확인 미리보기',exact:true});await dialog.getByRole('button',{name:'ACK 게시',exact:true}).click();await dialog.waitFor({state:'hidden'});await eventually(()=>item.getByTestId('delivery-state').getAttribute('data-state').then(value=>value==='acked'),'direct ACK confirmed');}
 async function prepare(target){await login(page,fixture.A.token,`/repos/${fixture.repo}/issues/${target.number}/compact`);await page.getByRole('region',{name:'COMPACT 도우미',exact:true}).waitFor();const response=page.waitForResponse(response=>new URL(response.url()).pathname===target.path+'/compact/prepare'&&response.request().method()==='POST');await page.getByRole('button',{name:'패킷 준비',exact:true}).click();const result=await response;assert.equal(result.status(),201);return result.json();}
 async function review(packet){for(const comment of packet.comments.slice(0,3)){await page.getByRole('button',{name:`원문 대조 ${comment.id}`,exact:true}).click();const dialog=page.getByRole('dialog',{name:`표본 원문 ${comment.id}`,exact:true});await dialog.waitFor();assert.ok((await dialog.innerText()).includes(comment.id)||await dialog.getByRole('heading',{name:`표본 원문 ${comment.id}`,exact:true}).count());await dialog.getByRole('button',{name:'대조 원문 닫기',exact:true}).click();await page.getByLabel(`표본 대조 ${comment.id}`,{exact:true}).check();}}
@@ -91,65 +101,104 @@ test('P9-19 stale409 and separate-Clock expired410 preserve draft/samples and po
   const current=(await fixture.A.client.request(target.path)).data;assert.ok(!current.envelope.COMPACT);observations.push({id:'P9-19',stale:409,expired:410,draftPreserved:true,posted:0});
 });
 
-test('P9-20 real WS refreshes detail/inbox/body/COMPACT while retaining draft/focus; lists discover issues',{timeout:120000},async()=>{
+test('P9-20 real WS refreshes detail/inbox/body/COMPACT while retaining draft/focus; lists discover issues',{timeout:120000},async t=>{
   const target=await newIssue('P9-20'),initial=await note(target,'초기 댓글'),frames=[];
-  page.on('websocket',socket=>socket.on('framereceived',event=>{try{const frame=JSON.parse(String(event.payload));if(frame.type==='event')frames.push(frame.event.action);}catch{}}));await login(page,fixture.B.token,`/repos/${fixture.repo}/issues/${target.number}`);
+  const stopObserving=observeWs(page,frames);t.after(stopObserving);await login(page,fixture.B.token,`/repos/${fixture.repo}/issues/${target.number}`);
+  await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();
   const composer=page.getByRole('form',{name:'댓글 작성',exact:true}),draft=composer.getByLabel('댓글 본문',{exact:true});await draft.waitFor();await draft.fill('전송하지 않은 U3 초안');await draft.focus();
   const appended=await note(target,'실제 WS 새 댓글');await page.getByRole('article',{name:`댓글 ${appended.commentId}`,exact:true}).waitFor();assert.equal(await draft.inputValue(),'전송하지 않은 U3 초안');assert.equal(await draft.evaluate(element=>element===document.activeElement),true);await page.getByRole('link',{name:'새 댓글로 이동',exact:true}).waitFor();
+  await eventually(()=>frames.some(frame=>frame.commentId===appended.commentId),'detail target comment arrived on an actual WS frame');
   let current=(await fixture.A.client.request(target.path)).data;const body=current.body.replace('STATE:running','STATE:blocked')+'\nU3 본문 변경';await fixture.A.client.write(target.path+'/body',{method:'PATCH',key:randomUUID(),revision:current.revision,body:{body}});
   await eventually(()=>page.getByRole('region',{name:'이슈 현재 상태',exact:true}).innerText().then(text=>text.includes('U3 본문 변경')&&text.includes('blocked')),'body/state event');
-  const packet=await write(fixture.A.client,target.path+'/compact/prepare',{purpose:'routine'});await write(fixture.A.client,target.path+'/comments',{body:summary(target,packet),compactPacketToken:packet.packetToken,sampledIds:packet.comments.map(comment=>comment.id),compactedBy:fixture.B.alias});
+  await eventually(()=>frames.some(frame=>frame.sourceAction==='issus.issue.body.edited'&&frame.issueNumber===target.number),'body/state change arrived on an actual WS frame');
+  const packet=await write(fixture.A.client,target.path+'/compact/prepare',{purpose:'routine'}),compacted=await write(fixture.A.client,target.path+'/comments',{body:summary(target,packet),compactPacketToken:packet.packetToken,sampledIds:packet.comments.map(comment=>comment.id),compactedBy:fixture.B.alias});
   await page.getByRole('status').filter({hasText:'새 구간 요약이 있습니다'}).waitFor();assert.equal(await draft.inputValue(),'전송하지 않은 U3 초안');assert.equal(await draft.evaluate(element=>element===document.activeElement),true);
-  const live=await context.newPage();live.on('pageerror',error=>pageErrors.push(error.message));try{await login(live,fixture.B.token,`/inbox?repo=${fixture.repo}&issues=${target.number}`);await live.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();const next=await write(fixture.A.client,target.path+'/comments',{body:`FROM:${fixture.A.alias}/s1 TO:${fixture.B.alias} TYPE:NOTE\ninbox 자동 갱신`}),d=await delivery(next.commentId,target);await card(d.id,live).waitFor();assert.equal(await card(d.id,live).count(),1);}finally{await live.close();}
+  await eventually(()=>frames.some(frame=>frame.commentId===compacted.commentId),'COMPACT arrived on an actual WS frame');
+  // Copy only this fixture's cookie: no CSRF, and re-exchange cannot change the detail tab's cookie pair.
+  const liveContext=await browser.newContext({viewport:{width:1440,height:1000}});await liveContext.addCookies(await context.cookies());
+  const live=await liveContext.newPage(),inboxFrames=[];observeWs(live,inboxFrames);live.setDefaultTimeout(15000);live.on('pageerror',error=>pageErrors.push(error.message));try{
+    await live.goto(`${server}/inbox?repo=${fixture.repo}&issues=${target.number}`);assert.equal(await live.evaluate(()=>sessionStorage.getItem('issus.csrf')),null);
+    await live.getByRole('alert',{name:'실시간 연결',exact:true}).filter({hasText:'실시간 연결 오류'}).waitFor();t.diagnostic('P9-20 cookie-only tab stream stopped before explicit CSRF exchange');
+    await live.getByRole('button',{name:'세션 연결',exact:true}).click();await live.getByLabel('세션 토큰',{exact:true}).fill(fixture.B.token);
+    const exchanged=live.waitForResponse(response=>new URL(response.url()).pathname==='/v1/auth/browser-session'&&response.request().method()==='POST');await live.getByRole('button',{name:'연결',exact:true}).click();assert.equal((await exchanged).status(),200);
+    await live.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();t.diagnostic('P9-20 same principal stream resumed after CSRF exchange');
+    const next=await write(fixture.A.client,target.path+'/comments',{body:`FROM:${fixture.A.alias}/s1 TO:${fixture.B.alias} TYPE:NOTE\ninbox 자동 갱신`}),d=await delivery(next.commentId,target);await card(d.id,live).waitFor();assert.equal(await card(d.id,live).count(),1);
+    await eventually(()=>inboxFrames.some(frame=>frame.commentId===next.commentId),'inbox target arrived on an actual WS frame');
+  }finally{await liveContext.close();}
+  assert.equal(await draft.inputValue(),'전송하지 않은 U3 초안');assert.equal(await draft.evaluate(element=>element===document.activeElement),true);
   await page.goto(`${server}/repos/${fixture.repo}/issues`);await page.getByRole('table',{name:'이슈 목록',exact:true}).waitFor();const opened=await newIssue('P9-20 새 이슈 발견'),started=Date.now();await page.getByRole('table',{name:'이슈 목록',exact:true}).getByRole('link',{name:`#${opened.number} P9-20 새 이슈 발견`,exact:true}).waitFor({timeout:5500});
-  observations.push({id:'P9-20',actions:[...new Set(frames)],draftPreserved:true,focusPreserved:true,initial:initial.commentId,listDiscoveryMs:Date.now()-started,duplicateRows:0});
+  observations.push({id:'P9-20',actions:[...new Set(frames.map(frame=>frame.action))],wsComments:frames.filter(frame=>frame.commentId).map(frame=>frame.commentId),bodyFrame:true,inboxFrame:true,draftPreserved:true,focusPreserved:true,initial:initial.commentId,listDiscoveryMs:Date.now()-started,duplicateRows:0});
 });
 
-test('P9-21 explicit SSE uses real frame/id and HTTP receipt, reconnects from a new subscription without ACK',{timeout:120000},async()=>{
-  // This scenario owns fresh aliases: earlier threshold cases leave an unrelated alias replay backlog.
-  await page.goto(server+'/repos');await page.getByRole('heading',{level:1,name:'저장소',exact:true}).waitFor();
-  const source=await provisionBrowserFixture(),subscriptionIds=[],responseTasks=new Set(),heldPulls=new Set(),routeErrors=[],responseErrors=[],receiptStatuses=[];let ws=0,cdp,canceledPulls=0,receiptRows=[],frames=[];
+test('P9-21 explicit SSE uses real frame/id and HTTP receipt, reconnects from a new subscription without ACK',{timeout:120000},async t=>{
+  const stages=[],subscriptionIds=[],responseTasks=new Set(),heldPulls=new Set(),routeErrors=[],responseErrors=[],receiptStatuses=[],receiptErrors=[];
+  let source,isolated,view,ws=0,frames=[],receiptRows=[],streamRequests=[],stage='start';
+  const mark=value=>{stage=value;stages.push({stage,at:new Date().toISOString()});t.diagnostic(`P9-21 ${stage}`);};
   let releasePull,pullReleased=false;const pullGate=new Promise(resolve=>{releasePull=()=>{pullReleased=true;resolve();};});
-  const pullUrl=url=>url.pathname==='/v1/inbox';
   const holdPull=route=>{
-    const task=(async()=>{if(!pullReleased)await pullGate;if(route.request().failure()){canceledPulls++;return;}await route.continue();})().catch(error=>{
-      // Inbox refresh aborts the previous fetch. Each intercepted request has only this one terminal call.
-      if(route.request().failure()||error.message.includes('Route is already handled'))canceledPulls++;else routeErrors.push(error.message);
-    });
-    heldPulls.add(task);return task.finally(()=>heldPulls.delete(task));
+    const task=(async()=>{if(!pullReleased)await pullGate;if(route.request().failure())return;await route.continue();})().catch(error=>{
+      if(!route.request().failure()&&!error.message.includes('Route is already handled'))routeErrors.push(error.message);
+    });heldPulls.add(task);return task.finally(()=>heldPulls.delete(task));
   };
   const received=response=>{
     const path=new URL(response.url()).pathname;
-    if(path==='/v1/deliveries/receipts')receiptStatuses.push(response.status());
+    if(path==='/v1/deliveries/receipts'){
+      receiptStatuses.push(response.status());
+      if(response.status()>=400){const task=response.json().then(value=>receiptErrors.push({status:response.status(),code:value.error?.code})).catch(error=>responseErrors.push(error.message));responseTasks.add(task);void task.finally(()=>responseTasks.delete(task));}
+    }
     if(path==='/v1/subscriptions'&&response.request().method()==='POST'&&response.status()===201){
       const task=response.json().then(value=>subscriptionIds.push(value.subscriptionId)).catch(error=>responseErrors.push(error.message));
       responseTasks.add(task);void task.finally(()=>responseTasks.delete(task));
     }
   };
-  const onWs=()=>{ws++;};
   try{
-    const target=await newIssue('P9-21',source),posted=await ask(target,source),d=await eventually(async()=>(await source.pool.query(`SELECT id,state,attempt FROM "${source.schema}".delivery WHERE comment_id=$1 AND recipient_alias_id=$2`,[posted.commentId,source.B.aliasId])).rows[0],'SSE delivery route without pull receipt');
-    assert.equal(d.state,'posted','SSE fixture must have no receipt from a previous WS page');
-    // Pull records an HTTP receipt; hold its real request until the stream receipt is durable.
-    await page.route(pullUrl,holdPull);
-    await page.addInitScript(()=>{window.__u3Sse=[];const original=window.fetch;window.fetch=async(...args)=>{const response=await original(...args);if(new URL(typeof args[0]==='string'?args[0]:args[0].url??String(args[0]),location.origin).pathname==='/v1/stream'&&response.ok){void(async()=>{const reader=response.clone().body.getReader(),decoder=new TextDecoder();let buffer='';try{for(;;){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let index;while((index=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,index);buffer=buffer.slice(index+2);const event=/^event:(.*)$/m.exec(block)?.[1],id=/^id:(.*)$/m.exec(block)?.[1],data=/^data:(.*)$/m.exec(block)?.[1];if(data){const frame=JSON.parse(data);window.__u3Sse.push({event,id,type:frame.type,action:frame.event?.action,deliveryId:frame.event?.payload?.deliveryId});if(window.__u3Sse.length>1000)window.__u3Sse.shift();}}}}catch{}finally{reader.releaseLock();}})();}return response;};});
-    page.on('response',received);page.on('websocket',onWs);
-    await login(page,source.B.token);await inbox(target,'sse',source);await eventually(async()=>(await source.pool.query(`SELECT transport FROM "${source.schema}".delivery_receipt WHERE delivery_id=$1`,[d.id])).rows.some(value=>value.transport==='sse'),'actual SSE frame and HTTP receipt');
-    releasePull();await card(d.id).waitFor();await eventually(()=>card(d.id).getByTestId('delivery-state').getAttribute('data-state').then(value=>value==='delivered'),'SSE HTTP receipt');assert.equal(ws,0);receiptRows=(await source.pool.query(`SELECT transport FROM "${source.schema}".delivery_receipt WHERE delivery_id=$1`,[d.id])).rows;assert.ok(receiptRows.some(value=>value.transport==='sse'));
-    cdp=await context.newCDPSession(page);await cdp.send('Network.enable');await cdp.send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:-1,uploadThroughput:-1});
-    await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 재연결 대기 중$/}).waitFor();await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
-    const next=await write(source.A.client,target.path+'/comments',{body:`FROM:${source.A.alias}/s1 TO:${source.B.alias} TYPE:NOTE\nSSE 재연결 중 댓글`}),nextDelivery=await delivery(next.commentId,target,source);await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();await card(nextDelivery.id).waitFor();await eventually(()=>subscriptionIds.length>=2,'new SSE subscription');assert.notEqual(subscriptionIds[0],subscriptionIds[1]);
-    await eventually(async()=>{frames=await page.evaluate(()=>window.__u3Sse);return frames.some(frame=>frame.event==='frame'&&frame.id&&frame.type==='event'&&frame.deliveryId===d.id);},'target delivery has an actual SSE event/id');
-    const facts=(await source.B.client.request(`/v1/inbox?repo=${source.repo}&issues=${target.number}`)).data;assert.equal(facts.ackState.find(value=>value.directiveId===posted.commentId).state,'waiting');const labels=await page.getByRole('region',{name:'받은편지함',exact:true}).getByTestId('delivery').evaluateAll(elements=>elements.map(element=>element.getAttribute('aria-label')));assert.equal(labels.length-new Set(labels).size,0);
-    observations.push({id:'P9-21',transport:'sse',subscriptionIds,frameIds:frames.filter(frame=>frame.id).length,automaticAck:false,duplicateRows:0});
+    // Separate cookie/CSRF and aliases from the live detail tab and its earlier replay backlog.
+    mark('provision');source=await provisionBrowserFixture();isolated=await browser.newContext({viewport:{width:1440,height:1000}});view=await isolated.newPage();view.setDefaultTimeout(15000);view.setDefaultNavigationTimeout(15000);view.on('pageerror',error=>pageErrors.push(error.message));
+    const target=await newIssue('P9-21',source);
+    await view.addInitScript(()=>{
+      window.__u3Sse=[];window.__u3SseRequests=[];const original=window.fetch;
+      window.fetch=async(...args)=>{
+        const url=new URL(typeof args[0]==='string'?args[0]:args[0].url??String(args[0]),location.origin);
+        if(url.pathname!=='/v1/stream')return original(...args);
+        const abort=new AbortController(),init=args[1]??{},signal=init.signal?AbortSignal.any([init.signal,abort.signal]):abort.signal;
+        const request={subscriptionId:url.searchParams.get('subscription'),cursor:new Headers(init.headers).get('Last-Event-ID'),aborted:false};window.__u3SseRequests.push(request);
+        // Terminate the real streaming fetch; P7 alone performs DELETE/reconnect/cursor recovery.
+        window.__u3SseDisconnect=()=>{request.aborted=true;abort.abort();};
+        const response=await original(args[0],{...init,signal});
+        if(response.ok){void(async()=>{const reader=response.clone().body.getReader(),decoder=new TextDecoder();let buffer='';try{for(;;){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let index;while((index=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,index);buffer=buffer.slice(index+2);const event=/^event:(.*)$/m.exec(block)?.[1],id=/^id:(.*)$/m.exec(block)?.[1],data=/^data:(.*)$/m.exec(block)?.[1];if(data){const frame=JSON.parse(data);window.__u3Sse.push({event,id,type:frame.type,action:frame.event?.action,deliveryId:frame.event?.payload?.deliveryId,attempt:frame.event?.payload?.attempt});}}}}catch{}finally{reader.releaseLock();}})();}
+        return response;
+      };
+    });
+    view.on('response',received);view.on('websocket',()=>{ws++;});
+    mark('login');await login(view,source.B.token);await view.route(url=>url.pathname==='/v1/inbox',holdPull);
+    mark('connect');await inbox(target,'sse',source,view);assert.ok((await view.getByRole('main').innerText()).includes('SSE'));
+    const posted=await ask(target,source),d=await eventually(async()=>(await source.pool.query(`SELECT id,state,attempt FROM "${source.schema}".delivery WHERE comment_id=$1 AND recipient_alias_id=$2`,[posted.commentId,source.B.aliasId])).rows[0],'SSE delivery route without pull receipt');
+    mark('first-frame-and-receipt');await eventually(async()=>{frames=await view.evaluate(()=>window.__u3Sse);return frames.some(frame=>frame.event==='frame'&&frame.id&&frame.type==='event'&&frame.deliveryId===d.id);},'target delivery has an actual SSE event/id');
+    await eventually(async()=>{receiptRows=(await source.pool.query(`SELECT transport FROM "${source.schema}".delivery_receipt WHERE delivery_id=$1`,[d.id])).rows;return receiptRows.some(row=>row.transport==='sse');},'actual SSE frame and HTTP receipt while pull held');assert.ok(receiptStatuses.includes(200));
+    releasePull();await card(d.id,view).waitFor();await eventually(()=>card(d.id,view).getByTestId('delivery-state').getAttribute('data-state').then(value=>value==='delivered'),'SSE HTTP receipt');
+    mark('initial-replay-receipts-drained');await eventually(async()=>{
+      frames=await view.evaluate(()=>window.__u3Sse);if(!frames.some(frame=>frame.type==='replay'))return false;
+      const expected=frames.filter(frame=>['issus.delivery.queued','issus.delivery.redelivered','issus.delivery.escalated'].includes(frame.action)&&frame.deliveryId&&Number.isInteger(frame.attempt));
+      const rows=(await source.pool.query(`SELECT delivery_id::text AS id,attempt FROM "${source.schema}".delivery_receipt WHERE session_id=$1`,[source.B.sessionId])).rows;
+      // Imported fixture deliveries may already have HTTP receipts; target SSE proof remains separate.
+      return receiptStatuses.length>=expected.length&&receiptStatuses.every(status=>status===200)&&expected.every(frame=>rows.some(row=>row.id===frame.deliveryId&&row.attempt===frame.attempt));
+    },'initial SSE replay has durable receipts before disconnect',30000);
+    mark('disconnect');const firstId=subscriptionIds[0];assert.ok(firstId);await view.evaluate(()=>window.__u3SseDisconnect());
+    const next=await write(source.A.client,target.path+'/comments',{body:`FROM:${source.A.alias}/s1 TO:${source.B.alias} TYPE:NOTE\nSSE 재연결 중 댓글`});
+    // Observe routing without a pull API call, which itself would create a pull receipt.
+    const nextDelivery=await eventually(async()=>(await source.pool.query(`SELECT id FROM "${source.schema}".delivery WHERE comment_id=$1 AND recipient_alias_id=$2`,[next.commentId,source.B.aliasId])).rows[0],'reconnect delivery route');
+    mark('reconnect');await eventually(()=>subscriptionIds.some(id=>id!==firstId),'new SSE subscription');await view.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();
+    await eventually(async()=>{frames=await view.evaluate(()=>window.__u3Sse);return frames.some(frame=>frame.event==='frame'&&frame.id&&frame.type==='event'&&frame.deliveryId===nextDelivery.id);},'new delivery replay has an actual SSE event/id');
+    await eventually(async()=>(await source.pool.query(`SELECT transport FROM "${source.schema}".delivery_receipt WHERE delivery_id=$1`,[nextDelivery.id])).rows.some(row=>row.transport==='sse'),'reconnected SSE HTTP receipt');
+    await card(nextDelivery.id,view).waitFor();streamRequests=await view.evaluate(()=>window.__u3SseRequests);assert.equal(streamRequests[0].aborted,true);assert.ok(streamRequests[1].cursor,'receipt-confirmed cursor is supplied on reconnect');assert.ok(frames.some(frame=>frame.id===streamRequests[1].cursor),'reconnect cursor came from an actual SSE frame');assert.notEqual(streamRequests[0].subscriptionId,streamRequests[1].subscriptionId);assert.equal(ws,0);
+    const facts=(await source.B.client.request(`/v1/inbox?repo=${source.repo}&issues=${target.number}`)).data;assert.equal(facts.ackState.find(value=>value.directiveId===posted.commentId).state,'waiting');const labels=await view.getByRole('region',{name:'받은편지함',exact:true}).getByTestId('delivery').evaluateAll(elements=>elements.map(element=>element.getAttribute('aria-label')));assert.equal(labels.length-new Set(labels).size,0);
+    observations.push({id:'P9-21',transport:'sse',subscriptionIds,frameIds:frames.filter(frame=>frame.id).length,automaticAck:false,duplicateRows:0});mark('complete');
   }finally{
-    try{
-      if(cdp){await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});await cdp.detach();}
-      releasePull();await page.unrouteAll({behavior:'wait'});await Promise.all([...heldPulls]);page.off('response',received);page.off('websocket',onWs);await Promise.all([...responseTasks]);
-      frames=await page.evaluate(()=>window.__u3Sse??[]);await writeFile(new URL('sse-case.json',output),JSON.stringify({isolatedAliases:true,subscriptionIds,receiptStatuses,receiptRows,frames,canceledPulls,routeErrors,responseErrors},null,2)+'\n');
-      await page.screenshot({path:fileURLToPath(new URL('sse-case.png',output)),fullPage:true,mask:[page.getByLabel('세션 토큰',{exact:true})]});
-      await page.goto(server+'/repos');
-    }finally{await source.cleanup();}
+    // Save the last completed stage before cleanup so a cancelled test cannot erase its failure site.
+    await writeFile(new URL('sse-case.json',output),JSON.stringify({stage,stages,isolatedAliases:true,subscriptionIds,streamRequests,receiptStatuses,receiptErrors,receiptRows,frames,routeErrors,responseErrors},null,2)+'\n');
+    releasePull();try{
+      if(view){await view.unrouteAll({behavior:'wait'});await Promise.all([...heldPulls]);await view.screenshot({path:fileURLToPath(new URL('sse-case.png',output)),fullPage:true,mask:[view.getByLabel('세션 토큰',{exact:true})]}).catch(()=>{});}
+    }finally{try{await isolated?.close();await Promise.all([...responseTasks]);}finally{await source?.cleanup();}}
   }
   assert.deepEqual(routeErrors,[]);assert.deepEqual(responseErrors,[]);
 });
