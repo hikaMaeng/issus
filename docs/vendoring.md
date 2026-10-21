@@ -11,7 +11,7 @@
 | 관측 dirty 목록 | 아래 source dirty 전문; agent 경로 dirty 없음 |
 | 복사 시각 | `2026-10-21T05:04:42.946102+00:00` (UTC) |
 | 원본→목적 경로 | 아래 69행 및 [byte manifest](../packages/agent/docs/vendoring-files.json); server 공개 barrel도 포함 |
-| 파일별 SHA-256 | 아래 원본/최종 목적 hash; 원본 재검사 `2026-10-21T05:34:10.422386+00:00` 일치69/69 |
+| 파일별 SHA-256 | 아래 원본/최종 목적 hash; 원본 재검사 `2026-10-21T06:42:48.883869+00:00` 일치69/69 |
 | 라이선스 확인 결과 | **없음, 소유자 동일**. root/packages/agent 경로 LICENSE·COPYING 미발견, source package/root manifest license 미설정, 복사 대상 SPDX 미발견 |
 | 제외 목록 | `node_modules`, `dist`, `.env*`, `.git`, 원본 `.cache`·캐시·런타임 데이터; admin/vibeagent 구현. agent 직하 실제 제외 이름은 `dist`; 내용을 열거나 복사하지 않음 |
 | 패치별 이유·시험 | 아래 §1.1 행별 추적. 원본 56개 시험 유지, 설계 변경 기대값3건 갱신. 새 회귀·실제 TCP WS/별도 실DB 시험 추가 |
@@ -48,7 +48,7 @@
 | `src/common·server/id·front·broker+시험` | 원본 재사용 · 공개 entry와 원본 시험 파일 전부 복사(server/index 포함) · 69파일 원본 hash 대조 및 runtime export 검사 |
 | `broker/auth` | 계정 결합 제거 · Principal/SessionVerifier 주입·오류 비노출 · policy/index.test.ts, HTTP/WS 401 |
 | `package.json` | 독립 workspace · admin_domain 제거·exact pg/ws/env-schema·express peer+dev·scripts/exports 유지 · lint/build/runtime export |
-| `policy·service·http/app` | 앱 인가/라우터 소유 · verifier/socket policy·authorizeChannel 주입·account proxy/URL 제거·extendHttp를 static 전 등록 · http/app.test.ts·WS 거부 |
+| `policy·service·http/app` | 앱 인가/라우터 소유 · verifier/socket policy·authorizeChannel 주입·account proxy/URL 제거·extendHttp를 static 전 등록. DECISION 6309746634 (2): optional ready hook을 /ready에서 queue·DB와 함께 await, 생략은 기존 동작 · http/app.test.ts(hook 성공/생략200·throw/거부503·queue/DB 실패503·지연 await/재호출)·WS 거부 |
 | `database.ts·env.ts` | 기본 계정/다른 schema 차단 · public search_path·필수 DATABASE_URL·env-schema 후 설정 주입. DECISION 6309173472 후속: PORT 정수10000–59999·execution lease>visibility 기동 검사 · database.test.ts·policy/index.test.ts·env.test.ts(PORT65536/경계/lease≤visibility 거부) |
 | `event-store/store append` | 도메인 UoW 원자성 · appendManyOn·wrapper·동일 tx sequence/notify·legacy UPDATE 제거 · event-store/patch.test.ts·실DB rollback/notify 시험 |
 | `store 보존+service` | 이력 유실 방지 · retentionDays:null·기동/주기 history prune 제거·cursor TTL30 별도 · null 회귀·실DB old fact 보존 |
@@ -94,7 +94,7 @@
 | `src/broker/gateway/lifecycle/index.ts` | `332b6a4340fd4a960be16c3995ea375434548389e6c4582ff2abea36aa202f95` | `ccbdae8a5c2b582eb9c49eb68fde6587f444d65954907f35bc505269f075c454` |
 | `src/broker/gateway/standby/index.test.ts` | `22893faec7a06a2ea115f1313474d1ca54dce8540223b939f90a35094eeab2c0` | `25f37021ad87d56994ccea4a8aa8681a49b9efa496e5e8a14e286afa9add047d` |
 | `src/broker/gateway/standby/index.ts` | `1e32889a4e54a1c8a29f67e62285e84ec6dbf744b7491748513a3d3ca747217d` | `931c8f6f50934b30b4feb6f2f2d48148e7d3a4ad54a6e06ba99e173f64359bbc` |
-| `src/broker/http/app.ts` | `f94261047fb6bbf956a19d601b8f1d303a8bf5719af454f9ff10ba645d30c0f7` | `6656293eab1da52491cfdc03f6c1de8b739282d31248263b34a5b505bda5d002` |
+| `src/broker/http/app.ts` | `f94261047fb6bbf956a19d601b8f1d303a8bf5719af454f9ff10ba645d30c0f7` | `42080082d75b0033a095befe008bc38625aa2de003a42d7da2a2d62f2415275f` |
 | `src/broker/idempotency/store.test.ts` | `d5cdeff883e95e75538295df32f5bd3fa177a3b3468d194311c681f167ffcd1c` | `00608aa65122a4548b50d35628640be4e10a4ad67f104be2b9748cf23fa0c6b3` |
 | `src/broker/idempotency/store.ts` | `e352cfffab48f4cafee3acc4c1175baf131f7d26d67f5664fc30b6e6d5e17a0e` | `36652cf346b85e870396942bef868d20010266804dba711bd507faf899ad68ea` |
 | `src/broker/index.ts` | `a097ab9c24ce532a6adde36eda1740c41b56dde98f9e689b5d685ac658f41ed2` | `85651180bcc30226ab0e263a18e374427e1aab2d71fdbb563fe62347b6c8d20d` |
@@ -114,7 +114,7 @@
 | `src/broker/pgmq/client.ts` | `50c30e05d43c96e49e445e43e6f1c7f229e89ea44cad7f5661bb714c409959b9` | `5d166d8f962cf9cbdc785eb95b688054f170074f1ea3b1788d674d8131dbb602` |
 | `src/broker/policy/index.ts` | `601624d0dbd2a39719fbd25a771092133f6d648ac1761496dcefc2394dc1ac33` | `6d4c75083fc944d0feb92987a8701239e768979a0a778ef366d55d68ed0f2a62` |
 | `src/broker/queue/transport.ts` | `283760e9f8212f94db7cf8ff92bbcd96e3099e53f06558ddf96f7018b3da006d` | `701a01aee2562b914022a65eeda16593f02c10f640443e1e413fe29e8876320d` |
-| `src/broker/service/index.ts` | `92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0` | `66390a446772de13c02ce0c48915e51e853aa8b0752c642f7c3a9164dbbf47d1` |
+| `src/broker/service/index.ts` | `92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0` | `804f6b9504f9497253ff9108be932debd38dd6289535e1d1621f4844ab519561` |
 | `src/broker/stream/hub.test.ts` | `88c427bb553268266d49905631b4b42bf0b48dd193ea16481838fc39984c5eff` | `45b02631e8e5ef9b8c2d0020c1c5923efe326c654ee84d5bf056944e3baabd42` |
 | `src/broker/stream/hub.ts` | `238eef34d4cd71cf76a5b8429531a711d8f04e2e17623de3ac2da440669b3b0a` | `6efec0dd8f123cccd8060ecd0173d0b7ef0b8e501721b103cc00127ca240eb8e` |
 | `src/broker/stream/mailbox/index.test.ts` | `ce98ddb37b0e2026f080ed9718c0e76644719387198fb4ead88e29596ec84ec1` | `850c72acff26dace61ec00e5c68815c612417cd589bdcfab7fefc141419e785d` |
@@ -129,14 +129,14 @@
 | `src/broker/worker/pool.ts` | `ab8ddf7172993d32edbd3dd13940c2279080193fed367a3df58f0485189e5e73` | `ecdfd199f919881f30244a053a72fcc43b8ee9d8e40f2f0c98a61783f7a014de` |
 | `src/broker/worker/worker-exit-zero.fixture.mjs` | `22ecfd1f0976ec486cfba7d0f57a3752d62dca4c43835511fd4d600787478774` | `5551c1ea6e1aa6d5bfb5dc3d3e76f1d11a3b9691697804c7938c9a97402a5123` |
 | `src/broker/worker/worker-hang.fixture.mjs` | `70cf0a48e3df082801faf0c49641a4bd84917c065a4372f5300fd2c61c7034ed` | `d654d4d413b5228dc8e42e6ab41fc1703de1ab0bb36c3ee012805b6d1da9a441` |
-| `docs/api.md` | `fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2` | `a30885ebcc80bf8f51d7344cdc03bfc9e7ba9e7ea5f290dbfcf028f4f73a0a58` |
-| `docs/architecture.md` | `d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d` | `e1a1a727ff0d18f4fbd0f53c2b2bca7cd1074bf684ba0a0d73cab20f2d3fb23e` |
-| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `53e7115bd481f538357e572688c7a95157c1a63e857e7bb5449a99e92595df0e` |
+| `docs/api.md` | `fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2` | `298c2e85edec5a4186f779be4a8cb88c631921d554110cf68753a1ba3bf2876e` |
+| `docs/architecture.md` | `d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d` | `dd2d949e4986d4dc2f21305808108f95e839123222218358267f459461d1ddb9` |
+| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `300cab890532271d493ccf3e2e41814af71f58713d55f87f6da5c9aa5617f516` |
 | `docs/internals.md` | `6b432d625800cb5c2629bf865e74f87bedda26246c97459c40f7cb365214b5af` | `67dee2412cbaf718a8cf4b726838393a0d12fc8f50a4881a5d1ac88935cf8940` |
 | `docs/overview.md` | `e41bc39247ecb1377ae946496a8b4bef3fba7ae509e7b4d91581a116b9bc4330` | `a1baf8e39e3ecd35f2c70a6b7e002ead6c6554daf58a60e0b12a74261ebbcbd3` |
-| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `1ec5e919f96bb79302e891b9ad0dc9bea4113311441c390451fc3dd73bd875ab` |
-| `docs/usage.md` | `5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989` | `7343326d099d33f91ffa2dd1cee2fddb8dbaf5a423ce78124890bf7fab7cc1e0` |
-| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `d2742614be9de441f49ece3320aa40bdcee626d6fcb23a6f5ba447380dbfca08` |
+| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `7bd502262784da76c20d5f2a6e5b84a7bc83a33e6ac159376700936a54d360f9` |
+| `docs/usage.md` | `5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989` | `341803cd7d35f800a1dbf22e2a0a4b912c6f5c8f2f7b319f1f67ecbf86e0bc82` |
+| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `278008e94bc61ad3c9d741568f3ec014726629000658f4d0a82e3a1064be69ee` |
 | `tsconfig.json` | `91e1f7b5bbc091598ce4105676cad7096d69b75024deaec3085067475adf52dc` | `af39a06c246fc12775594c90b51ec8f1a15d88af85a972a6f7a8eee91fda8dfe` |
 | `package.json` | `223f963b06f2f3c9f944539cb07bba19c2b1617e783bcac26f62715dac576424` | `06870904e7a1588573ecba218595d6f3c001e43890e558e2ea54d1de36909a1c` |
 
@@ -234,4 +234,20 @@ React DOM 19.3.1의 peer react ^19.3.1을 exact 19.3.1로 맞췄다. Vite 8.3.4 
 | DB 인증 판단 | loopback 게시+internal network의 P1 골격은 trust. 운영 token/DB 인증·DATABASE_URL·migration·queue 준비는 P4 통합 시 교체 필요 |
 | 제외 | 기존 secret·운영 데이터·외부 container 삭제·volume 삭제·prune·commit·push |
 
-P1 `/ready`는 골격 준비 응답이며 실제 migration/DB/queue/reaction 준비·WS subscribe 성공을 주장하지 않는다. 기능 통합 후 `/ready`와 deploy 검증을 확장하는 것은 P1 후속 세션의 조립 요청으로 처리한다. [시험 보고](../tests/reports/scaffold/20261021_134000.md)에서 실행 계층을 구분한다.
+P1 최초 `/ready`는 골격 준비 응답이었다. 아래 P4 조립이 migration/DB/queue readiness를 연결한다. [최초 시험 보고](../tests/reports/scaffold/20261021_134000.md)와 현재 검증을 구분한다.
+
+## P4 루트 조립 — issus-1-base/s3
+
+DECISION `6309746634`, 요청 `.cache/requests/issus-1-core.md`. domain/server는 backend·intake, runtime/server는 config·auth·migrations·health를 공개한다. common/protocol/compact의 `CompactPublication`·`CompactPublicationInput`은 backend 정본의 타입만 재수출한다. runtime 직접 의존은 `pg 8.23.1`, `env-schema 8.0.1`; domain의 pg는 production dependency다. lock 재생성·호스트 npm install은 오케스트레이터 담당이다.
+
+`scripts/build-app.mjs --server-only`도 domain dist의 `0001-domain-baseline.sql`을 app `dist/migrations/`로 복사하고 manifest/hash에 포함한다. broker entry는 이 파일을 읽어 `runMigrations({baselineSql})`에 주입한다. container에서 workspace 자산 resolve에 의존하지 않는다.
+
+기동 순서: 환경 검증 → operator secret의 hash 계산 → schema lock 하 migration 0001/0002/0003·PGMQ queue/broker schema → bootstrap 설치 → `createEventBroker.start`. HTTP 조립 시 UoW/auth/health가 broker DB pool을 공유하고 초기화 pool은 닫는다. `ISSUS_ALLOWED_ORIGIN`을 runtime의 `ISSUS_ORIGIN` 입력으로 연결한다. 기존 secret 파일은 이 구현 세션에서 열람하지 않는다.
+
+`RuntimeAuth`를 SessionVerifier로, `IntakeService.resolvePrincipal`에는 `auth.resolveActor`를 주입한다. `extendHttp`에 core router와 별도 `coreHttpError`를 설치해 앞선 agent JSON parser 오류까지 공통 응답으로 변환한다. `/ready`의 선행 agent route는 agent/s3 `ready` hook으로 `health.ready().ok`를 검사한다. initialized는 기동 성공 뒤 true, stop 시작 때 false다.
+
+P5 연결 전에는 `allowedActions=[]`, `ingressQueues=[]`, reactions 미지정, 채널 읽기 거부다. subscription/receipt callbacks·canonical+inbox historyReader·worker `executeIngress(event,context.fence)`는 P5 인계 계약이며 이 세션은 P5/P6/P7 기능 파일을 편집하지 않는다. P4 기본 history는 `readIssueHistory`와 runtime 0003 snapshot이다.
+
+동시 단계 요청: P5 domain routing/delivery/scheduling·runtime worker-bindings/scheduler-producer/adapters의 공개 barrel, P6 compact barrel·publication 주입·인증 뒤 compact HTTP, P7 front client/model barrel·CLI ws 8.22.0/@types/ws 8.18.2 exact를 연결한다. P6 `readCompactHistory`를 임시 canonical historyReader로 주입해 COMPACT 원문과 compactStatus를 분리한다(ASK 6309998199). P5 union reader가 이 경계를 인계하며 production reactions/callback/stream은 placeholder 유지 지시가 우선한다.
+
+검증 경계: [계획](../tests/plans/core-wiring-20261021.md), `.cache/base-s3/*.log`. 실제 Postgres의 고유 schema로 bundle 기동·health/ready·auth·migration 누락 시 503을 검증하고 schema를 정리한다. fixture secret은 메모리 hash만 설치한다. Docker 전체 배포·운영 token mount·P5/P6/P7 통합·직접 node HOST binding은 별도 호스트 수용 대상이다.

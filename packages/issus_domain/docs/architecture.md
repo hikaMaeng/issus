@@ -17,3 +17,5 @@
 반응표의 구체 queue→handler 연결은 app 한 곳에 둔다. 여기서는 `QUEUES`, `REACTIONS_NAME`, `DomainReactionTable`만 제공한다. 원 fact 좌표는 반응 envelope top-level의 source 3개와 delivery payload의 원 댓글 source 3개를 구별한다.
 
 `DomainFact`는 원 사건의 fact/failure kind를 표현하고 `ReactionInput`은 같은 action/payload를 가진 worker command를 표현한다. 두 decoder는 서로의 kind를 받지 않는다. common의 교차 시험과 server UoW가 `agent/broker` 공개 경계를 사용하며 common 런타임은 DB에 의존하지 않는다.
+
+P6 `compact/segment`는 source dedupe·원문 재계산·due, `compact/packet`은 snapshot·MASKS·hash/token, `compact/publication`은 P4 동일 tx의 증거 확인·reset이다. 공개 경계는 compact/index.ts, 조립은 P1·알림 전달은 P5다.

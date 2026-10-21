@@ -25,3 +25,5 @@ SQL에서 scope는 중복 owner_id+composite FK로 제한한다. comment_counter
 close는 terminal STATE·최종 REPORT·신선한 COMPACT·강화 미ACK0·HOLD0·CLAIM0·pending handoff0을 검사한다. 위반은409 CLOSE_BLOCKED이며 경고만 남기고 닫지 않는다. 성공하면 닫기 fact/본문/revision과 열린 board 완료 NOTE가 함께 커밋한다. 별칭 개명은 기존 stable id를 유지하고 old name tombstone을 추가하며 OWNER 본문과 revision도 함께 갱신한다.
 
 반응 소비자는 `verifyReactionSource`로 원 fact의 eventId/stream/sequence/action/owner를 조회·대조하고 `applyProjection`으로 `(projection,sourceEventId)`를 기록한다. 반응 envelope의 새 sequence나 react eventId를 원본 좌표로 쓰지 않는다.
+
+P6는 매번 comment 원문을 재계산하며 compact_segment는 캐시/발행 이력이다. publication이 다음 generation을 먼저 reset한 뒤 P4 pointer/fact를 같은 tx로 저장한다. 늦은 source 반응도 현재 pointer에서 계산한다. JSONB hash는 canonical key 정렬로 검증한다.

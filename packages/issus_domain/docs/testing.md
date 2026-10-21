@@ -13,3 +13,5 @@
 Codex 샌드박스에서 node test worker spawn EPERM이면 `.cache/p3/test-tsconfig.json`으로 시험까지 임시 JS emit 후 `.cache/p3/run-emitted-tests.mjs`를 실행한다. 이 결과와 표준 npm test 결과를 구분한다. host 검증 로그는 `.cache/p3/orch-validation/`, 자체 로그는 `.cache/p3/logs/`다. 실제 수치와 미실행은 [P3 실행 기록](p3-report.md)에 기록한다. 브라우저·HTTP·서비스 통합은 P4~P8 범위다.
 
 P4 단위는 backend/command-result/index.test.ts의 key·canonical hash·metadata/개행 보존이다. 실제 원자성·멱등·auth·HTTP 시험은 apps/issus/src/server/http/auth/{core,fixtures}.test.ts가 이 공개 API를 사용한다. append/send 실패의 전체 롤백, 동일key 동시 요청, 다른 actor의 동일UUID, projection source 검증/1회 적용, HANDOFF·강화 ACK·close, 실제 워커 프로세스 crash3지점, preflight 전체 DB/PGMQ 차분0을 검증한다. 계획/실행 기록은 apps/issus/tests/{plans,reports}/core 경계다.
+
+P6 [계획](../tests/plans/compact-20261021.md): `src/server/compact/{packet/packet,publication/integration}.test.ts`와 앱 HTTP compact 시험. DB URL 필수·skip 없음, 고유 schema/queue를 정리한다. Python packet parity는 `python tests/compact/generate-packet-parity.py`로 hash 고정 정본에서 재생성한다. 실DB/하네스 결과와 호스트 표준 npm test·배포/P5 전달 수용을 분리한다.

@@ -38,11 +38,12 @@
     "lint": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "agent": "0.1.0-issus.1"
+    "agent": "0.1.0-issus.1",
+    "pg": "8.23.1"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
-    "pg": "8.23.1",
+    "@types/pg": "8.23.1",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
   }

@@ -50,3 +50,18 @@ metadata wrapper·unknown key는422다. COMPACT는 OWNER만, packet의 owner/iss
 preflight는 Idempotency-Key·operation 없이 즉시200 또는 실제 validator 오류를 반환한다. `context={repoId,issueNumber,revision,checkedAt}`, `compact={due,reasons,count,chars,previousCompactId}`다. 클라이언트 시각을 받지 않으며 read-only snapshot에서 성공·실패 모두 DB/이벤트/큐 쓰기0이다.
 
 P5 소유 후속 경로: POST/DELETE /v1/subscriptions, WS /ws, GET /v1/stream, GET /v1/inbox, POST /v1/deliveries/receipts, POST /v1/deliveries/:id/application, POST /v1/inbox/process. P6 소유: GET I/compact/status, POST I/compact/prepare, GET I/compact/packet. 구체 inbox 병합 builder는 historyReader, COMPACT publication projection은 publication에 주입한다. /metrics operator 설정·운영 조립은 P1/P5 경계이며 미설정 시404다.
+
+## COMPACT (P6)
+
+| 경로 | 요청 / 응답 |
+| --- | --- |
+| GET I/compact/status | repo 인증. previousCompactId/count/chars/due/reasons/owner; 읽기 전용 |
+| POST I/compact/prepare | OWNER/감독/bootstrap, Idempotency-Key, `{purpose:"routine"\|"before-decision"\|"before-handoff"\|"before-close"}`; due+packet201, empty204 |
+| GET I/compact/packet | OWNER/감독/bootstrap, format=json(기본)\|markdown; packet200, 구간/제어변경 없음204 |
+| POST I/comments | 기존 공통 제출기. COMPACT body/compactPacketToken/sampledIds/compactedBy;201 또는202 |
+
+packet JSON은 markdown/count/chars/maskedCount/bodyLine1/previousCompact/comments/suggestedEnvelope/throughId/previousCompactId/snapshotRevision/packetHash/packetToken/pendingAppendix/controlFactsSinceCompact다. `--out`에는 markdown만 UTF-8 LF로 쓰며 token·표본은 전용 sidecar로 보관한다. 기본 파일명은 compact_packet_<owner>_<repo>_<issue>_<through>.md다.
+
+markdown 응답은 X-Compact-Packet-Token/Hash/Through-Id/Snapshot-Revision 헤더로 증거를 준다. 모든 compact 응답은 Cache-Control:no-store다. prepare의 같은 key/payload는 원 snapshot 응답을 재생하며 새 상태를 요약하려면 새 key로 준비한다. snapshot 뒤 새 댓글/revision은 게시 시409 COMPACT_STALE, TTL24h 경과410 COMPACT_PACKET_EXPIRED다.
+
+COMPACT 줄2는 `## ===== COMPACT #<실제이슈> through <SEEN> =====`, TO:ALL·전체≤2000codepoint·footer compacted-by:<compactedBy>. tail≥3이면 서로 다른 원 id≥3, 1–2면 전부, control-only0이면 []다. 이전 COMPACT가 있으면 RE에 포함한다. 요청 metadata wrapper/unknown key는422. raw token은 발급 응답/비공개 sidecar 외 저장/이벤트/로그에 남기지 않는다. 제어/생략사유 감사와 구간 밖 의무 부록은 [domain 계약](../../../packages/issus_domain/docs/compact.md)에 따른다.

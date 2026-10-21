@@ -12,10 +12,12 @@
     "lint": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "issus_domain": "0.1.0"
+    "issus_domain": "0.1.0",
+    "ws": "8.22.0"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
+    "@types/ws": "8.18.2",
     "typescript": "7.0.2",
     "tsx": "4.23.15",
     "esbuild": "0.28.2"

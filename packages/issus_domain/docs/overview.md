@@ -7,3 +7,5 @@
 P4 backend/intake는 외부 명령 접수와 worker 종결을 분리한다. 투영·안전 인덱스·중요 fact·반응 큐·명령 결과를 동일 tx로 처리하고, read-only preflight는 같은 검사기만 실행한다. P5 delivery/scheduling과 P6 compact packet/projection은 이 공개 API를 호출한다.
 
 `tests/fixtures/issue-board-v2`는 32 good(28 comment/4 issue-body), 5 bad, 9 flows의 원본 바이트와 검증 golden을 보존한다. flows는 여러 댓글을 담는 참고 문서이며 단일 댓글로 검증하지 않는다.
+
+P6 [COMPACT](compact.md)는 자동 due fact·OWNER용 마스킹 snapshot packet·게시 projection을 제공한다. 요약문 생성은 OWNER/외부 worker가 담당한다.

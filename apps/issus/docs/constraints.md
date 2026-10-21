@@ -5,3 +5,5 @@
 JSON 상한64KiB, 댓글4000 codepoint, COMPACT2000, board NOTE1500. unknown metadata·외부 actor/repoId/issueNumber/provenance를 거부한다. body는 trim/개행 정규화 없이 저장한다. bearer/cookie/query/body를 access log에 기록하지 않는다. query token 금지, wildcard CORS 없음, cookie는 HttpOnly/SameSite=Strict/TLS Secure이며 local HTTP는 loopback origin만 허용한다.
 
 UI는 main 랜드마크1개와 이름 issus인 level-1 heading을 노출한다. getByRole(main), getByRole(heading,{name:issus,level:1})를 사용한다. P4는 front 파일을 변경하지 않는다.
+
+P6 packet token은 인증을 대체하지 않으며 URL query·access log·공개 comment metadata에 넣지 않는다. markdown 헤더를 포함한 응답은 no-store다. 서버가 요약을 쓰거나 외부 agent를 기동하지 않는다.

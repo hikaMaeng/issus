@@ -24,3 +24,5 @@ issus의 봉투 v2·wire 계약·검증/집계·SQL baseline·원자 명령 처�
 P5/P6은 공개 UoW를 호출하며 내부 BEGIN/COMMIT·best-effort emit을 추가하지 않는다. `run`의 identityScope는 외부 명령이면 principal.id, 반응이면 projection/반응 실행 범위다. 반응표는 app이 주입하고 도메인에는 큐별 처리표를 복제하지 않는다.
 
 원 사건은 `DomainFact`/`parseDomainFact`, P2 변환 뒤 worker 소비 command는 `ReactionInput`/`parseReactionInput`으로 구분한다. [반응 교차 시험 계획](tests/plans/reaction-input-20261021.md).
+
+P6 [COMPACT](docs/compact.md): `CompactService`, `compactPublication`, `applyCompactReaction`, `readCompactHistory`. [시험 계획](tests/plans/compact-20261021.md). 구간 원문 통계·마스킹 패킷·원자 게시 projection을 제공한다.

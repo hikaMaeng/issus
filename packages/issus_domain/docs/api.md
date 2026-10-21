@@ -91,3 +91,7 @@ command business payload 뒤 서버가 `CommandContext {actor,idempotencyKey}`�
 `CompactPublicationInput={issue,comment,packet,metadata}`. P4가 packet scope/만료/through/revision/표본/작성자 검사를 완료한 뒤, COMPACT 댓글 삽입 직후 정확히1회 호출한다. P6는 같은 tx의 추가 projection만 처리하며 P4가 만드는 pointer·revision·compact.posted를 중복 발행하지 않는다. hook 실패는 전체 게시 롤백이다.
 
 `readIssueHistory(tx,principal,repoId,number,query)`는 canonical 댓글 snapshot+불변 UUID 페이지를 제공한다. P5 canonical+inbox 병합 builder는 HTTP의 historyReader에 주입한다. alias ordinal/receipt/processed 커서는 이 함수가 담당하지 않는다.
+
+## COMPACT (P6)
+
+`CompactService(uow)`의 status는 read-only, packet은 마스킹 snapshot/token 발급, prepare는 P4 reserveCommand/finishCommand로 due+packet을 멱등 처리한다. 댓글 게시는 P4 submit만 사용한다. `compactPublication`·`applyCompactReaction`·`readCompactHistory` 주입 계약과 packet/metadata 표는 [compact](compact.md#공개-api)에 고정했다.

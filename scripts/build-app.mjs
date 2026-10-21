@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFileSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, readdirSync, copyFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
@@ -25,6 +25,10 @@ const result = spawnSync(process.execPath, [esbuild, entry, `--outfile=${output}
   '--sourcemap', '--log-level=info'], { stdio: 'inherit', cwd });
 if (result.error) throw result.error;
 if (result.status !== 0) process.exit(result.status ?? 1);
+if (isBroker) {
+  mkdirSync(join(cwd, 'dist/migrations'), { recursive: true });
+  copyFileSync(join(root, 'packages/issus_domain/dist/server/backend/schema/0001-domain-baseline.sql'), join(cwd, 'dist/migrations/0001-domain-baseline.sql'));
+}
 const files = [];
 function collect(directory) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {

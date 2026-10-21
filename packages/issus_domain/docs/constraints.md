@@ -14,3 +14,5 @@
 - server 공개 경계는 backend/index.ts다. fact()는 P3 FactPayloadMap/parseFactPayload를 재사용하며 모르는 action·추가키·null 선택 필드를 영속시키지 않는다. server-only actor/provenance는 HTTP에서 거부한다.
 - 운영 schema는 issus, broker는 public이다. 테스트 namespace/queueName 주입을 운영 설정의 임의 테이블 접근으로 노출하지 않는다. owner 단위 쓰기 직렬화는 보수적 첫 구현이며 처리량 개선은 별도 검증한다.
 - COMPACT publication은 같은 DB tx의 단일 hook이다. P4가 canonical pointer·revision·fact를 소유하고 P6는 추가 projection을 연결한다. 외부 LLM/hook 성공을 DB 원자성으로 주장하지 않는다.
+
+P6 packet token은 24h·OWNER/issue/prev/through/revision/hash 결합이다. snapshot 뒤 댓글·본문·이관 변경은 새 packet을 요구한다. raw token을 event/result/log에 넣지 않는다. COMPACT는 의무/원문을 삭제하지 않는다. [compact](compact.md).
