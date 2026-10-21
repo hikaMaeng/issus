@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import type {IssusClient} from 'issus_domain/front';
 import {errorLines, type Principal, type CommentView} from '../../entry/client/index.js';
-import {ConfirmDialog} from '../session/index.js';
+import {ConfirmDialog, useSessionDraft} from '../session/index.js';
 import {quickDraft, useWriteOperation, OperationState, type ComposerDraft} from '../composer/index.js';
 import {ko} from '../../resources/index.js';
 import {composerKo} from '../../resources/composer.js';
@@ -12,7 +12,7 @@ export function QuickReply({client, path, principal, comment, seen, onDraft, onP
   client: IssusClient; path: string; principal: Principal; comment: CommentView; seen: string;
   onDraft?: (draft: ComposerDraft) => void; onPosted?: () => void; noenv?: boolean; board?: boolean;
 }) {
-  const [open, setOpen] = useState(false), [body, setBody] = useState(''), [errors, setErrors] = useState<string[]>([]), [status, setStatus] = useState(''), [checking, setChecking] = useState(false);
+  const [open, setOpen] = useState(false), [body, setBody] = useSessionDraft(`quick-ack:${path}:${comment.id}:body`, ''), [errors, setErrors] = useState<string[]>([]), [status, setStatus] = useState(''), [checking, setChecking] = useState(false);
   const operation = useWriteOperation(), from = principal.alias ? `${principal.alias}/${principal.sid ?? 's1'}` : '';
   function draft(kind: 'ACK'|'HOLD'|'DECISION'|'RELEASE'|'NOENV') {return quickDraft(kind, from, comment, seen);}
   async function submit(post: boolean) {

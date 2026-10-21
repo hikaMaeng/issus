@@ -18,8 +18,8 @@
 | POST /v1/owners/:owner/aliases/check |name,deep? |available/collisions, owner 전체·tombstone 포함 |
 | GET /v1/owners/:owner/aliases |q?,cursor?,limit1–500 |items/nextCursor, 같은 owner principal; 타owner403 |
 | GET /v1/owners/:owner/aliases/:name |query 없음 |alias/recentIssues/openClaimCount; 타owner403·없음404 |
-| POST /v1/owners/:owner/aliases |name,role,model,scope,repos,announcementIssue?,announcementBody; bootstrap |201 alias+ALIAS comment 또는202;409 충돌 |
-| POST /v1/aliases/:id/rename |newName,announcementIssue?,announcementBody |200 alias/oldName 또는202;409 충돌/개명 |
+| POST /v1/owners/:owner/aliases |name,role,model,scope,repos,announcementIssue?,announcementBody; bootstrap |201 alias+ALIAS comment 동기 완료; 동일 actor/key/payload는 원201 멱등 재생;409 충돌 |
+| POST /v1/aliases/:id/rename |newName,announcementIssue?,announcementBody |200 alias/oldName 동기 완료; 동일 actor/key/payload는 원200 멱등 재생;409 충돌/개명 |
 | POST /v1/sessions |alias,sid,resumeFrom?,reissueOf?; bootstrap |최초201 token/sessionId/expiresAt/alias/sid; 재시도409 예외 |
 | DELETE /v1/sessions/:id |bootstrap/self |200 revoked |
 | GET /v1/auth/me |— |principal+expiresAt, token 없음 |

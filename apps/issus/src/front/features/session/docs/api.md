@@ -9,3 +9,5 @@
 | DraftRecovery | pending/message/onRestore/onDiscard; 보관 본문은 렌더하지 않음 |
 
 기존 ConnectionForm·SessionBanner·SessionIssueForm·ConfirmDialog·RevokeSession·safeReturnPath 계약은 유지한다.
+
+HANDOFF는 `handoff:<repo>:<number>:{to,ackBy,reply,text,deferred,id,ack}`, 빠른 ACK는 `quick-ack:<issuePath>:<commentId>:body`, inbox ACK는 `inbox-ack:<repo>:<number>:<commentId>:body` 슬롯을 사용한다. 서버 확인·revision·검사 결과·operation/key·dialog 열림은 보관하지 않는다.

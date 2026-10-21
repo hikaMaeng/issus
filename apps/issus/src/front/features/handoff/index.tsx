@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import type {IssusClient} from 'issus_domain/front';
 import type {HandoffView} from 'issus_domain/common';
 import {errorLines, issuePath, repoPath, readInbox, type CommentView, type IssueView, type Principal} from '../../entry/client/index.js';
-import {ConfirmDialog} from '../session/index.js';
+import {ConfirmDialog, useSessionDraft} from '../session/index.js';
 import {ReferenceLink, issueHref} from '../reference/index.js';
 import {protocolTime, serializeDraft, useWriteOperation, OperationState, TimeAssist} from '../composer/index.js';
 import {handoffPermissions} from './model.js';
@@ -13,8 +13,9 @@ export {handoffPermissions} from './model.js';
 
 /** HANDOFF posting, direct ACK acceptance and OWNER completion are distinct server-confirmed phases. */
 export function Handoff({client, repo, number, principal, owner, revision, onChanged}: {client: IssusClient; repo: string; number: number; principal: Principal|null; owner: string; revision: number; onChanged: () => void}) {
-  const [open, setOpen] = useState(false), [to, setTo] = useState(''), [ackBy, setAckBy] = useState(() => protocolTime(new Date(Date.now() + 10 * 60000))), [reply, setReply] = useState(''), [text, setText] = useState(''), [deferred, setDeferred] = useState('');
-  const [id, setId] = useState(''), [ack, setAck] = useState(''), [handoffs, setHandoffs] = useState<HandoffView[]>([]), [recipient, setRecipient] = useState(''), [expectedRevision, setExpectedRevision] = useState(revision), [errors, setErrors] = useState<string[]>([]), [status, setStatus] = useState(''), [checking, setChecking] = useState(false), [target, setTarget] = useState<IssueView|null>(null), [targetRef, setTargetRef] = useState(''), [pendingPhase, setPendingPhase] = useState<'post'|'accept'|'complete'|null>(null);
+  const slot = `handoff:${repo}:${number}`;
+  const [open, setOpen] = useState(false), [to, setTo] = useSessionDraft(`${slot}:to`, ''), [ackBy, setAckBy] = useSessionDraft(`${slot}:ackBy`, () => protocolTime(new Date(Date.now() + 10 * 60000))), [reply, setReply] = useSessionDraft(`${slot}:reply`, ''), [text, setText] = useSessionDraft(`${slot}:text`, ''), [deferred, setDeferred] = useSessionDraft(`${slot}:deferred`, '');
+  const [id, setId] = useSessionDraft(`${slot}:id`, ''), [ack, setAck] = useSessionDraft(`${slot}:ack`, ''), [handoffs, setHandoffs] = useState<HandoffView[]>([]), [recipient, setRecipient] = useState(''), [expectedRevision, setExpectedRevision] = useState(revision), [errors, setErrors] = useState<string[]>([]), [status, setStatus] = useState(''), [checking, setChecking] = useState(false), [target, setTarget] = useState<IssueView|null>(null), [targetRef, setTargetRef] = useState(''), [pendingPhase, setPendingPhase] = useState<'post'|'accept'|'complete'|null>(null);
   const operation = useWriteOperation(), path = issuePath(repo, number), current = handoffs.find(row => row.commentId === id), permissions = handoffPermissions(principal, owner, recipient, current?.status);
   useEffect(() => {if (!operation.locked) setExpectedRevision(current => Math.max(current, revision));}, [revision]);
   const body = serializeDraft({fields: {FROM: principal?.alias ? `${principal.alias}/${principal.sid ?? 's1'}` : '', TO: to, TYPE: 'HANDOFF', 'ACK-BY': ackBy, 'REPLY-IN': reply}, text: `${text}\n${issueKo.handoffDirective}`});

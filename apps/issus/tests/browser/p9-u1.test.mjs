@@ -269,6 +269,80 @@ test('P9-R5 COMPACT draft survives real401 while packet token and accepted sampl
   observations.push({id: 'P9-R5', bodyPreserved: true, packetRestored: false, acceptedSamplesRestored: false});
 });
 
+async function draftCommentCount(number) {
+  return (await fixture.pool.query(`SELECT count(*)::int AS n FROM "${fixture.schema}".comment WHERE repo_id=$1 AND issue_number=$2`, [fixture.repoId, number])).rows[0].n;
+}
+async function recoveryAsk(number, text) {
+  return fixture.write(fixture.B.client, issuePath(fixture.repo, number) + '/comments', {body: `FROM:${fixture.B.alias}/s1 TO:${fixture.A.alias} TYPE:ASK ACK-BY:${new Date(Date.now()+3600000).toISOString().replace(/\.\d{3}Z$/, '+00:00')}\nASK @${fixture.A.alias}: ${text}`});
+}
+
+test('P9-R7 HANDOFF fields survive real401 and explicit restore requires target recheck', async () => {
+  const {number} = await freshDraftIssue('P9 HANDOFF recovery'), target = await freshDraftIssue('P9 HANDOFF destination');
+  await login(page, fixture.A.token, `/repos/${fixture.repo}/issues/${number}`);
+  const dialog = () => page.getByRole('dialog', {name: '이관', exact: true});
+  const open = async () => {await page.getByRole('button', {name: '이관', exact: true}).click(); await eventually(async () => await dialog().getByLabel('TO', {exact: true}).isEnabled(), 'HANDOFF refresh finished');};
+  await open();
+  const deadline = new Date(Date.now()+3600000).toISOString().replace(/\.\d{3}Z$/, '+00:00'), text = '인증 만료 전 이관 결과·남은 질문\n그대로 보존', deferred = '현재 복원 시험 중 요약 보류';
+  for (const [label,value] of [['TO',fixture.B.alias],['ACK-BY',deadline],['REPLY-IN',`#${target.number}`],['결과·근거·남은 질문·자원·승인 경계',text],['compactDeferredReason',deferred]]) await dialog().getByLabel(label, {exact: true}).fill(value);
+  await dialog().getByRole('button', {name: '후속 이슈 확인', exact: true}).click();
+  await eventually(async () => await dialog().getByRole('button', {name: 'HANDOFF 게시', exact: true}).isEnabled(), 'target checked before expiry');
+  const before = await draftCommentCount(number);
+  await expireCookieDraft(); await reconnectDraft(fixture.A.token); await open();
+  assert.equal(await dialog().getByLabel('TO', {exact: true}).inputValue(), '');
+  assert.equal(await dialog().getByLabel('결과·근거·남은 질문·자원·승인 경계', {exact: true}).inputValue(), '');
+  await dialog().getByRole('button', {name: '이관 닫기', exact: true}).click();
+  await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).click(); await open();
+  for (const [label,value] of [['TO',fixture.B.alias],['ACK-BY',deadline],['REPLY-IN',`#${target.number}`],['결과·근거·남은 질문·자원·승인 경계',text],['compactDeferredReason',deferred]]) assert.equal(await dialog().getByLabel(label, {exact: true}).inputValue(), value);
+  assert.equal(await dialog().getByRole('button', {name: 'HANDOFF 게시', exact: true}).isDisabled(), true);
+  assert.equal(await dialog().getByText('후속 이슈를 확인했습니다', {exact: true}).count(), 0);
+  await dialog().getByRole('button', {name: '후속 이슈 확인', exact: true}).click();
+  await eventually(async () => await dialog().getByRole('button', {name: 'HANDOFF 게시', exact: true}).isEnabled(), 'restored target explicitly rechecked');
+  assert.equal(await draftCommentCount(number), before);
+  await dialog().getByRole('button', {name: '이관 닫기', exact: true}).click();
+  observations.push({id: 'P9-R7', real401: true, samePrincipal: true, automaticRestored: false, fieldsRestored: 5, targetRechecked: true, posted: 0});
+});
+
+test('P9-R8 quick ACK real401 restores edited raw body only for its original comment', async () => {
+  const {number} = await freshDraftIssue('P9 quick ACK recovery'), first = await recoveryAsk(number, '첫 댓글'), second = await recoveryAsk(number, '다른 댓글');
+  await login(page, fixture.A.token, `/repos/${fixture.repo}/issues/${number}`);
+  const dialog = () => page.getByRole('dialog', {name: '수신 확인 미리보기', exact: true});
+  const open = async id => {await page.getByRole('article', {name: `댓글 ${id}`, exact: true}).getByRole('button', {name: '수신 확인 작성', exact: true}).click(); await dialog().waitFor();};
+  const body = `FROM:${fixture.A.alias}/s1 TO:${fixture.B.alias} TYPE:ACK RE:${first.commentId}\n수정한 ACK 원문\n끝 공백  \n`;
+  await open(first.commentId); await dialog().getByLabel('ACK 본문', {exact: true}).fill(body);
+  const before = await draftCommentCount(number);
+  await expireCookieDraft(); await reconnectDraft(fixture.A.token); await open(first.commentId);
+  assert.notEqual(await dialog().getByLabel('ACK 본문', {exact: true}).inputValue(), body);
+  await dialog().getByRole('button', {name: '취소', exact: true}).click();
+  await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).click();
+  await open(second.commentId); assert.ok(!(await dialog().getByLabel('ACK 본문', {exact: true}).inputValue()).includes('수정한 ACK 원문'));
+  await dialog().getByRole('button', {name: '취소', exact: true}).click(); await open(first.commentId);
+  assert.equal(await dialog().getByLabel('ACK 본문', {exact: true}).inputValue(), body);
+  assert.equal(await draftCommentCount(number), before);
+  await dialog().getByRole('button', {name: '취소', exact: true}).click();
+  observations.push({id: 'P9-R8', real401: true, samePrincipal: true, automaticRestored: false, otherCommentRestored: false, posted: 0});
+});
+
+test('P9-R9 inbox ACK real401 restores edited content only for its original issue and comment', async () => {
+  const {number} = await freshDraftIssue('P9 inbox ACK recovery'), otherIssue = await freshDraftIssue('P9 inbox other issue');
+  const first = await recoveryAsk(number, '복원할 inbox 댓글'), second = await recoveryAsk(number, '같은 이슈 다른 댓글'), third = await recoveryAsk(otherIssue.number, '다른 이슈 댓글');
+  await login(page, fixture.A.token, `/inbox?repo=${fixture.repo}&issues=${number},${otherIssue.number}`);
+  const item = id => page.getByTestId('delivery').filter({has: page.getByRole('heading', {level: 2, name: `ME · ${id}`, exact: true})});
+  const dialog = () => page.getByRole('dialog', {name: '수신 확인 미리보기', exact: true});
+  const open = async id => {await item(id).getByRole('button', {name: '수신 확인 작성', exact: true}).click(); await dialog().waitFor();};
+  const content = 'inbox에서 편집한 ACK\n줄바꿈·끝 공백  \n';
+  await open(first.commentId); await dialog().getByLabel('ACK 내용', {exact: true}).fill(content);
+  const before = await draftCommentCount(number), otherBefore = await draftCommentCount(otherIssue.number);
+  await expireCookieDraft(); await reconnectDraft(fixture.A.token); await open(first.commentId);
+  assert.notEqual(await dialog().getByLabel('ACK 내용', {exact: true}).inputValue(), content);
+  await dialog().getByRole('button', {name: '취소', exact: true}).click();
+  await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).click();
+  for (const id of [second.commentId, third.commentId]) {await open(id); assert.notEqual(await dialog().getByLabel('ACK 내용', {exact: true}).inputValue(), content); await dialog().getByRole('button', {name: '취소', exact: true}).click();}
+  await open(first.commentId); assert.equal(await dialog().getByLabel('ACK 내용', {exact: true}).inputValue(), content);
+  assert.equal(await draftCommentCount(number), before); assert.equal(await draftCommentCount(otherIssue.number), otherBefore);
+  await dialog().getByRole('button', {name: '취소', exact: true}).click();
+  observations.push({id: 'P9-R9', real401: true, samePrincipal: true, automaticRestored: false, otherCommentRestored: false, otherIssueRestored: false, posted: 0});
+});
+
 test('P9-R6 actual expiry timer preserves draft and explicit discard never restores it', async () => {
   // Only the browser's wall clock advances; auth/me and all API payloads remain real.
   await page.close(); page = await context.newPage(); page.on('pageerror', error => pageErrors.push(error.message));

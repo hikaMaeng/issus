@@ -371,7 +371,7 @@ SSE는 동일 bootstrap/권한/커서의 대체 transport다. `GET /v1/stream?su
 | ROSTER 읽기 | GET I의 body·revision | 본문 행의 출처 표시, registry 대체 아님 |
 | 별칭 registry 목록·상세·선택지 | GET `/v1/owners/:owner/aliases`, GET `.../aliases/:name` | DECISION6314143095·core REPORT6314466185; apps/issus/docs/api.md Q1 정본 |
 | 별칭 충돌 검사 | POST `/v1/owners/:owner/aliases/check` | name/deep?, available/collisions, 등록·예약 아님 |
-| 별칭 등록·개명 | POST `/v1/owners/:owner/aliases`, POST `/v1/aliases/:id/rename` | role/model/scope/repos/announcementIssue?/announcementBody 또는newName;201/200/202·409 |
+| 별칭 등록·개명 | POST `/v1/owners/:owner/aliases`, POST `/v1/aliases/:id/rename` | role/model/scope/repos/announcementIssue?/announcementBody 또는newName; 등록201·개명200 동기 완료·동일 actor/key/payload는 원201·200 멱등 재생·409 |
 | HANDOFF 작성 | POST `I/comments` | TYPE HANDOFF·REPLY-IN·ACK-BY·compactDeferredReason? |
 | HANDOFF 수용·완료 | POST `I/handoffs/:commentId/accept`, POST `.../complete` | `{ackCommentId}` / `{expectedRevision}`,200/202; 이 경로 revision은 JSON key |
 | 닫기·재개 | POST `I/close`, POST `I/reopen` + If-Match | reason/finalReportId 또는 reason/state,200/202·CLOSE_BLOCKED409 |

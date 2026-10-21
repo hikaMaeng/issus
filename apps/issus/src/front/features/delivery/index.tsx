@@ -3,6 +3,7 @@ import {header, type InboxItem} from 'issus_domain/common';
 import type {IssusClient} from 'issus_domain/front';
 import {errorLines, issuePath, repoPath, type CommentView, type Principal} from '../../entry/client/index.js';
 import {Envelope} from '../envelope/index.js';
+import {useSessionDraft} from '../session/index.js';
 import {deliveryLabels, ko} from '../../resources/index.js';
 import {inboxKo} from '../../resources/inbox.js';
 import {deliveryIssue, DeliveryWrite} from './model.js';
@@ -15,7 +16,7 @@ export function Delivery({item, client, principal, repo, onChanged, now = Date.n
   const canAck = !!(item.commentId && issueNumber && principal.alias && principal.sid && parsed._from && !parsed._noenv);
   const deadline = fields['ACK-BY'], seconds = deadline ? Math.floor((now-Date.parse(deadline))/1000) : NaN;
   const overdue = Number.isFinite(seconds) && seconds > 0 && !['acked', 'applied', 'superseded'].includes(item.delivery?.state ?? 'posted');
-  const [ackContent, setAckContent] = useState<string>(ko.ackContent), [errors, setErrors] = useState<string[]>([]), [reason, setReason] = useState('');
+  const [ackContent, setAckContent] = useSessionDraft<string>(`inbox-ack:${repo}:${issueNumber}:${item.commentId ?? item.viewKey}:body`, ko.ackContent), [errors, setErrors] = useState<string[]>([]), [reason, setReason] = useState('');
   const [evidence, setEvidence] = useState(''), [outcome, setOutcome] = useState<'applied'|'not-applied'>('applied'), [applicationReason, setApplicationReason] = useState('');
   const [disposition, setDisposition] = useState<'acked'|'replied'>('acked'), [processEvidence, setProcessEvidence] = useState('');
   const [busy, setBusy] = useState(false), [status, setStatus] = useState(''), [operation, setOperation] = useState<string|null>(null);

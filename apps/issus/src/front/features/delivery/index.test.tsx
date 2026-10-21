@@ -4,6 +4,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {IssusClient, ClientError} from 'issus_domain/front';
 import type {InboxItem} from 'issus_domain/common';
 import {Delivery, DeliveryWrite, deliveryIssue, issueNumbers, orderDeliveries, mergeInboxSnapshot} from './index.js';
+import {SessionDraftMemory, SessionDraftProvider} from '../session/index.js';
 
 const client=new IssusClient({server:'http://test.invalid'}), principal={alias:'tt-1-reader',sid:'s2'};
 const item=(id:string,type='ASK',priority:InboxItem['priority']='ME',sequence='9007199254740993',state:NonNullable<InboxItem['delivery']>['state']='posted'):InboxItem=>({viewKey:`comment:${id}`,commentId:id,sourceEventId:`event-${id}`,sourceStreamId:'channel:issue:00000000-0000-4000-8000-000000000001:3',sourceSequence:id,origin:'merged',priority,content:{body:`FROM:tt-1-author/s1 TO:tt-1-reader TYPE:${type} ACK-BY:2026-10-21T20:00+09:00\nASK @tt-1-reader: 내용 <script>unsafe()</script>`},delivery:{id:`delivery-${id}`,ordinal:id,state,attempt:0,aliasEventSequence:sequence}});
@@ -50,4 +51,15 @@ test('U3 uncertain writes freeze the original request across edits/503 and reuse
   await assert.rejects(()=>writer.run(api,'/v1/comments',body,()=>{}),error=>error instanceof ClientError&&error.status===503);body.body='edited';assert.ok(writer.pending);
   status=201;assert.deepEqual(await writer.run(api,'/different',{body:'different'},()=>{}),{commentId:'1000001'});assert.equal(calls[0]!.key,calls[1]!.key);assert.equal(calls[1]!.path,'/v1/comments');assert.deepEqual(calls[1]!.body,{body:'original'});assert.equal(writer.pending,undefined);
   status=422;await assert.rejects(()=>writer.run(api,'/v1/comments',{body:'invalid'},()=>{}));assert.equal(writer.pending,undefined);status=201;await writer.run(api,'/v1/comments',{body:'fixed'},()=>{});assert.notEqual(calls[2]!.key,calls[3]!.key);
+});
+
+test('inbox ACK restores edited text explicitly and isolates repo, issue and comment under one inbox scope',()=>{
+  const memory=new SessionDraftMemory(),scope='same-principal/inbox',saved='보존한 ACK 원문 <script>무해</script>\n';
+  memory.begin(scope);memory.write(scope,'inbox-ack:o/r:3:1000001:body',saved);memory.suspend(scope);memory.begin(scope);
+  const render=(value=item('1000001'),repo='o/r')=>renderToStaticMarkup(<SessionDraftProvider memory={memory} scope={scope}><Delivery item={value} client={client} principal={principal} repo={repo} onChanged={()=>{}}/></SessionDraftProvider>);
+  assert.ok(!render().includes('보존한 ACK 원문'));assert.ok(memory.hasPending(scope));
+  assert.equal(memory.restore(scope),true);
+  const restored=render();assert.match(restored,/보존한 ACK 원문 &lt;script&gt;무해&lt;\/script&gt;/);
+  assert.ok(!restored.includes('<script>'));assert.ok(!restored.includes('aria-label="요청 처리 상태"'));
+  for(const html of [render(item('1000002')),render({...item('1000001'),sourceStreamId:'channel:issue:00000000-0000-4000-8000-000000000001:4'}),render(item('1000001'),'o/other')])assert.ok(!html.includes('보존한 ACK 원문'));
 });
