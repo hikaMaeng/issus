@@ -1,11 +1,12 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {ClientError, createBrowserClient, errorLines, hasBrowserCsrf, type Principal} from '../client/index.js';
 import {AppShell, IssueContext} from '../../features/app-shell/index.js';
-import {ConnectionForm, safeReturnPath, DraftRecovery, SessionDraftMemory, SessionDraftProvider, sessionDraftScope} from '../../features/session/index.js';
+import {ConnectionForm, safeReturnPath, DraftRecovery, SessionDraftMemory, SessionDraftProvider} from '../../features/session/index.js';
 import {Feedback} from '../../features/feedback/index.js';
 import {ko, sessionKo} from '../../resources/index.js';
 import {resolveAppRoute} from './routes.js';
 import {appRouteView} from './view.js';
+import {activateSessionDraft} from './session.js';
 
 /** The form exists during recovery and after login; the authenticated disclosure starts closed. */
 export function SessionConnection({principal, loading, onConnected}: {principal: Principal|null; loading: boolean; onConnected: (value: Principal) => void}) {
@@ -19,11 +20,9 @@ export function App() {
   const [principal, setPrincipal] = useState<Principal|null>(null), [loading, setLoading] = useState(true), [version, setVersion] = useState(0), [errors, setErrors] = useState<string[]>([]);
   const [draftMessage, setDraftMessage] = useState('');
   const pagePath = location.pathname + location.search;
-  function authenticated(value: Principal, force = false) {
-    const nextScope = sessionDraftScope(value, pagePath);
-    if (force || identity.current?.sessionId !== value.sessionId || scope.current !== nextScope) {
-      drafts.suspend(scope.current); drafts.begin(nextScope); setVersion(count => count + 1);
-    }
+  function authenticated(value: Principal) {
+    const {scope: nextScope, changed} = activateSessionDraft(drafts, {principal: identity.current, scope: scope.current}, value, pagePath);
+    if (changed) setVersion(count => count + 1);
     identity.current = value; scope.current = nextScope; setPrincipal(value); setLoading(false); setErrors([]); setDraftMessage('');
   }
   function invalidate() {
@@ -49,7 +48,7 @@ export function App() {
     return () => clearTimeout(timer);
   }, [principal]);
   function connected(value: Principal) {
-    authGeneration.current++; authenticated(value, true);
+    authGeneration.current++; authenticated(value);
     if (location.pathname === '/login') location.replace(safeReturnPath(new URLSearchParams(location.search).get('returnTo'), location.origin));
   }
   const route = resolveAppRoute(location.pathname, location.search), repo = route.repo;

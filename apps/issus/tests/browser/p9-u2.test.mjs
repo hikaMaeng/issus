@@ -133,13 +133,17 @@ test('P9-10 U2 priority OTHER folds, shared HOLD remains visible; directACK cann
   assert.equal(await article(page, other.commentId).getByText('OTHER full text', {exact: true}).count(), 0);
   await article(page, other.commentId).getByText(`OTHER 댓글 ${other.commentId} 전문 보기`, {exact: true}).click(); await article(page, other.commentId).getByText('OTHER full text', {exact: true}).waitFor();
   assert.ok((await page.getByRole('region', {name: 'CC', exact: true}).innerText()).includes(cc.commentId));
-  await article(page, seed.commentId).getByRole('button', {name: 'HOLD 작성', exact: true}).click(); const holdDraft = await form(page).getByLabel('댓글 본문', {exact: true}).inputValue(); assert.ok(holdDraft.includes('TYPE:HOLD')); assert.equal(await count(number), 3);
+  await article(page, seed.commentId).getByRole('button', {name: 'HOLD 작성', exact: true}).click();
+  await eventually(async () => (await form(page).getByLabel('댓글 본문', {exact: true}).inputValue()).includes('TYPE:HOLD'), 'HOLD draft applied to composer');
+  const holdDraft = await form(page).getByLabel('댓글 본문', {exact: true}).inputValue(); assert.ok(holdDraft.includes('TYPE:HOLD')); assert.equal(await count(number), 3);
   await invalidBoth(page, number, holdDraft.replace(/ SEEN:\S+/, ''));
   await invalidBoth(page, number, holdDraft.replace(/ACK-BY:\S+/, `ACK-BY:${future(20 * 60000)}`));
   const hold = await validPost(page, number, holdDraft); await article(page, hold).waitFor(); assert.ok((await article(page, hold).innerText()).includes('HOLD'));
   await post(number, `FROM:${fixture.A.alias}/s1 TO:${fixture.B.alias} TYPE:ACK RE:${hold}\n수용. 실제 중단.`, fixture.A);
   assert.ok((await view(number)).activeHolds.includes(hold));
-  await article(page, hold).getByRole('button', {name: 'DECISION 작성', exact: true}).click(); const decision = await form(page).getByLabel('댓글 본문', {exact: true}).inputValue();
+  await article(page, hold).getByRole('button', {name: 'DECISION 작성', exact: true}).click();
+  await eventually(async () => (await form(page).getByLabel('댓글 본문', {exact: true}).inputValue()).includes(`SUPERSEDES:${hold}`), 'checked DECISION draft applied to composer');
+  const decision = await form(page).getByLabel('댓글 본문', {exact: true}).inputValue();
   await invalidBoth(page, number, decision.replace(/ ACK-BY:\S+/, ''), {compactDeferredReason: '긴급 해제 판정'});
   await invalidBoth(page, number, decision.replace(/SUPERSEDES:\S+/, 'SUPERSEDES:9999999999999999'), {compactDeferredReason: '긴급 해제 판정'});
   const released = await validPost(page, number, decision, {compactDeferredReason: '긴급 해제 판정'}); assert.ok(!(await view(number)).activeHolds.includes(hold));
@@ -150,6 +154,7 @@ test('P9-11 U2 NOENV inert raw is nonexecutable and offers only repost-request d
   await open(page); const legacy = article(page, fixture.legacy); assert.equal(await legacy.getByRole('alert').innerText(), '[NOENV] 봉투가 없어 실행할 수 없습니다');
   assert.equal(await legacy.getByRole('button', {name: '수신 확인 작성', exact: true}).count(), 0); assert.equal(await page.evaluate(() => window.legacyExecuted), undefined);
   const before = await count(fixture.number); await legacy.getByRole('button', {name: '봉투 재게시 요청 작성', exact: true}).click();
+  await eventually(async () => (await form(page).getByLabel('댓글 본문', {exact: true}).inputValue()).includes(`ASK @${fixture.A.alias}:`), 'NOENV repost request draft applied to composer');
   assert.ok((await form(page).getByLabel('댓글 본문', {exact: true}).inputValue()).includes(`ASK @${fixture.A.alias}:`)); assert.equal(await count(fixture.number), before);
 });
 
@@ -159,7 +164,9 @@ test('P9-12 U2 registry board NOTE template/1500 limit and forbidden ASK both422
   const template = page.getByRole('form', {name: '게시판 NOTE 템플릿', exact: true});
   await template.getByLabel('원 이슈(REPLY-IN)', {exact: true}).fill('#' + fixture.number); await template.getByLabel('원 이슈 최종 REPORT ID', {exact: true}).fill(fixture.finalReport);
   await template.getByLabel('결과 1줄', {exact: true}).fill('U2 deployed board'); await template.getByLabel('실패·교훈(최대 3줄)', {exact: true}).fill('서버 판정 원문 유지'); await template.getByLabel('재사용 산출물 경로', {exact: true}).fill('apps/issus/tests/browser/p9-u2.test.mjs');
-  await template.getByRole('button', {name: 'NOTE 초안 만들기', exact: true}).click(); const body = await form(page).getByLabel('댓글 본문', {exact: true}).inputValue(); assert.ok(Array.from(body).length <= 1500); const noteId = await validPost(page, board.number, body);
+  await template.getByRole('button', {name: 'NOTE 초안 만들기', exact: true}).click();
+  await eventually(async () => (await form(page).getByLabel('댓글 본문', {exact: true}).inputValue()).includes('완료 공유: U2 deployed board'), 'board NOTE template applied to composer');
+  const body = await form(page).getByLabel('댓글 본문', {exact: true}).inputValue(); assert.ok(Array.from(body).length <= 1500); const noteId = await validPost(page, board.number, body);
   const invalid = `FROM:${fixture.B.alias}/s1 TO:${fixture.A.alias} TYPE:ASK ACK-BY:${future()}\nASK @${fixture.A.alias}: 게시판 금지.`; await invalidBoth(page, board.number, invalid);
   await invalidBoth(page, board.number, `FROM:${fixture.B.alias}/s1 TO:ALL TYPE:NOTE\n${'x'.repeat(1500)}`);
   await invalidBoth(page, board.number, `FROM:${fixture.B.alias}/s1 TO:${fixture.A.alias} TYPE:HOLD ACK-BY:${future()} SEEN:${noteId}\n게시판 HOLD 금지`);

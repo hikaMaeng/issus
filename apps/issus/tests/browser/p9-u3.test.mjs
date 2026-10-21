@@ -21,12 +21,12 @@ async function login(target,token,path='/repos'){
   await eventually(()=>target.getByLabel('세션 토큰',{exact:true}).inputValue().then(value=>value===''),'bearer erased after session exchange');
   await eventually(()=>target.getByRole('navigation',{name:'주 탐색',exact:true}).count(),'authenticated shell');
 }
-async function newIssue(label){const result=await write(fixture.A.client,`/v1/repos/${fixture.repo}/issues`,{title:label,body:`STATE:running OWNER:${fixture.A.alias} UPDATED:${iso(Date.now())}\nGOAL: ${label}`});return {number:result.number,path:issuePath(fixture.repo,result.number)};}
+async function newIssue(label,source=fixture){const result=await write(source.A.client,`/v1/repos/${source.repo}/issues`,{title:label,body:`STATE:running OWNER:${source.A.alias} UPDATED:${iso(Date.now())}\nGOAL: ${label}`});return {number:result.number,path:issuePath(source.repo,result.number)};}
 async function note(target,text='원문'){return write(fixture.A.client,target.path+'/comments',{body:`FROM:${fixture.A.alias}/s1 TO:ALL TYPE:NOTE\n${text}`});}
-async function ask(target=fixture){return write(fixture.A.client,target.path+'/comments',{body:`FROM:${fixture.A.alias}/s1 TO:${fixture.B.alias} TYPE:ASK ACK-BY:${iso(Date.now()+3600000)}\nASK @${fixture.B.alias}: U3 반영 근거를 확인하세요.\nNEXT: 확인.`});}
-async function delivery(id,target=fixture){return eventually(async()=>{const result=(await fixture.B.client.request(`/v1/inbox?repo=${fixture.repo}&issues=${target.number}`)).data;return result.items.find(item=>item.commentId===id)?.delivery;},'delivery route');}
+async function ask(target=fixture,source=fixture){return write(source.A.client,target.path+'/comments',{body:`FROM:${source.A.alias}/s1 TO:${source.B.alias} TYPE:ASK ACK-BY:${iso(Date.now()+3600000)}\nASK @${source.B.alias}: U3 반영 근거를 확인하세요.\nNEXT: 확인.`});}
+async function delivery(id,target=fixture,source=fixture){return eventually(async()=>{const result=(await source.B.client.request(`/v1/inbox?repo=${source.repo}&issues=${target.number}`)).data;return result.items.find(item=>item.commentId===id)?.delivery;},'delivery route');}
 function card(id,target=page){return target.getByRole('region',{name:'받은편지함',exact:true}).getByRole('article',{name:`전달 ${id}`,exact:true});}
-async function inbox(target=fixture,transport='ws'){await page.goto(`${server}/inbox?repo=${fixture.repo}&issues=${target.number}&transport=${transport}`);await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();}
+async function inbox(target=fixture,transport='ws',source=fixture){await page.goto(`${server}/inbox?repo=${source.repo}&issues=${target.number}&transport=${transport}`);await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();}
 async function ackCard(item){await item.getByRole('button',{name:'수신 확인 작성',exact:true}).click();const dialog=page.getByRole('dialog',{name:'수신 확인 미리보기',exact:true});await dialog.getByRole('button',{name:'ACK 게시',exact:true}).click();await dialog.waitFor({state:'hidden'});await eventually(()=>item.getByTestId('delivery-state').getAttribute('data-state').then(value=>value==='acked'),'direct ACK confirmed');}
 async function prepare(target){await login(page,fixture.A.token,`/repos/${fixture.repo}/issues/${target.number}/compact`);await page.getByRole('region',{name:'COMPACT 도우미',exact:true}).waitFor();const response=page.waitForResponse(response=>new URL(response.url()).pathname===target.path+'/compact/prepare'&&response.request().method()==='POST');await page.getByRole('button',{name:'패킷 준비',exact:true}).click();const result=await response;assert.equal(result.status(),201);return result.json();}
 async function review(packet){for(const comment of packet.comments.slice(0,3)){await page.getByRole('button',{name:`원문 대조 ${comment.id}`,exact:true}).click();const dialog=page.getByRole('dialog',{name:`표본 원문 ${comment.id}`,exact:true});await dialog.waitFor();assert.ok((await dialog.innerText()).includes(comment.id)||await dialog.getByRole('heading',{name:`표본 원문 ${comment.id}`,exact:true}).count());await dialog.getByRole('button',{name:'대조 원문 닫기',exact:true}).click();await page.getByLabel(`표본 대조 ${comment.id}`,{exact:true}).check();}}
@@ -106,22 +106,52 @@ test('P9-20 real WS refreshes detail/inbox/body/COMPACT while retaining draft/fo
 });
 
 test('P9-21 explicit SSE uses real frame/id and HTTP receipt, reconnects from a new subscription without ACK',{timeout:120000},async()=>{
-  // Stop the previous page's alias WS before creating the delivery whose first receipt must be SSE.
+  // This scenario owns fresh aliases: earlier threshold cases leave an unrelated alias replay backlog.
   await page.goto(server+'/repos');await page.getByRole('heading',{level:1,name:'저장소',exact:true}).waitFor();
-  const target=await newIssue('P9-21'),posted=await ask(target),d=await eventually(async()=>(await fixture.pool.query(`SELECT id,state,attempt FROM "${fixture.schema}".delivery WHERE comment_id=$1 AND recipient_alias_id=$2`,[posted.commentId,fixture.B.aliasId])).rows[0],'SSE delivery route without pull receipt'),subscriptionIds=[];let ws=0;
-  assert.equal(d.state,'posted','SSE fixture must have no receipt from a previous WS page');
-  // Pull itself records an HTTP receipt. Delay the real pull request until the stream receipt is durable.
+  const source=await provisionBrowserFixture(),subscriptionIds=[],responseTasks=new Set(),heldPulls=new Set(),routeErrors=[],responseErrors=[],receiptStatuses=[];let ws=0,cdp,canceledPulls=0,receiptRows=[],frames=[];
   let releasePull,pullReleased=false;const pullGate=new Promise(resolve=>{releasePull=()=>{pullReleased=true;resolve();};});
-  const pullUrl=url=>url.pathname==='/v1/inbox',holdPull=async route=>{if(!pullReleased)await pullGate;await route.continue();};await page.route(pullUrl,holdPull);
-  await page.addInitScript(()=>{window.__u3Sse=[];const original=window.fetch;window.fetch=async(...args)=>{const response=await original(...args);if(new URL(typeof args[0]==='string'?args[0]:args[0].url??String(args[0]),location.origin).pathname==='/v1/stream'&&response.ok){void(async()=>{const reader=response.clone().body.getReader(),decoder=new TextDecoder();let buffer='';try{for(;;){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let index;while((index=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,index);buffer=buffer.slice(index+2);const event=/^event:(.*)$/m.exec(block)?.[1],id=/^id:(.*)$/m.exec(block)?.[1],data=/^data:(.*)$/m.exec(block)?.[1];if(data){const frame=JSON.parse(data);window.__u3Sse.push({event,id,type:frame.type});if(window.__u3Sse.length>1000)window.__u3Sse.shift();}}}}catch{}finally{reader.releaseLock();}})();}return response;};});
-  const received=async response=>{if(new URL(response.url()).pathname==='/v1/subscriptions'&&response.request().method()==='POST'&&response.status()===201)subscriptionIds.push((await response.json()).subscriptionId);};page.on('response',received);const onWs=()=>{ws++;};page.on('websocket',onWs);
-  let cdp;try{await login(page,fixture.B.token);await inbox(target,'sse');await eventually(async()=>(await fixture.pool.query(`SELECT transport FROM "${fixture.schema}".delivery_receipt WHERE delivery_id=$1`,[d.id])).rows.some(value=>value.transport==='sse'),'actual SSE frame and HTTP receipt');releasePull();await card(d.id).waitFor();await eventually(()=>card(d.id).getByTestId('delivery-state').getAttribute('data-state').then(value=>value==='delivered'),'SSE HTTP receipt');assert.equal(ws,0);const receipts=(await fixture.pool.query(`SELECT transport FROM "${fixture.schema}".delivery_receipt WHERE delivery_id=$1`,[d.id])).rows;assert.ok(receipts.some(value=>value.transport==='sse'));
+  const pullUrl=url=>url.pathname==='/v1/inbox';
+  const holdPull=route=>{
+    const task=(async()=>{if(!pullReleased)await pullGate;if(route.request().failure()){canceledPulls++;return;}await route.continue();})().catch(error=>{
+      // Inbox refresh aborts the previous fetch. Each intercepted request has only this one terminal call.
+      if(route.request().failure()||error.message.includes('Route is already handled'))canceledPulls++;else routeErrors.push(error.message);
+    });
+    heldPulls.add(task);return task.finally(()=>heldPulls.delete(task));
+  };
+  const received=response=>{
+    const path=new URL(response.url()).pathname;
+    if(path==='/v1/deliveries/receipts')receiptStatuses.push(response.status());
+    if(path==='/v1/subscriptions'&&response.request().method()==='POST'&&response.status()===201){
+      const task=response.json().then(value=>subscriptionIds.push(value.subscriptionId)).catch(error=>responseErrors.push(error.message));
+      responseTasks.add(task);void task.finally(()=>responseTasks.delete(task));
+    }
+  };
+  const onWs=()=>{ws++;};
+  try{
+    const target=await newIssue('P9-21',source),posted=await ask(target,source),d=await eventually(async()=>(await source.pool.query(`SELECT id,state,attempt FROM "${source.schema}".delivery WHERE comment_id=$1 AND recipient_alias_id=$2`,[posted.commentId,source.B.aliasId])).rows[0],'SSE delivery route without pull receipt');
+    assert.equal(d.state,'posted','SSE fixture must have no receipt from a previous WS page');
+    // Pull records an HTTP receipt; hold its real request until the stream receipt is durable.
+    await page.route(pullUrl,holdPull);
+    await page.addInitScript(()=>{window.__u3Sse=[];const original=window.fetch;window.fetch=async(...args)=>{const response=await original(...args);if(new URL(typeof args[0]==='string'?args[0]:args[0].url??String(args[0]),location.origin).pathname==='/v1/stream'&&response.ok){void(async()=>{const reader=response.clone().body.getReader(),decoder=new TextDecoder();let buffer='';try{for(;;){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let index;while((index=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,index);buffer=buffer.slice(index+2);const event=/^event:(.*)$/m.exec(block)?.[1],id=/^id:(.*)$/m.exec(block)?.[1],data=/^data:(.*)$/m.exec(block)?.[1];if(data){const frame=JSON.parse(data);window.__u3Sse.push({event,id,type:frame.type,action:frame.event?.action,deliveryId:frame.event?.payload?.deliveryId});if(window.__u3Sse.length>1000)window.__u3Sse.shift();}}}}catch{}finally{reader.releaseLock();}})();}return response;};});
+    page.on('response',received);page.on('websocket',onWs);
+    await login(page,source.B.token);await inbox(target,'sse',source);await eventually(async()=>(await source.pool.query(`SELECT transport FROM "${source.schema}".delivery_receipt WHERE delivery_id=$1`,[d.id])).rows.some(value=>value.transport==='sse'),'actual SSE frame and HTTP receipt');
+    releasePull();await card(d.id).waitFor();await eventually(()=>card(d.id).getByTestId('delivery-state').getAttribute('data-state').then(value=>value==='delivered'),'SSE HTTP receipt');assert.equal(ws,0);receiptRows=(await source.pool.query(`SELECT transport FROM "${source.schema}".delivery_receipt WHERE delivery_id=$1`,[d.id])).rows;assert.ok(receiptRows.some(value=>value.transport==='sse'));
     cdp=await context.newCDPSession(page);await cdp.send('Network.enable');await cdp.send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:-1,uploadThroughput:-1});
     await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 재연결 대기 중$/}).waitFor();await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
-    const next=await write(fixture.A.client,target.path+'/comments',{body:`FROM:${fixture.A.alias}/s1 TO:${fixture.B.alias} TYPE:NOTE\nSSE 재연결 중 댓글`}),nextDelivery=await delivery(next.commentId,target);await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();await card(nextDelivery.id).waitFor();await eventually(()=>subscriptionIds.length>=2,'new SSE subscription');assert.notEqual(subscriptionIds[0],subscriptionIds[1]);
-    const frames=await page.evaluate(()=>window.__u3Sse);assert.ok(frames.some(frame=>frame.event==='frame'&&frame.id&&frame.type==='event'));const facts=(await fixture.B.client.request(`/v1/inbox?repo=${fixture.repo}&issues=${target.number}`)).data;assert.equal(facts.ackState.find(value=>value.directiveId===posted.commentId).state,'waiting');const labels=await page.getByRole('region',{name:'받은편지함',exact:true}).getByTestId('delivery').evaluateAll(elements=>elements.map(element=>element.getAttribute('aria-label')));assert.equal(labels.length-new Set(labels).size,0);
+    const next=await write(source.A.client,target.path+'/comments',{body:`FROM:${source.A.alias}/s1 TO:${source.B.alias} TYPE:NOTE\nSSE 재연결 중 댓글`}),nextDelivery=await delivery(next.commentId,target,source);await page.getByRole('status',{name:'실시간 연결',exact:true}).filter({hasText:/^실시간 연결됨$/}).waitFor();await card(nextDelivery.id).waitFor();await eventually(()=>subscriptionIds.length>=2,'new SSE subscription');assert.notEqual(subscriptionIds[0],subscriptionIds[1]);
+    await eventually(async()=>{frames=await page.evaluate(()=>window.__u3Sse);return frames.some(frame=>frame.event==='frame'&&frame.id&&frame.type==='event'&&frame.deliveryId===d.id);},'target delivery has an actual SSE event/id');
+    const facts=(await source.B.client.request(`/v1/inbox?repo=${source.repo}&issues=${target.number}`)).data;assert.equal(facts.ackState.find(value=>value.directiveId===posted.commentId).state,'waiting');const labels=await page.getByRole('region',{name:'받은편지함',exact:true}).getByTestId('delivery').evaluateAll(elements=>elements.map(element=>element.getAttribute('aria-label')));assert.equal(labels.length-new Set(labels).size,0);
     observations.push({id:'P9-21',transport:'sse',subscriptionIds,frameIds:frames.filter(frame=>frame.id).length,automaticAck:false,duplicateRows:0});
-  }finally{releasePull();await page.unroute(pullUrl,holdPull);if(cdp){await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});await cdp.detach();}page.off('response',received);page.off('websocket',onWs);}
+  }finally{
+    try{
+      if(cdp){await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});await cdp.detach();}
+      releasePull();await page.unrouteAll({behavior:'wait'});await Promise.all([...heldPulls]);page.off('response',received);page.off('websocket',onWs);await Promise.all([...responseTasks]);
+      frames=await page.evaluate(()=>window.__u3Sse??[]);await writeFile(new URL('sse-case.json',output),JSON.stringify({isolatedAliases:true,subscriptionIds,receiptStatuses,receiptRows,frames,canceledPulls,routeErrors,responseErrors},null,2)+'\n');
+      await page.screenshot({path:fileURLToPath(new URL('sse-case.png',output)),fullPage:true,mask:[page.getByLabel('세션 토큰',{exact:true})]});
+      await page.goto(server+'/repos');
+    }finally{await source.cleanup();}
+  }
+  assert.deepEqual(routeErrors,[]);assert.deepEqual(responseErrors,[]);
 });
 
 test('P9-22 actual 202 operation remains pending; lost response retries one key and posts one ACK',{timeout:120000},async()=>{
