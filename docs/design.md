@@ -1,10 +1,21 @@
-# issus 설계안 v2.1
+# issus 설계안 v2.2
 
-버전: v2.1 (2026-10-21) — SUPERSEDES v2
+버전: v2.2 (2026-10-21) — SUPERSEDES v2.1
 
-작성: issus-1-design/s3 (s2 승계, 별칭 유지) · 2026-10-21 · 상태: v2 2차 VERIFY PASS `6308181113` · DECISION `6308181510` 구현 승인에 따른 잔여 4건 개정.
+작성: issus-1-design/s4 (s3 승계, 별칭 유지) · 2026-10-21 · 상태: v2 2차 VERIFY PASS `6308181113` 이후 구현 중 확정된 DECISION 4건 반영. 근거: DECISION 6308921916·6310243238·6310757267.
 
 이 문서는 `docs/brief.md` 요구 1–6을 구현 가능한 계약으로 구체화한다. GitHub 이슈를 흉내 내는 저장소 위에 **별칭별 영속 받은편지함, 세션 구독, ACK 추적**을 기본 기능으로 둔다. 게시·전송·수신·반영을 구별하며, 서버는 에이전트 프로세스의 실제 중단이나 작업 성공을 추측하지 않는다. 설계 단계 산출물은 이 문서뿐이며 아래 파일·API·시험은 구현할 대상이다.
+
+## v2.1→v2.2 변경 요약
+
+구현 중 확정된 아래 4건만 본문에 반영한다. 다른 절의 계약은 유지하며, 이 문서 개정 자체는 런타임·실제 세션 깨우기 시험의 PASS를 뜻하지 않는다.
+
+| 번호 | 개정 계약 | 위치 / 근거 |
+| --- | --- | --- |
+| 1 | compose `issus_internal`은 `internal: false`. 프로젝트 범위 네트워크 격리·loopback 공개 유지 | §1.2 / 근거: DECISION 6308921916 |
+| 2 | alias.registered/renamed fact에 ROSTER 복원용 `model` 필수 | §4.3 / 근거: DECISION 6310243238 (2) |
+| 3 | good 32는 댓글28의 완료201·본문교체4의 완료200, before-close due는 close 전 별도 제어 tx로 보존, Set-Cookie는 고정 Clock·token/필수 속성 검사 | §3.2·§6.1·§10 / 근거: DECISION 6310243238 (1)(3)(4) |
+| 4 | WS subprotocol 인증·자족적 한 줄 JSON·별칭 필터 기본, subscribe --once/--until 종료 계약과 세션 깨우기 수단 | §5.3·신설 §5.6·§8·§10·§14 / 근거: DECISION 6310757267 |
 
 ## v2→v2.1 변경 요약
 
@@ -97,7 +108,7 @@ DECISION `6307832679` Q2에 따라 ndx_business→issus의 **동일 소유자(hi
 | `issus-worker` | `apps/issus-worker`, node24 | 없음, 내부 `$PORT` health만 | 모듈별 `.env`; intake/router/delivery/compact 큐 소비 |
 | `issus-scheduler` | `apps/issus-scheduler`, node24 | 없음, 내부 `$PORT` health만 | 모듈별 `.env`; 짧은 due-scan producer + scheduler 큐 소비 |
 
-네트워크 `issus_internal` 하나, `internal:true`, external network 없음. 명시적 프로젝트 범위 named volume 사용; 다른 프로젝트 네트워크·DB와 연결하지 않는다. host 포트 후보 18140(웹), 15440(DB 시험/운영 조회), 모두 10000–59999 범위다. 구현자가 listener+Docker 게시 포트 중복을 확인하고 충돌 시 범위 내 빈 값으로 env에 기록한다. 포트는 런타임 코드 하드코딩 금지. `ISSUS_PORT`는 내부 기본18140을 sample에 두고 container의 `PORT`로 주입한다. deploy는 검증된 ISSUS_HOST_PORT/ISSUS_PORT/ISSUS_DB_HOST_PORT를 모든 compose 호출의 보간 환경으로 export한다. compose `env_file`만으로 `${...}` 보간이 된다고 가정하지 않는다. Postgres 내부5432는 이미지 프로토콜 포트다. DB는 loopback 밖에 게시하지 않는다.
+네트워크 `issus_internal` 하나, `internal: false`, external network 없음. Docker internal 네트워크에서는 컨테이너 포트를 호스트에 공개하지 못한 관측에 따라 변경하며, 프로젝트 범위 네트워크로 타 프로젝트 격리를 유지한다. 근거: DECISION 6308921916. 명시적 프로젝트 범위 named volume 사용; 다른 프로젝트 네트워크·DB와 연결하지 않는다. host 포트 후보 18140(웹), 15440(DB 시험/운영 조회), 모두 10000–59999 범위다. 구현자가 listener+Docker 게시 포트 중복을 확인하고 충돌 시 범위 내 빈 값으로 env에 기록한다. 포트는 런타임 코드 하드코딩 금지. `ISSUS_PORT`는 내부 기본18140을 sample에 두고 container의 `PORT`로 주입한다. deploy는 검증된 ISSUS_HOST_PORT/ISSUS_PORT/ISSUS_DB_HOST_PORT를 모든 compose 호출의 보간 환경으로 export한다. compose `env_file`만으로 `${...}` 보간이 된다고 가정하지 않는다. Postgres 내부5432는 이미지 프로토콜 포트다. 웹·DB 포트의 loopback 공개는 유지하며 loopback 밖에 게시하지 않는다.
 
 DB health는 pg_isready+pgmq extension 존재 확인, app은 migration 완료·DB/queue/reaction 초기화 후 `/ready` 200, worker는 queue poll 성공·필요 schema 준비를 확인한다. `depends_on:service_healthy`와 재접속을 함께 적용한다. initdb는 `CREATE EXTENSION IF NOT EXISTS pgmq`만; table은 버전 migration 소유. 기존 volume에도 extension 확인 migration이 수행돼야 한다. DB `stop_grace_period:60s`; app/worker 30s. Dockerfile은 호스트에서 만든 self-contained dist만 COPY하며 npm install/build를 실행하지 않는다.
 
@@ -213,7 +224,7 @@ live write는 등록된 FROM/TO/CC 존재, token-FROM 일치(승인된 proxy 예
 
 원본 issue body는 첫 3키 순서 검사에 빈틈이 있으므로 서비스 context는 정확히 STATE→OWNER→UPDATED를 재검사한다. SEEN은 live CLAIM/COMPACT에서는 단일 기존 comment id 또는 빈 issue의 0만(문법은 목록 허용). COMPACT의 SEEN은 §6 snapshot과 일치해야 한다. HOLD를 실제로 해제하는 SUPERSEDES는 DECISION만, 발신자는 해당 issue OWNER/감독 또는 원 HOLD 발신자다. 다른 참조의 일반 정정 권한은 원 작성자/OWNER/감독이다. legacy read의 임의 SUPERSEDES도 §5.2 호환 pending 집계에는 포함하지만, 권한 없는 정정을 delivery 종결이나 HOLD 해제로 승격하지 않는다. ACK의 댓글 허용·호환 pending 해소·실제 TO 수신확인·반영/이관 수용은 서로 다른 판정이다.
 
-문법 검증 API `/v1/validate`는 DB·현재시각을 보지 않는다. 이 endpoint와 실제 게시 preflight가 같은 문법 모듈을 쓰는 것을 통합 시험한다. 정형 32개(역사 날짜·레거시 이름·아직 없는 RE 포함)를 production post에 무조건 넣는 시험으로 오해하지 않는다. live 시나리오는 등록/실제 참조/시험 시계/현재 기한을 갖춘 별도 fixture다.
+문법 검증 API `/v1/validate`는 DB·현재시각을 보지 않는다. 이 endpoint와 실제 게시 preflight가 같은 문법 모듈을 쓰는 것을 통합 시험한다. 정형 32개(역사 날짜·레거시 이름·아직 없는 RE 포함)를 production post에 무조건 넣는 시험으로 오해하지 않는다. good 32 HTTP E2E는 원본 바이트를 유지하고 등록·실제 참조·Clock 주입으로 문맥을 먼저 준비한다. 댓글28개는 POST comment의 완료201, 본문4개(`issue-body-running/closing/cancelled`, `board-body`)는 신규 이슈 POST가 아니라 준비된 이슈의 본문 교체(`--edit-body`, PUT/PATCH body)의 완료200이다. 본문이 가리키는 COMPACT id·REPLY-IN 이슈·BOARD 이슈도 시험이 먼저 만들며, 32개 모두 서버 검증 통과가 수용 기준이다. 근거: DECISION 6310243238 (1).
 
 **무변경 서버 preflight(P1-b):** `POST /v1/repos/:owner/:repo/issues/:number/preflight`는 인증된 principal, 경로의 repo/issue, §7.2의 `mode,request`(본문·제출 metadata), 요청 접수 시 서버 `Clock.now()`를 받아 위 문법·문맥 검사와 compact due 계산을 실행한다. 현재시각은 응답 `context.checkedAt`이며 클라이언트 지정 시각은 받지 않는다(시험 Clock 주입만 허용). REPEATABLE READ의 읽기 전용 snapshot에서 검사하고 DB 행·revision·token·packet·due·cursor·감사 event·command_result·PGMQ를 생성/변경하지 않는다. 인증 경로도 last-seen 갱신 등의 쓰기를 하지 않는다. DECISION/HANDOFF의 선행 요약 사유는 계산 결과에만 포함하며 due를 기록하거나 packet을 발급하지 않는다. 결과는 해당 시각·snapshot의 진단이므로 실제 게시의 접수/worker 최종 재검사를 생략할 근거가 아니다. P4 `issus-1-core`가 `apps/issus/src/server/http/preflight/**`와 공통 context 검사 연결·I-P1을 소유하고, P7 `issus-1-client`는 CLI dry-run에서 소비한다(루트 route 조립은 P1 경계 유지).
 
@@ -286,7 +297,7 @@ auth session 발급·철회·subscription lifecycle은 접속 제어 서비스�
 | `issus.issue.closed` / `issus.issue.reopened` | reason,finalReportId?,compactId?,body,actor,revision | fact/C/issue | `issus_route`→issue-notify |
 | `issus.handoff.accepted` | handoffId,ackCommentId,targetIssue,newOwnerAliasId | fact/C/issue | `issus_route`→issue-notify |
 | `issus.issue.handed-off` | handoffId,ackCommentId,sourceIssue,targetIssue,oldOwner,newOwner,body,revision | fact/C/source issue | `issus_route`→source+target owners |
-| `issus.alias.registered` / `issus.alias.renamed` | aliasId,name,oldName?,repos,role,scope,actor | fact/C/repo(공지 repo별 사본) | — |
+| `issus.alias.registered` / `issus.alias.renamed` | aliasId,name,oldName?,repos,role,model,scope,actor (`model`은 ROSTER 복원에 필수. 근거: DECISION 6310243238 (2)) | fact/C/repo(공지 repo별 사본) | — |
 | `issus.board.created` | repoId,issueNumber,ownerAliasId,title,body | fact/C/repo | `issus_route`→repo-notify |
 | `issus.subscription.opened` / `issus.subscription.closed` | subscriptionId,aliasId,sid,sessionId,channels,transport,reason? | fact/W/internal:subscription | — (감사/계측) |
 | `issus.session.opened` / `issus.session.revoked` | sessionId,aliasId,sid,expiresAt?,reason? | fact/W/internal:auth | — (secret 없음) |
@@ -387,6 +398,8 @@ pendingLegacy(R,M) = { c in R | FROM(c) not in M,
 
 재전달은 새 delivery를 만들지 않고 sourceEventId/commentId를 유지한다. 전송 eventId만 attempt별 새 값이므로 UI는 deliveryId 기준 같은 항목의 횟수로 갱신한다. 오프라인이면 inbox에 남고 실제 delivered는 찍지 않는다. PGMQ 처리 재시도와 ACK 기한 재전달은 다른 예산이다. 소켓 연결 확인·hook HTTP 2xx·OS command exit0은 ACK가 아니다.
 
+**WS 인증·전달 확정:** §7.1의 Authorization 헤더·browser cookie 방식에 더해 `Sec-WebSocket-Protocol`에 `issus.v1`과 `issus.bearer.<token>`을 함께 제시하는 인증을 허용한다. 서버는 bearer를 읽되 응답 subprotocol에는 `issus.v1`만 반환한다. query string 토큰은 금지하며 subprotocol bearer도 로그·fact에 남기지 않는다. WS 구독은 인증 별칭 채널만 보내는 필터형이 기본이며 firehose를 기본 구독으로 쓰지 않는다. 전달 프레임1개는 이슈·댓글 id·봉투·priority·delivery 상태를 포함하는 자족적 한 줄 JSON이어야 한다. body의 줄바꿈은 JSON escape로 전달하여 Monitor 알림 한 개만으로 처리할 문맥을 제공한다. 근거: DECISION 6310757267 (1)(2).
+
 ### 5.4 스트리밍 프레임·재생·처리 커서
 
 인증한 session은 subscription API로 채널 권한과 immutable 시작 cursor를 발급받는다. `from=since-compact`는 §5.5와 같은 bootstrap builder로 최신 COMPACT(없으면 처음)+이후 원문과 inbox를 병합하고 pendingLegacy/ackState/activeHold를 먼저 제공한 뒤 snapshot watermark에서 live를 연결한다. 중복 제거는 §5.5의 comment viewKey와 원 fact sourceEventId를 적용한다. 보통 reconnect는 마지막 **수신 확인한** transport cursor로 재생한다.
@@ -463,6 +476,17 @@ interface WakeAdapter {
 
 `packages/issus_domain/common/protocol/adapter/`가 wire 계약, app의 `src/server/adapters/<kind>/`가 구현이다. 기본 off, 허용된 alias→고정 endpoint/실행 파일의 관리자 설정만 사용한다. 게시 본문에서 shell/URL을 만들지 않는다. command adapter는 shell=false + argv, timeout5초, stdout body를 이벤트로 저장하지 않는다. webhook은 관리자 allowlist와 secret redaction, 재시도 키를 지원한다. RemoteTrigger 실제 연동/세션 깨우기 보장은 외부 제품 검증 전 미확인이고 1차 수용 기준에는 off 동작만 들어간다. off 상태의 push는 이미 연결된 세션으로의 스트림 전달을 뜻한다.
 
+### 5.6 세션 깨우기 수단
+
+다음 경로는 서버 delivery를 실행 중인 세션에 알리는 수단이다. 수신·transport receipt는 사용자 ACK나 작업 반영을 대신하지 않는다. 근거: DECISION 6310757267.
+
+| 경로 | 동작과 경계 |
+| --- | --- |
+| Claude Code Monitor ws 소스 | ws 소스 `{url, protocols}`로 별칭 채널을 구독한다. 헤더를 넣을 수 없으므로 §5.3의 `issus.v1` + `issus.bearer.<token>`을 사용한다. 프레임1개=알림1개이며 30분 만료 때 재장전한다. 배포 뒤 실제 세션이 깨어나는 수용 확인은 오케스트레이터가 수행한다. 근거: DECISION 6310757267 (1)(2)(4) |
+| 백그라운드 subscribe --once | `issus subscribe --once`를 백그라운드로 실행하고 프로세스 종료 알림으로 세션을 깨운다. 첫 delivery 수신·영수 완료 후 exit0, `--until <ms>`로 지정한 ACK-BY/idle 대기 만료는 exit3이다. 근거: DECISION 6310757267 (3)(4) |
+| Codex | pull `issus watch`를 사용하거나 `subscribe --once`→`codex exec` 래퍼를 사용한다. 래퍼는 수신한 delivery를 후속 실행에 넘기며 실제 ACK/반영은 그 실행의 책임이다. 근거: DECISION 6310757267 (3)(4) |
+| RemoteTrigger 어댑터 | off 유지. 실제 연결·세션 깨우기 보장은 미확인이다. Monitor/CLI 경로와 별도로 검증한다. 근거: DECISION 6310757267 (4) |
+
 ## 6. COMPACT 자동 유도와 패킷
 
 **결정:** 요약문 생성은 OWNER/위임 worker가 맡고 서비스는 구간 계산·due 전달·패킷·강한 마커·본문 포인터 갱신을 책임진다. 자동 LLM 요약이나 요약 내용을 새 권위로 승격하지 않는다.
@@ -474,6 +498,8 @@ interface WakeAdapter {
 최신 COMPACT **댓글 id 이후**의 모든 댓글 수와 원문 전체 code point 합(봉투·LF 포함)을 집계한다. COMPACT 자신의 자수는 새 구간에 포함하지 않는다. 일반 issue ≥25댓글 **또는** ≥40,000자, board ≥30댓글 **또는** ≥40,000자이면 due. `compact_segment` generation별 threshold due를 1회 발급하고 OWNER의 alias inbox로 `issus.compact.due`를 전달한다. 중복 reaction/재생으로 count를 ++하지 않고 sourceEventId unique 또는 원본 count 재계산을 쓴다.
 
 DECISION/HANDOFF 준비 API·close 요청은 댓글 수와 무관하게 `reason=before-decision|before-handoff|before-close` due도 기록한다. COMMENT가 이미 들어온 뒤의 due는 소급 선행 완료로 쓰지 않는다. CLI `post --dry-run`은 due 정보를 함께 출력하고 게시 전에 packet 경로를 안내한다. ACK/HOLD/긴급 DECISION을 무조건 COMPACT 대기시키는 deadlock은 만들지 않는다. close만 §2.4의 신선한 COMPACT를 필수 gate로 둔다. OWNER는 DECISION/HANDOFF 전 요약을 만드는 것이 기본이며 긴급 생략은 `compactDeferredReason` 제출 metadata로 감사에 남긴다.
+
+**before-close 접점:** P4 `closeIssue` 소유 경로가 P6 export `refreshCompactSegment(tx, issue, 'before-close')`를 closeIssue 호출 **전 별도 제어 tx**에서 실행·커밋한다. due는 관측 사실이므로 뒤의 close 검증 실패·close tx 롤백에도 기록을 보존한다. 무변경 preflight는 §3.2대로 계산만 하고 due를 기록하지 않는다. 근거: DECISION 6310243238 (3).
 
 ### 6.2 패킷·마스킹·동시 게시
 
@@ -657,7 +683,8 @@ CSS 클래스/XPath/`.first()`/`.nth()`가 주 locator가 되는 구조를 만�
 | subscribe `--repo --issue` | 각 필수 | 각 아니오 | 없음 | stream+receipt. --board는 반복 가능(기본[]), --since-compact 기본true | E |
 | subscribe `--me` | 선택 | 아니오 | token alias | 구독/receipt는 단일 인증 alias만. watch의 복수 관찰 집합과 구분 | E |
 | subscribe `--transport` | 선택 | 아니오 | ws | ws 또는 sse만 | E |
-| subscribe `--cursor FILE` / `--once` | 각 선택 | 각 아니오 | cursor는 profile의 scope별 파일 / once=false | 마지막 수신 transport cursor 저장, once는 bootstrap+현재 replay 후 종료 | E |
+| subscribe `--cursor FILE` / `--once` | 각 선택 | 각 아니오 | cursor는 profile의 scope별 파일 / once=false | 마지막 수신 transport cursor 저장. once는 첫 delivery 수신·영수 완료 후 종료하며 ready/subscribed/replay 완료만으로 종료하지 않음. 근거: DECISION 6310757267 (3) | 첫 delivery 수신·영수 후0, 대기 만료3, 오류는 E |
+| subscribe `--until <ms>` | 선택 | 아니오 | 생략 시 명시적 대기 상한 없음 | ms 단위 대기 제한으로 ACK-BY/idle timeout을 지정. --once도 이 상한 적용. 근거: DECISION 6310757267 (3) | 만료3 |
 | alias register `--owner --repo --name --role --model --scope` / `--sid` | 앞6개 필수 / sid 선택 | 각 아니오 | sid 없음 | bootstrap 권한. announcement+registry tx, sid 지정 시 등록 뒤 session open | E |
 | alias rename `--name`; board ensure `--owner` | 각 필수 | 각 아니오 | 없음 | 현재 alias 개명 / 명시 board 생성. 권한·충돌 검사 | E |
 | session open `--alias --sid`; auth set `--server --token-stdin` | 각 필수 | 각 아니오 | 없음 | bootstrap 발급/표준입력. profile 사용자 전용권한, stdout token fallback 없음. 발급 응답 유실은 기존 key로 확인 후 §7.1 명시적 재발급 | E |
@@ -789,13 +816,14 @@ scheduler 정지>15초/overdue lag>15초, reaction lag>10초, 영구 처리 fail
 | U-C2 | §6.3 요청 전 필드 HTTP→명령 decoder→저장 왕복, unknown/오탈자·누락·다른TYPE의 키·sample수·worker/footer불일치, 사유 hash 변경 | 표의 허용 필드 유실0, 금지/unknown422·게시0, 동일 key metadata변경409, 두 posted fact metadata=comment.metadata, raw packetToken fact노출0 |
 | U-M1 | 각 MASKS 정례/반례, PEM 여러줄, header/line1 비밀 패턴, 순서 중복 | Python masked text 일치+패킷 전체 중복노출 방지, raw string 없음 |
 | U-S1 | fake time ACK-BY 직전/직후, 3retry, 같은issue ACK/REPORT RE/tick 경합, COMPACT 이전 미해소, restart | 동일 source 새comment0; due unique, legacy 미해소 HOLD 즉시 escalation, REPORT RE 해소 후 ackState waiting이어도 retry/escalation0, window 밖 global pending은 재알림 유지 |
-| I-01 | 실제DB, 가짜 session A/B 별칭 등록, B WS subscribe, A UI stream | native token 인증, subscription.opened, ready→subscribed |
+| I-V1 | good32 원본 바이트 유지, 별칭/권한/실제 참조/고정 Clock 문맥 준비. 댓글28 POST, 준비한 이슈의 본문4 교체(--edit-body); COMPACT id·REPLY-IN·BOARD 이슈 선행 생성 | 32개 모두 서버 검증 통과. 댓글28 완료201, issue-body-running/closing/cancelled·board-body 4개는 PUT/PATCH body 완료200. 신규 이슈 POST201로 본문 시험 대체 금지. 근거: DECISION 6310243238 (1) |
+| I-01 | 실제DB, 가짜 session A/B 별칭 등록, B WS subscribe, A UI stream. Authorization 외 subprotocol 인증·잘못된 token·query token·타별칭 채널도 시도 | native token 인증, subscription.opened, ready→subscribed. issus.v1+issus.bearer.<token> 허용·응답은 issus.v1만, query token 거부·로그/fact 토큰노출0, 기본 별칭 필터·자족적 한 줄 delivery JSON. 근거: DECISION 6310757267 (1)(2) |
 | I-02 | A→B ASK(완전한 ISO ACK-BY), 같은key 재송, 같은body 다른key, B receipt | comment1건/delivery1건, 같은key 기존결과, 다른key409, B ME 전문, A를 B 수신으로 간주하지 않음 |
 | I-03 | B TYPE:ACK RE:<ASK>, 다음 REPORT+apply, 뒤늦은receipt | acked→applied, pending0, event/snapshot 일치 |
 | I-04 | A→B HOLD, B 연결종료·미ACK 상태로 test clock 전진, 재접속 | overdue/redelivered/escalated, OWNER/감독 inbox, B 재생에서 같은HOLD id, receipt만으로 pending 소멸 불가 |
 | I-05 | B ACK STATE:hold, A/B 각각 CLAIM 시도, DECISION SUPERSEDES 해제 뒤 ACK | 당사자B 실행시작은HOLD로 거부, 비당사자 오차단0, ACK만으로 해제 불가 |
 | I-06 | 25건/40k 임계 각각 도달, OWNER packet→COMPACT, 동시 새comment로 stale 검사 | owner due, token/marker/through 검사, stale409, 성공 시 body pointer 원자 갱신, sinceCompact 누락0 |
-| I-07 | 미ACK/미RELEASE/pending handoff 상태 close, 이후 수용ACK→handoff complete→최종REPORT/COMPACT→close | blockers id 반환, 무응답handoff 완료 불가, 최종close 성공, closed 새작업post409 |
+| I-07 | 미ACK/미RELEASE/pending handoff 상태 close, 이후 수용ACK→handoff complete→최종REPORT/COMPACT→close. close 전 별도 제어 tx의 before-close due 기록 확인 | blockers id 반환, 무응답handoff 완료 불가, 최종close 성공, closed 새작업post409. close 실패·롤백에도 before-close due 보존. 근거: DECISION 6310243238 (3) |
 | I-08 | broker/worker를 ①queue 저장 뒤 ②domain tx commit 전 ③commit 뒤/result 전에 정지·재시작 | comment/fact/의무 누락0, 논리중복0, cached 결과, 미완source 유지 |
 | I-09 | reaction cursor 없음, 24h 넘은 미처리fact, 복수broker lease, projection rebuild | 처음부터 page 회수, lookback으로 오래된 의무 유실 없음, rebuild 후 동치 |
 | I-10 | WS/SSE high-water/subscribe 경계에 barrier 게시, 256초과 재생, client 수신 전 연결단절 | cursor 재개 누락0, eventId 중복제거, 타alias 수신0, scope 위조403/1008 |
@@ -806,8 +834,10 @@ scheduler 정지>15초/overdue lag>15초, reaction lag>10초, 영구 처리 fail
 | I-15 | P5/P7: subscribe 없는 B가 최초 pull 전체 페이지를 소비하여 H/A/E refreshCursor 저장. 새 댓글 없이 기존 일반 ASK delivery D만 기한 재전달 attempt1로 갱신한 뒤 작은 page로 refresh, 이후 receipt로 같은 attempt의 state만 갱신해 재조회 | commentId·ordinal·H/A 불변, E 증가. D 한 행의 attempt/state/aliasEventSequence 최신화, 중복행0·기존 source 유지. 페이지 중 추가 변경은 다음 refresh에서 회수, 동일 cursor 재조회 누락0·오래된 응답으로 후퇴0·processed 불변 |
 | I-P1 | P4/P7: 유효 ASK·만료 ACK-BY·HOLD>10분·unknown metadata·COMPACT stale/만료·closed/duplicate·issue-body If-Match·미인증/타repo, 서버 Clock과 임계 due/DECISION/HANDOFF를 POST I/preflight 및 CLI --dry-run으로 검사 | 200의 checkedAt/compact due 정확, 오류 status/code/reasons는 실제 게시 검사와 동치. 성공·실패 모두 DB 전체 투영/revision/packet/due/cursor/command_result/event·PGMQ 차분0. preflight 뒤 상태 변경 시 실제 게시 재검사 |
 | I-S1 | P4/P7: 세션 최초201 응답 유실, 동일 key·payload 재시도, 다른 payload 재시도, bootstrap 새 key+새 sid+reissueOf로 재발급, 경합 재발급 | 최초 token 1회·해시만 저장, 동일 key409 SESSION_TOKEN_NOT_REPLAYABLE와 비밀 없는 복구정보, payload변경409 IDEMPOTENCY_CONFLICT. 재발급 old token revoke·새 token1회·alias inbox 유지, 경합409 SESSION_CONFLICT, token의 DB/result/event/log 노출0 |
+| I-S2 | browser-session 최초/동일 key 재시도 Set-Cookie 검사, 고정 Clock 주입 | token과 HttpOnly·SameSite·Path·Expires(Clock 기준) 필수 속성이 일치. Express 응답 시각에 기대값을 의존하지 않음. 근거: DECISION 6310243238 (4) |
 | I-D1 | P5 소유 receipts/application HTTP: 미인증·타alias·중복receipt·receipt 전/후 ACK·무관 evidence·ACK없는 apply·유효 REPORT apply | 미인증401/타alias403, 중복receipt멱등·단조상태. ACK없는 apply409 ACK_REQUIRED/무관근거422, 유효근거 applied. 전용 시험 경로와 담당은 §11 |
 | C-01 | CLI parser와 실제API: 반복 --me/--mine 합집합·반복 board dedupe, token alias 미포함, peek, state 생략/상대경로, compact --out 생략·empty, 한글경로·default limit | M/board 정본 일치, 추가alias canonical관찰만·타인cursor변경0. 기본 cwd/issue_watch.state.json의 scope격리, out 원본 파일명·masked text·sidecar, exit0/1/2/3 표와 일치 |
+| C-02 | subscribe --once로 ready/subscribed 후 delivery 대기→첫 delivery 수신·receipt, 별도 실행에서 --until <ms> 만료 | 제어 프레임만으로 조기 종료0건, 첫 delivery 영수 후 exit0, 대기 만료 exit3, ACK/반영 자동생성0. 백그라운드 종료 알림 경로와 §5.6 Monitor 실제 깨우기는 배포 후 별도 관측. 근거: DECISION 6310757267 (3)(4) |
 | B-01 | 배포web issue 목록→issue, envelope/COMPACT/NOENV read fixture | semantic locator strict, 문자/marker 시인성, NOENV를 유효게시로 오인하지 않음 |
 | B-02 | textarea invalid ASK 검사·게시→유효ASK 게시→inbox ACK→reload | 422 reasons, invalid 댓글0, 성공id, 상태/재표시 동치 |
 | B-03 | 오류·빈목록·loading·close blocked dialog, WS 단절/재연결 | status/alert/label로 판정, CSS/nth 의존0, 중복행0 |
@@ -821,7 +851,7 @@ U는 단위, I는 실제DB/PGMQ 통합, B는 headless Playwright, O는 운영이
 
 실행 기록은 모듈별 `tests/reports/<name>/YYYYMMDD_HHMMSS.md`다. Timestamp/Environment/Executed Steps/Observed Logs/Failures/Reproducibility/Locator Outcome을 두고 runId·source revision/dirty diff hash·명령·Node/npm/Docker/PG/PGMQ/image/bundle hash·비밀을 제외한 환경값·실시ID·출력파일·duration·API/WS frame·DB 대조를 기록한다. screenshot/Playwright trace/console/network failure는 같은 timestamp artifact 폴더에 둔다. raw bearer/cookie/packet secret은 로그에 남기지 않는다.
 
-행별 VERDICT=PASS/FAIL/BLOCKED/UNVERIFIED, 사전 범위 밖만 SCOPE-EXCLUDED다. mock/local/실제DB/deployed browser를 별도 열로 나누고 health·compile·원본 check_examples 통과를 issus 수용 성공으로 확대하지 않는다. §0의 v1 실행 기록과 v2의 문서/정본 대조를 구별한다. 이 절의 issus 시험은 모두 미실시다. 완료는 fixture37·**I-01~15·I-P1·I-S1·I-D1·C-01**·B-01~03·O-01과 위 필수 단위(U-D2/U-E1/U-C2 포함)가 통과하고 g1/g2 리뷰·문서가 갖춰진 시점이다. 추가 시험도 필수이며 v1의 좁은 smoke 범위로 완료를 축소하지 않는다. commit/push는 이번 설계 담당의 범위 밖이다.
+행별 VERDICT=PASS/FAIL/BLOCKED/UNVERIFIED, 사전 범위 밖만 SCOPE-EXCLUDED다. mock/local/실제DB/deployed browser를 별도 열로 나누고 health·compile·원본 check_examples 통과를 issus 수용 성공으로 확대하지 않는다. §0의 v1 실행 기록과 v2의 문서/정본 대조를 구별한다. 이 절의 issus 시험은 모두 미실시다. 완료는 fixture37·**I-V1·I-01~15·I-P1·I-S1~2·I-D1·C-01~02**·B-01~03·O-01과 위 필수 단위(U-D2/U-E1/U-C2 포함)가 통과하고 g1/g2 리뷰·문서가 갖춰진 시점이다. I-V1/I-S2·I-07 보완의 근거: DECISION 6310243238. I-01 보완/C-02의 근거: DECISION 6310757267. Monitor 실제 세션 깨우기는 §5.6대로 배포 후 오케스트레이터가 실기 확인하고 별도 증거로 남긴다. 추가 시험도 필수이며 v1의 좁은 smoke 범위로 완료를 축소하지 않는다. commit/push는 이번 설계 담당의 범위 밖이다.
 
 ## 11. 구현 단계와 담당 경계
 
@@ -910,7 +940,7 @@ Python source hash: issue_post.py=`67d01e961496f842f5764161c382a9c0abb291d6e62e9
 | brief 요구 | 충족 설계 위치 | 구현 수용 증거 |
 | --- | --- | --- |
 | 1 도메인 | §2 repo/issue/comment·STATE·alias registry/session·board·HANDOFF ACK·close, §3 전수 검증, §4 사건 | U-V/U-A, I-02/I-07, 32 good/5 bad, body/state/event 원자성 |
-| 2 구독·push | §5 alias/채널·reading 우선순위·ACK/반영·overdue/escalation·WS/SSE·pull·선택 adapter, §7 API | I-01~05/I-09~14/I-D1, B-02/03, 실제 PG/PGMQ+두 가짜 세션 프레임/DB 증거 |
+| 2 구독·push | §5 alias/채널·reading 우선순위·ACK/반영·overdue/escalation·WS/SSE·pull·선택 adapter, §5.3 subprotocol 인증·별칭 필터·자족적 JSON, §5.6 Monitor ws/백그라운드 once/Codex pull·래퍼/RemoteTrigger off·미확인, §7 API·§8 once/until. 근거: DECISION 6310757267 | I-01~05/I-09~14/I-D1, C-02, B-02/03, 실제 PG/PGMQ+두 가짜 세션 프레임/DB 증거 및 배포 뒤 오케스트레이터의 Monitor 실제 세션 깨우기 관측 |
 | 3 COMPACT | §6 임계·OWNER due·packet MASKS·marker·stale 방어·본문 pointer, §5 globalPending | U-C/U-M, I-06, B-01, since-compact 데이터 누락 0 |
 | 4 CLI·스킬 | §8 six commands/호환 인자·exit·cursor·UTF-8·배포 | C-01/CLI compatibility report, Python golden fixture와 실제 API 왕복; GitHub 미러는 §12 비범위 |
 | 5 운영 | §1 단일 compose/module container/PGMQ/volume, §9 구조·npm deploy·영속·복구, §7 semantic UI | O-01/I-12, deployed browser B-01~03, README/docs 7종·운영 기록 |
