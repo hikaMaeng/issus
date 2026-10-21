@@ -51,6 +51,16 @@ metadata wrapper·unknown key는422다. COMPACT는 OWNER만, packet의 owner/iss
 
 preflight는 Idempotency-Key·operation 없이 즉시200 또는 실제 validator 오류를 반환한다. `context={repoId,issueNumber,revision,checkedAt}`, `compact={due,reasons,count,chars,previousCompactId}`다. 클라이언트 시각을 받지 않으며 read-only snapshot에서 성공·실패 모두 DB/이벤트/큐 쓰기0이다.
 
+## ETag·조건부 GET
+
+`GET I`, `GET R/issues`, `GET /v1/inbox`는 실제 전송 JSON UTF-8 전체의 SHA-256을 `ETag:"sha256-<hex>"`로 발급한다. 이슈 본문 revision과 별개이며 stats·pendingLegacy/windowPendingAck/globalPendingAck·ackState·activeHolds·claims·compact 등 응답에 포함되는 모든 파생 필드가 대상이다. 목록은 해당 필터·정렬·페이지의 응답 전체가 기준이다.
+
+인증·권한·현재 snapshot 조회 후 `If-None-Match`를 평가한다. 같은 표현은304/빈본문, 변경된 표현은200/새 ETag다. 약한 validator·validator 목록·`*`도 HTTP GET 비교 규칙을 따른다. `Cache-Control:private, no-cache`, `Vary:Authorization,Cookie`로 재검증하며, 본문 편집 시각으로 파생 상태의 수정 시각을 추측하지 않아 `Last-Modified`는 발급하지 않는다.
+
+inbox는 기존 계약대로 매 조회 새 `snapshotId`·opaque `nextCursor`/`refreshCursor`를 만들고 HTTP 영수를 기록한다. 이 값도 응답 일부이므로 도메인 변경이 없어도200/새 ETag일 수 있다. cursor를 해시에서 제외하거나 이전 cursor로 바꾸지 않는다.
+
+쓰기 `If-Match`는 계속 응답 본문의 **숫자 revision**(따옴표 허용)을 사용한다. GET의 opaque ETag는 본문 편집·close/reopen의 If-Match 값이 아니다. 숫자 stale는412, opaque ETag를 보낸 경우400 INVALID_IF_MATCH다. 회귀 근거는 [조건부 GET 계획](../src/server/http/issue/tests/plans/conditional-get-20261021.md)이다.
+
 ## Q1·Q2 읽기 조회 (DECISION 6314143095)
 
 세 경로는 기존 bearer/cookie 세션 인증을 재사용한다. 성공·거부 모두 read-only transaction이며 fact·큐·command_result·history_snapshot 쓰기0이다. 인덱스는 `0004-core-read-indexes.sql` 순번 migration으로만 추가한다. GET은 Idempotency-Key가 필요 없다.
