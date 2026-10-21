@@ -3,12 +3,12 @@ import {header} from 'issus_domain/common';
 import type {IssusClient} from 'issus_domain/front';
 import {errorLines, errorReasons, allPages, type Principal, type ValidationReason} from '../../entry/client/index.js';
 import {Envelope} from '../envelope/index.js';
-import {ConfirmDialog} from '../session/index.js';
+import {ConfirmDialog, useSessionDraft} from '../session/index.js';
 import {ko} from '../../resources/index.js';
 import {composerKo} from '../../resources/composer.js';
-import {TYPES, STATES, fieldKeys, boardTypes, parseDraft, serializeDraft, draftSize, requiredFields, composerReasonField, type Draft} from './model.js';
+import {TYPES, fieldKeys, boardTypes, parseDraft, serializeDraft, draftSize, requiredFields, composerReasonField, fieldFeedback, type Draft} from './model.js';
 import {useWriteOperation, OperationState} from './mutation.js';
-import {TimeAssist} from './time.js';
+import {ComposerField, FieldErrors} from './fields.js';
 
 export {TYPES, STATES, fieldKeys, boardTypes, parseDraft, serializeDraft, draftSize, requiredFields, quickDraft, protocolTime, composerReasonField} from './model.js';
 export {WriteAttempt, useWriteOperation, OperationState} from './mutation.js';
@@ -21,10 +21,10 @@ export function Composer({client, path, onPosted, principal: supplied, revision,
   client: IssusClient; path: string; onPosted: () => void; principal?: Principal|null; revision?: number;
   board?: boolean; compactHref?: string; draft?: ComposerDraft;
 }) {
-  const [body, setBody] = useState(''), [fields, setFields] = useState<Draft>({fields: {FROM: supplied?.alias ? `${supplied.alias}/${supplied.sid ?? 's1'}` : '', TO: 'ALL', TYPE: 'NOTE'}, text: ''});
-  const [principal, setPrincipal] = useState(supplied), [structured, setStructured] = useState(false), [replacement, setReplacement] = useState<Draft|null>(null), [incoming, setIncoming] = useState<string|null>(null);
+  const [body, setBody] = useSessionDraft('composer.body', ''), [fields, setFields] = useSessionDraft<Draft>('composer.fields', {fields: {FROM: supplied?.alias ? `${supplied.alias}/${supplied.sid ?? 's1'}` : '', TO: 'ALL', TYPE: 'NOTE'}, text: ''});
+  const [principal, setPrincipal] = useState(supplied), [structured, setStructured] = useSessionDraft('composer.structured', false), [replacement, setReplacement] = useState<Draft|null>(null), [incoming, setIncoming] = useState<string|null>(null);
   const [errors, setErrors] = useState<string[]>([]), [reasons, setReasons] = useState<readonly ValidationReason[]>([]), [status, setStatus] = useState(''), [checking, setChecking] = useState(false), [checked, setChecked] = useState<Preflight|null>(null), [stale, setStale] = useState(false);
-  const [deferred, setDeferred] = useState(''), [aliases, setAliases] = useState<string[]>([]), [registryFailed, setRegistryFailed] = useState(false);
+  const [deferred, setDeferred] = useSessionDraft('composer.deferred', ''), [aliases, setAliases] = useState<string[]>([]), [registryFailed, setRegistryFailed] = useState(false);
   const operation = useWriteOperation(), textarea = useRef<HTMLTextAreaElement>(null), lastRevision = useRef(revision), action = useRef(false);
   useEffect(() => {
     if (supplied !== undefined) {setPrincipal(supplied); if (supplied?.alias) setFields(current => current.fields.FROM ? current : {...current, fields: {...current.fields, FROM: `${supplied.alias}/${supplied.sid ?? 's1'}`}}); return;}
@@ -38,6 +38,7 @@ export function Composer({client, path, onPosted, principal: supplied, revision,
   const raw = parseDraft(body), type = raw.draft.fields.TYPE ?? fields.fields.TYPE ?? 'NOTE', size = draftSize(body, board, deferred && ['DECISION','HANDOFF'].includes(type) ? {compactDeferredReason: deferred} : {});
   const effectiveType = fields.fields.TYPE ?? 'NOTE', required = requiredFields(effectiveType), locked = operation.locked || checking;
   const mapped = new Set(reasons.map(composerReasonField).filter((key): key is string => !!key));
+  const typeFeedback = fieldFeedback(reasons, 'TYPE', 'composer-type');
   const firstErrorId = mapped.size ? [...mapped][0] === 'TYPE' ? 'composer-type' : [...mapped][0] === 'compactDeferredReason' ? 'composer-deferred' : `composer-field-${[...mapped][0]}` : 'comment-body';
   function edited(value: string) {setBody(value); setFields(value ? parseDraft(value).draft : {fields: {FROM: principal?.alias ? `${principal.alias}/${principal.sid ?? 's1'}` : '', TO: 'ALL', TYPE: 'NOTE'}, text: ''}); setErrors([]); setReasons([]); setStatus(''); setChecked(null); setStale(false);}
   function apply(next: Draft) {
@@ -71,20 +72,12 @@ export function Composer({client, path, onPosted, principal: supplied, revision,
   }
   return <><form aria-label={ko.composer} aria-busy={operation.busy || checking} noValidate onSubmit={(event: FormEvent) => {event.preventDefault(); void act(true);}}>
     <h2>{ko.composer}</h2><p>{composerKo.dryRun}</p>{board && <p>{composerKo.boardHint}</p>}
-    <label htmlFor="composer-type">{composerKo.type}</label><select id="composer-type" disabled={locked} aria-invalid={mapped.has('TYPE')} aria-describedby={mapped.has('TYPE') ? 'composer-errors' : 'composer-type-hint'} value={effectiveType} onChange={event => {setStructured(true); const next: Draft = {...fields, fields: {...fields.fields, ...(principal?.alias ? {FROM: `${principal.alias}/${principal.sid ?? 's1'}`} : {}), TYPE: event.target.value}}; if (!['ACK','REPORT','DECISION'].includes(event.target.value)) delete next.fields.STATE; if (['ALIAS','COMPACT'].includes(event.target.value)) next.fields.TO = 'ALL'; apply(next);}}>
+    <label htmlFor="composer-type">{composerKo.type}</label><select id="composer-type" disabled={locked} aria-invalid={typeFeedback.invalid} aria-describedby={typeFeedback.describedBy ?? 'composer-type-hint'} value={effectiveType} onChange={event => {setStructured(true); const next: Draft = {...fields, fields: {...fields.fields, ...(principal?.alias ? {FROM: `${principal.alias}/${principal.sid ?? 's1'}`} : {}), TYPE: event.target.value}}; if (!['ACK','REPORT','DECISION'].includes(event.target.value)) delete next.fields.STATE; if (['ALIAS','COMPACT'].includes(event.target.value)) next.fields.TO = 'ALL'; apply(next);}}>
       {(board ? boardTypes : TYPES).map(value => <option key={value} value={value}>{value}</option>)}
-    </select><p id="composer-type-hint">{composerKo.hints[effectiveType as keyof typeof composerKo.hints]}</p>
+    </select><FieldErrors feedback={typeFeedback}/><p id="composer-type-hint">{composerKo.hints[effectiveType as keyof typeof composerKo.hints]}</p>
     <button type="button" disabled={locked} aria-pressed={structured} onClick={() => {setStructured(value => !value); if (body) setFields(raw.draft);}}>{structured ? composerKo.raw : composerKo.structured}</button>
     <fieldset hidden={!structured && !mapped.size} disabled={locked} aria-describedby="composer-type-hint"><legend>{composerKo.fields}</legend>
-      {fieldKeys.filter(key => key !== 'TYPE').map(key => {
-        const invalid = mapped.has(key), id = `composer-field-${key}`;
-        return <div key={key}><label htmlFor={id}>{key}</label>
-          {key === 'STATE' ? <select id={id} value={fields.fields[key] ?? ''} required={required.includes(key)} aria-invalid={invalid} aria-describedby={invalid ? `${id}-error` : undefined} onChange={event => changeField(key, event.target.value)} disabled={!['REPORT','ACK','DECISION'].includes(effectiveType)}><option value=""/>{STATES.map(state => <option key={state}>{state}</option>)}</select> :
-            <input id={id} value={fields.fields[key] ?? ''} list={key === 'TO' ? 'composer-alias-candidates' : undefined} required={required.includes(key)} readOnly={key === 'FROM' && principal?.kind !== 'bootstrap'} aria-invalid={invalid} aria-describedby={invalid ? `${id}-error` : undefined} onChange={event => changeField(key, event.target.value)}/>}
-          {['DUE','ACK-BY'].includes(key) && <TimeAssist field={key} id={id} value={fields.fields[key] ?? ''} onChange={value => changeField(key, value)}/>}
-          {invalid && <p id={`${id}-error`}>{composerKo.fieldError}</p>}
-        </div>;
-      })}
+      {fieldKeys.filter(key => key !== 'TYPE').map(key => <ComposerField key={key} field={key} value={fields.fields[key] ?? ''} reasons={reasons} required={required.includes(key)} readOnly={key === 'FROM' && principal?.kind !== 'bootstrap'} stateDisabled={!['REPORT','ACK','DECISION'].includes(effectiveType)} onChange={value => changeField(key, value)}/>)}
       <datalist id="composer-alias-candidates"><option value="ALL"/>{aliases.map(alias => <option key={alias} value={alias}/>)}</datalist><p>{registryFailed ? composerKo.registryFallback : composerKo.registry}</p><label htmlFor="composer-tail">{composerKo.text}</label><textarea id="composer-tail" value={fields.text} onChange={event => {const next = {...fields, text: event.target.value}; setFields(next); if (structured) apply(next);}}/>
       <button type="button" onClick={() => apply(fields)}>{composerKo.apply}</button>
     </fieldset>

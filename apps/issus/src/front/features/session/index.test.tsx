@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {safeReturnPath, ConnectionForm, SessionBanner, SessionIssueForm} from './index.js';
+import {safeReturnPath, ConnectionForm, SessionBanner, SessionIssueForm, DraftRecovery, SessionDraftProvider, SessionDraftMemory, useSessionDraft} from './index.js';
 
 test('session return path accepts only same-origin paths without authentication query values', () => {
   for (const value of ['https://evil.invalid/path','//evil.invalid/path','/\\evil.invalid','/login','/repos?token=secret','/repos?access_token=secret']) assert.equal(safeReturnPath(value, 'http://localhost:18140'), '/repos');
@@ -18,4 +18,19 @@ test('session banner displays server identity and expiry without exposing bearer
 test('session issuance begins with a masked explicit management credential and no issued token', () => {
   const html = renderToStaticMarkup(<SessionIssueForm onConnected={() => {}}/>);
   assert.ok(html.includes('aria-label="세션 발급"')); assert.ok(html.includes('type="password"')); assert.ok(!html.includes('id="issued-token"')); assert.ok(html.includes('s1'));
+});
+
+test('draft recovery exposes explicit restore/discard buttons without rendering the saved content', () => {
+  const html = renderToStaticMarkup(<DraftRecovery pending onRestore={() => {}} onDiscard={() => {}}/>);
+  assert.ok(html.includes('보관한 초안 복원')); assert.ok(html.includes('보관한 초안 버리기'));
+  assert.ok(html.includes('role="status"')); assert.ok(!html.includes('<form'));
+  assert.equal(renderToStaticMarkup(<DraftRecovery pending={false} onRestore={() => {}} onDiscard={() => {}}/>), '');
+});
+
+test('draft hook works without a provider and reads only explicitly restored working slots', () => {
+  function Probe() {const [body] = useSessionDraft('composer.body', 'fresh'); return <textarea value={body} readOnly/>;}
+  assert.ok(renderToStaticMarkup(<Probe/>).includes('fresh'));
+  const memory = new SessionDraftMemory(); memory.begin('principal/page'); memory.write('principal/page', 'composer.body', 'saved'); memory.suspend('principal/page'); memory.begin('principal/page');
+  const view = () => renderToStaticMarkup(<SessionDraftProvider memory={memory} scope="principal/page"><Probe/></SessionDraftProvider>);
+  assert.ok(view().includes('fresh')); memory.restore('principal/page'); assert.ok(view().includes('saved'));
 });

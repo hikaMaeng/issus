@@ -36,7 +36,7 @@ async function reasons(number, body, actor = fixture.B, metadata = {}) {
   try {await actor.client.request(issuePath(fixture.repo, number) + '/preflight', {method: 'POST', body: {mode: 'comment', request: {body, ...metadata}}}); assert.fail('expected server 422');}
   catch (error) {assert.ok(error instanceof ClientError); assert.equal(error.status, 422); return error.reasons;}
 }
-async function invalidBoth(target, number, body, metadata = {}) {
+async function invalidBoth(target, number, body, metadata = {}, field) {
   const expected = await reasons(number, body, target === ownerPage ? fixture.A : fixture.B, metadata), before = await count(number), composer = form(target);
   await composer.getByLabel('댓글 본문', {exact: true}).fill(body);
   if (metadata.compactDeferredReason) await composer.getByLabel('compactDeferredReason', {exact: true}).fill(metadata.compactDeferredReason);
@@ -46,6 +46,14 @@ async function invalidBoth(target, number, body, metadata = {}) {
     await eventually(async () => JSON.stringify(await composer.getByRole('alert').getByRole('paragraph').allTextContents()) === JSON.stringify(expected), 'ordered422');
     assert.equal(await composer.getByLabel('댓글 본문', {exact: true}).getAttribute('aria-invalid'), 'true');
     assert.equal(await composer.getByLabel('댓글 본문', {exact: true}).inputValue(), body);
+    if (field) {
+      const control = composer.getByLabel(field, {exact: true});
+      assert.equal(await control.getAttribute('aria-invalid'), 'true');
+      const descriptions = await control.evaluate(element => (element.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean).map(id => {const description = document.getElementById(id); return description && !description.hidden ? description.textContent : null;}));
+      assert.deepEqual(descriptions, [expected[0]], `${field}: exact server reason must describe the invalid input`);
+      await composer.getByRole('link', {name: '첫 오류로 이동', exact: true}).click();
+      assert.equal(await control.evaluate(element => element === document.activeElement), true);
+    }
   }
   assert.equal(await count(number), before); return expected;
 }
@@ -80,6 +88,11 @@ test('P9-04/05 U2 TYPE13 raw422 field reasons then preflight dry-run and one dur
   assert.equal(await form(page).getByLabel('댓글 TYPE', {exact: true}).getByRole('option').count(), 13);
   const invalid = `FROM:${fixture.B.alias}/s1 TO:${fixture.A.alias} TYPE:ASK\nACK-BY missing`;
   await invalidBoth(page, number, invalid); assert.equal(await form(page).getByLabel('ACK-BY', {exact: true}).getAttribute('aria-invalid'), 'true');
+  for (const [field, body] of [
+    ['TO', `FROM:${fixture.B.alias}/s1 TO:${fixture.A.alias},${fixture.B.alias} TYPE:NOTE\nTO syntax probe`],
+    ['ACK-BY', `FROM:${fixture.B.alias}/s1 TO:ALL TYPE:NOTE ACK-BY:tomorrow\nACK-BY syntax probe`],
+    ['STATE', `FROM:${fixture.B.alias}/s1 TO:ALL TYPE:REPORT STATE:invalid\nSTATE syntax probe`],
+  ]) await invalidBoth(page, number, body, {}, field);
   const valid = `FROM:${fixture.B.alias}/s1 TO:${fixture.A.alias} TYPE:ASK ACK-BY:${future()}\nASK @${fixture.A.alias}: U2 확인 요청.`;
   const id = await validPost(page, number, valid); await page.reload(); await article(page, id).waitFor(); assert.equal(await article(page, id).count(), 1);
   observations.push({id: 'P9-04/05', commentId: id, invalidRowsAdded: 0});

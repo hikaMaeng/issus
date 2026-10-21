@@ -5,6 +5,10 @@ import {IssusClient} from 'issus_domain/front';
 import {checkComment, TYPES, REQUIRED} from 'issus_domain/common';
 import {Composer, parseDraft, serializeDraft, draftSize, quickDraft, requiredFields, composerReasonField, WriteAttempt} from './index.js';
 import {FrontClientError, ClientError, OperationTimeout} from '../../entry/client/index.js';
+import {errorReasons} from '../../entry/client/index.js';
+import {fieldFeedback} from './model.js';
+import {ComposerField, FieldErrors} from './fields.js';
+import {SessionDraftMemory, SessionDraftProvider} from '../session/index.js';
 
 const client = new IssusClient({server: 'http://test.invalid'}), from = 'tt-1-alpha/s1';
 const principal = {alias: 'tt-1-alpha', sid: 's1', kind: 'session'};
@@ -47,6 +51,83 @@ test('U2 422 maps only exact protocol keys/required diagnostics and never guesse
   assert.equal(composerReasonField({code: 'RECIPIENT_UNKNOWN', path: 'alias', message: '등록되지 않은 별칭'}), undefined);
   assert.equal(composerReasonField({code: 'PROTOCOL', path: 'body', message: 'some TYPE CLAIM: DUE 필수'}), undefined);
 });
+
+for (const probe of [
+  {field: 'TO', body: `FROM:${from} TO:tt-1-bravo,tt-1-charlie TYPE:NOTE\nprobe`},
+  {field: 'ACK-BY', body: `FROM:${from} TO:ALL TYPE:NOTE ACK-BY:tomorrow\nprobe`},
+  {field: 'STATE', body: `FROM:${from} TO:ALL TYPE:REPORT STATE:invalid\nprobe`},
+]) test(`U2 read-only canonical ${probe.field} syntax probe maps body422 to exact described field`, () => {
+  const messages = checkComment(probe.body);
+  assert.equal(messages.length, 1);
+  const error = new FrontClientError(422, 'VALIDATION_FAILED', messages.map(message => ({code: 'PROTOCOL', path: 'body', message})));
+  const reasons = errorReasons(error), feedback = fieldFeedback(reasons, probe.field, `composer-field-${probe.field}`);
+  assert.notEqual(composerReasonField(reasons[0]), undefined);
+  assert.equal(composerReasonField(reasons[0]), probe.field);
+  assert.equal(feedback.invalid, true);
+  assert.deepEqual(feedback.messages.map(reason => reason.message), messages);
+  const html = renderToStaticMarkup(<ComposerField field={probe.field} value={parseDraft(probe.body).draft.fields[probe.field]} reasons={reasons} required={false} readOnly={false} stateDisabled={false} onChange={() => {}}/>);
+  assert.ok(html.includes(`id="composer-field-${probe.field}"`));
+  assert.ok(html.includes('aria-invalid="true"'));
+  assert.ok(html.includes(`aria-describedby="${feedback.describedBy}"`));
+  for (const reason of feedback.messages) assert.ok(html.includes(renderToStaticMarkup(<p id={reason.id}>{reason.message}</p>)));
+  assert.deepEqual(checkComment(probe.body), messages);
+});
+
+test('U2 canonical explicit field syntax variants map without assigning body-content or similar messages', () => {
+  for (const [token, field] of [
+    ['FROM:bad', 'FROM'], ['FROM:tt-1-alpha/INVALID', 'FROM'], ['FROM:tt-1-alpha/by-invalid', 'FROM'],
+    ['TO:#1', 'TO'], ['TO:@bad', 'TO'], ['TO:reviewer', 'TO'], ['CC:ALL', 'CC'], ['CC:@bad', 'CC'], ['CC:ALL,ALL', 'CC'],
+    ['DUE:tomorrow', 'DUE'], ['RE:bad', 'RE'], ['SEEN:bad', 'SEEN'], ['SUPERSEDES:bad', 'SUPERSEDES'],
+    ['REPLY-IN:bad', 'REPLY-IN'], ['MIRROR-OF:bad', 'MIRROR-OF'], ['TYPE:BAD', 'TYPE'], ['TYPE:READY', 'TYPE'], ['STATE:done', 'STATE'],
+  ]) {
+    const [key] = token.split(':'), fields = {FROM: from, TO: 'ALL', TYPE: 'NOTE', [key]: token.slice(key.length + 1)};
+    const messages = checkComment(serializeDraft({fields, text: 'probe'}));
+    assert.ok(messages.length > 0, token);
+    for (const message of messages) assert.equal(composerReasonField({code: 'PROTOCOL', path: 'body', message}), field, message);
+  }
+  for (const message of ['봉투 키 중복 TO', '지시성 TYPE ASK: TO는 1명(ALL 금지) — 모두에게 알릴 뿐이면 NOTE', 'TYPE ALIAS: TO:ALL 필수', 'TYPE COMPACT: TO:ALL 필수(요약은 전원 공유)']) assert.equal(composerReasonField({code: 'PROTOCOL', path: 'body', message}), 'TO');
+  const toReason = checkComment(`FROM:${from} TO:tt-1-bravo,tt-1-charlie TYPE:NOTE\nprobe`)[0];
+  for (const reason of [
+    {code: 'X', path: 'alias', message: toReason},
+    {code: 'X', path: 'body', message: 'prefix ' + toReason},
+    {code: 'X', path: 'body', message: toReason + ' suffix'},
+    {code: 'X', path: 'body', message: 'TO에 문제가 있음'},
+    {code: 'X', path: 'body', message: 'TYPE VERIFY: 본문에 `VERDICT:PASS|FAIL|BLOCKED` 필수'},
+    {code: 'X', path: 'body', message: '`ASK @tt-1-bravo:` 줄의 대상이 TO(tt-1-alpha)와 다름'},
+  ]) assert.equal(composerReasonField(reason), undefined);
+  assert.equal(composerReasonField({code: 'X', path: 'envelope.TO', message: 'STATE 오류'}), 'TO');
+});
+
+test('U2 field descriptions preserve duplicate reason order, escape text, and clear invalid state', () => {
+  const messages = ['first <script>alert(1)</script>', 'second & reason', 'first <script>alert(1)</script>'];
+  const reasons = messages.map(message => ({code: 'PROTOCOL', path: 'envelope.TO', message}));
+  reasons.splice(1, 0, {code: 'PROTOCOL', path: 'envelope.STATE', message: 'other field'});
+  const feedback = fieldFeedback(reasons, 'TO', 'composer-field-TO');
+  assert.equal(feedback.describedBy, 'composer-field-TO-error-0 composer-field-TO-error-1 composer-field-TO-error-2');
+  assert.deepEqual(feedback.messages.map(reason => reason.message), messages);
+  const html = renderToStaticMarkup(<FieldErrors feedback={feedback}/>);
+  assert.equal(html, feedback.messages.map(reason => renderToStaticMarkup(<p id={reason.id}>{reason.message}</p>)).join(''));
+  assert.ok(!html.includes('<script>'));
+  const clear = fieldFeedback([], 'TO', 'composer-field-TO');
+  assert.equal(clear.invalid, false); assert.equal(clear.describedBy, undefined); assert.deepEqual(clear.messages, []);
+  const type = fieldFeedback([{code: 'PROTOCOL', path: 'envelope.TYPE', message: 'TYPE original'}], 'TYPE', 'composer-type');
+  assert.equal(renderToStaticMarkup(<FieldErrors feedback={type}/>), '<p id="composer-type-error-0">TYPE original</p>');
+});
+test('U2 composer restores four non-secret draft slots only after explicit session recovery', () => {
+  const memory = new SessionDraftMemory(), scope = 'composer-recovery';
+  const body = `FROM:${from} TO:tt-1-bravo TYPE:DECISION ACK-BY:2026-10-21T13:00+00:00\n보존 초안`, fields = parseDraft(body).draft;
+  memory.begin(scope);
+  for (const [slot, value] of [['body', body], ['fields', fields], ['structured', true], ['deferred', '선행 요약 생략 사유']] as const) memory.write(scope, `composer.${slot}`, value);
+  memory.suspend(scope); memory.begin(scope);
+  const render = () => renderToStaticMarkup(<SessionDraftProvider memory={memory} scope={scope}><Composer client={client} path="/v1/repos/o/r/issues/1" principal={principal} onPosted={() => {}}/></SessionDraftProvider>);
+  assert.ok(!render().includes('보존 초안'));
+  assert.equal(memory.restore(scope), true);
+  const html = render();
+  assert.ok(html.includes('보존 초안')); assert.ok(html.includes('value="tt-1-bravo"')); assert.ok(html.includes('선행 요약 생략 사유'));
+  assert.ok(!html.includes('<fieldset hidden='));
+  assert.ok(!html.includes('id="composer-errors"')); assert.ok(!html.includes('aria-label="검사 결과"'));
+});
+
 test('U2 uncertain requests retry the original payload/key; final422 releases the key for corrected input', async () => {
   const calls: {key: string; body: unknown}[] = []; let count = 0;
   const stub = {write: async (_path: string, options: {key: string; body: unknown}) => {calls.push({key: options.key, body: options.body}); if (count++ === 0) throw new ClientError(0,'CONNECTION_FAILED'); if (count === 2) throw new FrontClientError(422,'VALIDATION_FAILED',[{code: 'PROTOCOL', path: 'body', message: 'exact reason'}]); return {commentId: '1000002'};}} as unknown as IssusClient;

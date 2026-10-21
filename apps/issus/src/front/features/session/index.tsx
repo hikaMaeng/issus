@@ -4,6 +4,13 @@ import {allPages, ClientError, connectBrowser, createBrowserClient, errorLines, 
 import {ko, sessionKo, rosterKo} from '../../resources/index.js';
 import {Feedback} from '../feedback/index.js';
 
+export {SessionDraftProvider, useSessionDraft, SessionDraftMemory, sessionDraftScope} from './drafts.js';
+
+/** Recovery is an explicit user action after the server confirms the same principal. */
+export function DraftRecovery({pending, message, onRestore, onDiscard}: {pending: boolean; message?: string; onRestore: () => void; onDiscard: () => void}) {
+  return <>{pending && <div><p role="status">{sessionKo.draftPending}</p><button type="button" onClick={onRestore}>{sessionKo.draftRestore}</button><button type="button" onClick={onDiscard}>{sessionKo.draftDiscard}</button></div>}{message && <p role="status">{message}</p>}</>;
+}
+
 /** Reject external and credential-bearing return destinations. */
 export function safeReturnPath(value: string|null|undefined, origin: string): string {
   if (!value || !value.startsWith('/') || value.startsWith('//') || /[\\\r\n]/.test(value)) return '/repos';

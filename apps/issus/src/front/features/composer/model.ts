@@ -7,9 +7,42 @@ export const fieldKeys = ['FROM','TO','TYPE','CC','RE','STATE','DUE','ACK-BY','S
 export type Fields = Record<string,string>;
 export interface Draft {fields: Fields; text: string}
 export const boardTypes = ['NOTE','ACK','ALIAS','COMPACT'] as const;
-/** Supplement the frozen adapter with exact canonical required-key templates only. */
+const bodyFieldPatterns = [
+  /^(?:필수 봉투 키 없음 (FROM|TO|TYPE)|TYPE (?:ASK|HOLD|DECISION|HANDOFF|ACK|PLAN|CLAIM|RELEASE|REPORT|VERIFY|COMPACT): (RE|DUE|SEEN|STATE|REPLY-IN) 필수)$/,
+  new RegExp(`^봉투 키 중복 (${fieldKeys.join('|')})$`),
+  /^(TO) '.*' — 정확히 1명 또는 ALL\. 알릴 사람은 CC:, 각각 시킬 일은 댓글 둘$/,
+  /^(TO|CC) '.*' — (?:이슈번호·IP 지칭 금지, 별칭만|별칭 문자 `\[A-Za-z0-9가-힣_\.\-\]\{2,24\}`만\(sid·@·공백 금지\)|역할명 지칭 금지, 등록된 별칭만)$/,
+  /^(CC) 'ALL' 불가$/,
+  /^(CC) '.*'가 TO와 같음$/,
+  /^(DUE|ACK-BY) '.*' 시각 형식 오류 — YYYY-MM-DDTHH:MM\+09:00 \(날짜 필수\)$/,
+  /^(RE|SEEN|SUPERSEDES) '.*' — comment id\(숫자\) 목록만$/,
+  /^(REPLY-IN) '.*' — `#n` 또는 `owner\/repo#n`$/,
+  /^(MIRROR-OF) '.*' — URL 필요$/,
+  new RegExp(`^(STATE) '.*' enum 아님 — ${[...STATES].sort().join('\\|')}$`),
+  /^(STATE)는 REPORT·ACK·DECISION에만 — TYPE \S+에서 제거$/,
+  new RegExp(`^(TYPE) '.*' 허용 안 됨 — ${[...TYPES].sort().join(' ')}(?: \\(대체: .*\\))?$`),
+  /^(FROM) 대리 게시자 '.*' 별칭 문법 위반$/,
+  /^(FROM) sid '.*' — `\[a-z0-9-\]` 12자 이하\(짧게, 과제·이슈 인코딩 금지\)$/,
+  /^(FROM) 별칭 '.*' 문법 위반 — `<proj>-<n>-<role>`\(예 p4-24-review\) 또는 `<proj>-<role>`, 소문자·숫자·한글·'-', ≤24자 \(join-naming\.md#이름, examples\/alias-register\.md\)$/,
+  /^지시성 TYPE (?:ASK|HOLD|DECISION|HANDOFF): (TO)는 1명\(ALL 금지\) — 모두에게 알릴 뿐이면 NOTE$/,
+  /^TYPE (?:ALIAS|COMPACT): (TO):ALL 필수(?:\(요약은 전원 공유\))?$/,
+] as const;
+
+/** Associate explicit canonical diagnostics only; body content and alias errors remain unassigned. */
 export function composerReasonField(reason: ValidationReason): string|undefined {
-  return reasonField(reason) ?? (reason.path === 'body' ? /^(?:필수 봉투 키 없음 (FROM|TO|TYPE)|TYPE (?:ASK|HOLD|DECISION|HANDOFF|ACK|PLAN|CLAIM|RELEASE|REPORT|VERIFY|COMPACT): (RE|DUE|SEEN|STATE|REPLY-IN) 필수)$/.exec(reason.message)?.slice(1).find(Boolean) : undefined);
+  const direct = reasonField(reason);
+  if (direct || reason.path !== 'body') return direct;
+  for (const pattern of bodyFieldPatterns) {
+    const field = pattern.exec(reason.message)?.slice(1).find(Boolean);
+    if (field) return field;
+  }
+  return undefined;
+}
+
+/** Keep every matching reason in server order, including duplicates, with exact descriptive text. */
+export function fieldFeedback(reasons: readonly ValidationReason[], field: string, id: string) {
+  const messages = reasons.filter(reason => composerReasonField(reason) === field).map((reason, index) => ({id: `${id}-error-${index}`, message: reason.message}));
+  return {invalid: messages.length > 0, describedBy: messages.length ? messages.map(reason => reason.id).join(' ') : undefined, messages};
 }
 /** Form requirements are affordances only. Canonical server validation is never bypassed. */
 export function requiredFields(type: string): readonly string[] {

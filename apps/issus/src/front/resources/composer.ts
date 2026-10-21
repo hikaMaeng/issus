@@ -9,7 +9,7 @@ export const composerKo = {
   preview: '댓글 미리보기', text: '봉투 다음 본문', metadata: '전송 metadata',
   dryRun: '검사는 dry-run이며 댓글을 게시하지 않습니다. 게시 시 서버가 다시 검사합니다.',
   checked: '검사 결과', stale: '이슈가 변경되어 이전 검사 결과가 무효입니다. 다시 검사하세요.',
-  firstError: '첫 오류로 이동', fieldError: '이 필드의 서버 사유는 오류 요약을 확인하세요.',
+  firstError: '첫 오류로 이동',
   count: (chars: number, bytes: number, limit: number) => `${chars} codepoint / ${limit} · ${bytes} bytes / 65536`,
   compact: 'COMPACT는 패킷과 표본 증거가 필요합니다. COMPACT 도우미에서 작성하세요.',
   compactLink: 'COMPACT 도우미 열기', deferred: 'compactDeferredReason',

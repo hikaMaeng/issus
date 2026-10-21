@@ -11,3 +11,5 @@ U2 이슈 개입 화면·작성기·관리 행동의 공개 계약.
 | 시험 | [testing](docs/testing.md) |
 
 정본: 루트 docs/ui.md v1.1 §3·5·6·9·10. 공통 entry/client·resources index·styles는 U1 동결, front 공통 문서는 U3 소유다. 이 하위 문서가 U2 계약을 기록하고 U3의 공통 문서 통합 입력이 된다.
+
+P9 수정6316344821: composer의 일반 문법422 필드 사유·읽기 전용 probe3종은 [testing](docs/testing.md), 인증 중단 후 네 초안 슬롯의 명시 복원은 [internals](docs/internals.md)을 따른다.

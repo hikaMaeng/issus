@@ -15,11 +15,12 @@ let browser, context, page, fixture, operator;
 const pageErrors = [], observations = [], issuedSessions = [];
 async function login(target, token, path = '/repos') {
   await target.goto(server + path);
-  await target.getByRole('heading', {level: 1, name: /^(저장소|세션 연결)$/}).waitFor();
+  await target.getByRole('heading', {level: 1}).filter({hasNotText: /^issus$/}).waitFor();
   if (!await target.getByLabel('세션 토큰', {exact: true}).isVisible()) await target.getByRole('button', {name: '세션 연결', exact: true}).click();
   await target.getByLabel('세션 토큰', {exact: true}).fill(token);
   await target.getByRole('button', {name: '연결', exact: true}).click();
   await eventually(() => target.getByLabel('세션 토큰', {exact: true}).inputValue().then(value => value === ''), 'bearer erased');
+  await eventually(async () => await target.getByRole('form', {name: '세션 연결', exact: true}).getAttribute('aria-busy') === 'false', 'server identity confirmed after bearer exchange');
   await eventually(() => target.getByRole('navigation', {name: '주 탐색', exact: true}).getByRole('link', {name: '저장소', exact: true}).count(), 'shell ready');
 }
 before(async () => {
@@ -149,6 +150,150 @@ test('P9-23 keyboard navigation dialog Escape restores focus at narrow viewport'
   await page.keyboard.press('Escape'); assert.equal(await trigger.evaluate(element => element === document.activeElement), true);
   assert.equal(await page.getByRole('main').count(), 1); assert.equal(await page.getByRole('heading', {level: 1}).count(), 1);
   await page.setViewportSize({width: 1440, height: 1000}); observations.push({id: 'P9-23-U1', escapeRestoredFocus: true});
+});
+
+async function reconnectDraft(token) {
+  const form = page.getByRole('form', {name: '세션 연결', exact: true});
+  if (!await form.isVisible()) await page.getByRole('button', {name: '세션 연결', exact: true}).click();
+  await form.getByLabel('세션 토큰', {exact: true}).fill(token);
+  await form.getByRole('button', {name: '연결', exact: true}).click();
+  await eventually(() => form.getByLabel('세션 토큰', {exact: true}).inputValue().then(value => value === ''), 'reconnection bearer erased');
+  await eventually(async () => await form.getAttribute('aria-busy') === 'false', 'reauthentication fully completed');
+}
+async function expireCookieDraft() {
+  await context.clearCookies({name: 'issus_session'});
+  const unauthorized = page.waitForResponse(response => new URL(response.url()).pathname === '/v1/auth/me' && response.status() === 401);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await unauthorized;
+  await page.getByRole('heading', {level: 1, name: '세션 연결', exact: true}).waitFor();
+  assert.equal(await page.getByRole('form', {name: '댓글 작성', exact: true}).count(), 0);
+  assert.equal(await page.getByRole('status', {name: '실시간 연결', exact: true}).count(), 0);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('issus.csrf')), null);
+}
+async function freshDraftIssue(title) {
+  return fixture.write(fixture.A.client, `/v1/repos/${fixture.repo}/issues`, {title, body: `STATE:running OWNER:${fixture.A.alias} UPDATED:${new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00')}\nGOAL: session draft boundary`});
+}
+
+test('P9-R1 actual Board/Create/Edit/Compact routes render one h1/main and public forms', async () => {
+  const {number} = await freshDraftIssue('P9 route assembly');
+  await login(page, fixture.A.token);
+  for (const [suffix, heading, role, name] of [
+    ['board', '공통 게시판', 'region', '공통 게시판'],
+    ['issues/new', '이슈 개설', 'form', '이슈 개설'],
+    [`issues/${number}/edit`, '본문 편집', 'form', '본문 편집'],
+    [`issues/${number}/compact`, 'COMPACT 도우미', 'region', 'COMPACT 도우미'],
+  ]) {
+    await page.goto(`${server}/repos/${fixture.repo}/${suffix}`);
+    await page.getByRole('heading', {level: 1, name: heading, exact: true}).waitFor();
+    await page.getByRole(role, {name, exact: true}).waitFor();
+    assert.equal(await page.getByRole('main').count(), 1); assert.equal(await page.getByRole('heading', {level: 1}).count(), 1);
+    assert.equal(await page.getByText('기능을 준비하고 있습니다', {exact: true}).count(), 0);
+  }
+  await page.goBack(); await page.getByRole('form', {name: '본문 편집', exact: true}).waitFor();
+  await page.goForward(); await page.getByRole('region', {name: 'COMPACT 도우미', exact: true}).waitFor();
+  observations.push({id: 'P9-R1', routes: 4, history: true, placeholder: 0});
+});
+
+test('P9-R2 real401 keeps comment draft above auth, isolates alias, and restores only by button', async () => {
+  const {number} = await freshDraftIssue('P9 comment auth recovery');
+  await login(page, fixture.A.token, `/repos/${fixture.repo}/issues/${number}`);
+  const body = `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:NOTE\n401 이전 원문 초안\n`;
+  await page.getByRole('form', {name: '댓글 작성', exact: true}).getByLabel('댓글 본문', {exact: true}).fill(body);
+  await expireCookieDraft(); await reconnectDraft(fixture.B.token);
+  await page.getByRole('form', {name: '댓글 작성', exact: true}).waitFor();
+  assert.equal(await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).count(), 0);
+  assert.equal(await page.getByLabel('댓글 본문', {exact: true}).inputValue(), '');
+  await reconnectDraft(fixture.A.token);
+  const restore = page.getByRole('button', {name: '보관한 초안 복원', exact: true}); await restore.waitFor();
+  assert.equal(await page.getByLabel('댓글 본문', {exact: true}).inputValue(), '');
+  const writes = []; const observe = request => {if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/comments')) writes.push(request.url());}; page.on('request', observe);
+  await restore.click();
+  await eventually(async () => await page.getByLabel('댓글 본문', {exact: true}).inputValue() === body, 'exact raw comment restored');
+  page.off('request', observe); assert.deepEqual(writes, []);
+  const stored = await page.evaluate(() => [...Object.values(localStorage), ...Object.values(sessionStorage)]);
+  assert.ok(!stored.includes(body)); assert.ok(!stored.includes(fixture.A.token)); assert.ok(!stored.includes(fixture.B.token));
+  observations.push({id: 'P9-R2', real401: true, otherAliasRestored: false, automaticRestored: false, posted: 0});
+});
+
+test('P9-R3 create title/raw/structured drafts survive real401 and explicit recovery', async () => {
+  await login(page, fixture.A.token, `/repos/${fixture.repo}/issues/new`);
+  const form = () => page.getByRole('form', {name: '이슈 개설', exact: true}), title = '재연결 전 개설 제목', body = `STATE:running OWNER:${fixture.A.alias} UPDATED:${new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00')}\nGOAL: 재연결 전 작성\n`;
+  await form().getByLabel('제목', {exact: true}).fill(title); await form().getByLabel('이슈 본문', {exact: true}).fill(body);
+  await form().getByLabel('첫 줄 다음 본문', {exact: true}).fill('아직 원문에 적용하지 않은 구조화 입력');
+  await expireCookieDraft(); await reconnectDraft(fixture.A.token);
+  await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).click();
+  await eventually(async () => await form().getByLabel('이슈 본문', {exact: true}).inputValue() === body, 'create raw draft restored');
+  assert.equal(await form().getByLabel('제목', {exact: true}).inputValue(), title);
+  assert.equal(await form().getByLabel('첫 줄 다음 본문', {exact: true}).inputValue(), '아직 원문에 적용하지 않은 구조화 입력');
+  observations.push({id: 'P9-R3', titlePreserved: true, rawPreserved: true, unappliedFieldsPreserved: true});
+});
+
+test('P9-R4 edit recovery retains original If-Match baseline and still receives real412', async () => {
+  const {number} = await freshDraftIssue('P9 edit auth recovery'), path = issuePath(fixture.repo, number);
+  await login(page, fixture.A.token, `/repos/${fixture.repo}/issues/${number}/edit`);
+  const form = () => page.getByRole('form', {name: '본문 편집', exact: true}); await form().waitFor();
+  const original = (await fixture.A.client.request(path)).data, body = original.body + '\nmy retained draft';
+  await form().getByLabel('이슈 본문', {exact: true}).fill(body); await expireCookieDraft();
+  const updated = original.body + '\nserver changed during authentication';
+  await fixture.A.client.write(path + '/body', {method: 'PATCH', key: randomUUID(), revision: original.revision, body: {body: updated}});
+  await reconnectDraft(fixture.A.token); await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).click();
+  await eventually(async () => await form().getByLabel('이슈 본문', {exact: true}).inputValue() === body, 'edit draft restored');
+  const response = page.waitForResponse(response => new URL(response.url()).pathname === path + '/body' && response.request().method() === 'PATCH');
+  await form().getByRole('button', {name: '본문 저장', exact: true}).click(); const stale = await response;
+  assert.equal(stale.status(), 412); assert.equal(stale.request().headers()['if-match'], `"${original.revision}"`);
+  await page.getByRole('region', {name: '최신 서버 원문', exact: true}).waitFor();
+  assert.equal(await form().getByLabel('이슈 본문', {exact: true}).inputValue(), body);
+  assert.equal((await fixture.A.client.request(path)).data.body, updated);
+  observations.push({id: 'P9-R4', real412: true, originalRevision: original.revision, staleOverwrite: false});
+});
+
+test('P9-R5 COMPACT draft survives real401 while packet token and accepted samples require fresh review', async () => {
+  const {number} = await freshDraftIssue('P9 compact auth recovery'), path = issuePath(fixture.repo, number);
+  await fixture.write(fixture.A.client, path + '/comments', {body: `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:NOTE\nsource for recovery`});
+  await login(page, fixture.A.token, `/repos/${fixture.repo}/issues/${number}/compact`);
+  const prepare = page.waitForResponse(response => new URL(response.url()).pathname === path + '/compact/prepare' && response.request().method() === 'POST');
+  await page.getByRole('button', {name: '패킷 준비', exact: true}).click(); const packet = await (await prepare).json();
+  const sample = packet.comments[0].id;
+  await page.getByRole('button', {name: `원문 대조 ${sample}`, exact: true}).click();
+  await page.getByRole('dialog', {name: `표본 원문 ${sample}`, exact: true}).waitFor();
+  await page.getByRole('button', {name: '대조 원문 닫기', exact: true}).click(); await page.getByLabel(`표본 대조 ${sample}`, {exact: true}).check();
+  const body = `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:COMPACT SEEN:${packet.throughId}\n## ===== COMPACT #${number} through ${packet.throughId} =====\n보존할 사람 요약\ncompacted-by:${fixture.A.alias}`;
+  await page.getByLabel('COMPACT 본문', {exact: true}).fill(body); await page.getByLabel('요약 담당 별칭', {exact: true}).fill(fixture.A.alias);
+  await expireCookieDraft(); await reconnectDraft(fixture.A.token); await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).click();
+  await eventually(async () => await page.getByLabel('COMPACT 본문', {exact: true}).inputValue() === body, 'COMPACT raw draft restored');
+  assert.equal(await page.getByLabel('요약 담당 별칭', {exact: true}).inputValue(), fixture.A.alias);
+  assert.equal(await page.getByRole('button', {name: '패킷 다운로드', exact: true}).isDisabled(), true);
+  assert.equal(await page.getByRole('button', {name: 'COMPACT 게시', exact: true}).isDisabled(), true);
+  assert.equal(await page.getByLabel(`표본 대조 ${sample}`, {exact: true}).count(), 0);
+  assert.ok(!(await page.getByRole('main').innerText()).includes(packet.packetToken));
+  observations.push({id: 'P9-R5', bodyPreserved: true, packetRestored: false, acceptedSamplesRestored: false});
+});
+
+test('P9-R6 actual expiry timer preserves draft and explicit discard never restores it', async () => {
+  // Only the browser's wall clock advances; auth/me and all API payloads remain real.
+  await page.close(); page = await context.newPage(); page.on('pageerror', error => pageErrors.push(error.message));
+  const identity = (await fixture.A.client.request('/v1/auth/me')).data;
+  await page.clock.install({time: new Date(new Date(identity.expiresAt).getTime() - 60000)});
+  try {
+    const {number} = await freshDraftIssue('P9 expiry timer');
+    await login(page, fixture.A.token, `/repos/${fixture.repo}/issues/${number}`);
+    const body = `FROM:${fixture.A.alias}/s1 TO:ALL TYPE:NOTE\n만료 타이머 전 초안`;
+    await page.getByLabel('댓글 본문', {exact: true}).fill(body);
+    await page.clock.fastForward(61000);
+    await page.getByRole('heading', {level: 1, name: '세션 연결', exact: true}).waitFor();
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('issus.csrf')), null);
+    assert.equal(await page.getByRole('status', {name: '실시간 연결', exact: true}).count(), 0);
+    await page.clock.setSystemTime(new Date()); await reconnectDraft(fixture.A.token);
+    await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).waitFor();
+    assert.equal(await page.getByLabel('댓글 본문', {exact: true}).inputValue(), '');
+    await page.getByRole('button', {name: '보관한 초안 버리기', exact: true}).click();
+    assert.equal(await page.getByRole('button', {name: '보관한 초안 복원', exact: true}).count(), 0);
+    assert.equal(await page.getByLabel('댓글 본문', {exact: true}).inputValue(), '');
+    observations.push({id: 'P9-R6', actualExpiryTimer: true, automaticRestore: false, discarded: true});
+  } finally {
+    await page.close(); page = await context.newPage(); page.on('pageerror', error => pageErrors.push(error.message));
+    await login(page, fixture.B.token);
+  }
 });
 
 test('P9-24 dark tokens/computed contrast and new-tab CSRF require reauthentication', async () => {

@@ -11,4 +11,8 @@ export const sessionKo = {
   bootstrapOnly: '발급은 관리 토큰의 권한으로 실행합니다', candidate: 'ROSTER 후보 · 등록 여부 미확인',
   returnInvalid: '내부 경로로만 돌아갈 수 있습니다', notSession: '세션 토큰만 연결할 수 있습니다', tokenRequired: '세션 토큰을 입력해 주세요',
   connectFailure: '토큰 교환을 확인하지 못했습니다. 세션 토큰을 다시 연결해 주세요', owner: '소유자',
+  draftPending: '이 별칭과 세션 ID의 현재 경로에 보관한 초안이 있습니다. 복원하면 현재 입력을 바꾸며, 편집 revision과 요약 패킷을 다시 확인해야 합니다',
+  draftRestore: '보관한 초안 복원', draftDiscard: '보관한 초안 버리기',
+  draftRestored: '초안을 복원했습니다. 내용을 확인하고 다시 검사해 주세요. COMPACT 패킷과 표본 대조는 새로 준비해야 합니다',
+  draftDiscarded: '보관한 초안을 버렸습니다',
 } as const;
