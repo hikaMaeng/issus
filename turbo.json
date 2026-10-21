@@ -37,7 +37,19 @@
         "$TURBO_DEFAULT$",
         "../../scripts/**"
       ],
-      "outputs": []
+      "outputs": [],
+      "passThroughEnv": [
+        "ISSUS_TEST_DATABASE_URL",
+        "ISSUS_TEST_SERVER_URL",
+        "USERNAME",
+        "USERPROFILE",
+        "USERDOMAIN",
+        "HOME",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "TEMP",
+        "TMP"
+      ]
     },
     "test:integration": {
       "dependsOn": [
@@ -48,7 +60,15 @@
       "outputs": [],
       "passThroughEnv": [
         "ISSUS_TEST_DATABASE_URL",
-        "ISSUS_TEST_SERVER_URL"
+        "ISSUS_TEST_SERVER_URL",
+        "USERNAME",
+        "USERPROFILE",
+        "USERDOMAIN",
+        "HOME",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "TEMP",
+        "TMP"
       ]
     },
     "test:browser": {
@@ -60,7 +80,15 @@
       "outputs": [],
       "passThroughEnv": [
         "ISSUS_TEST_DATABASE_URL",
-        "ISSUS_TEST_SERVER_URL"
+        "ISSUS_TEST_SERVER_URL",
+        "USERNAME",
+        "USERPROFILE",
+        "USERDOMAIN",
+        "HOME",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "TEMP",
+        "TMP"
       ]
     }
   }
