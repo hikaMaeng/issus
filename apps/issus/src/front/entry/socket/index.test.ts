@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {WebSocketServer} from 'ws';
 import {ClientError, StreamClosed} from 'issus_domain/front';
-import {browserSocket} from './index.js';
+import {browserSocket, browserStreamClient} from './index.js';
+import {IssusClient} from 'issus_domain/front';
 
 /** Real loopback sockets exercise the browser adapter; cookie/UI assertions stay in deployed B-03. */
 async function harness() {
@@ -61,4 +62,16 @@ test('browser WS adapter: cross-origin and insecure downgrade are rejected befor
     await assert.rejects(() => browserSocket(h.url, {}), error => error instanceof ClientError && error.status === 403);
     assert.equal(h.sockets.clients.size, 0);
   } finally {await h.close();}
+});
+
+test('U3 fixed URL accepts bearer only in subprotocol and negotiates issus.v1 without exposing it in URL', {timeout:10000}, async()=>{
+  const h=await harness();let protocols:string|undefined;
+  h.sockets.on('connection',(_socket,request)=>{protocols=request.headers['sec-websocket-protocol'];assert.equal(request.url,'/ws');});
+  try {const connection=await browserSocket(h.url,{Authorization:'Bearer session.test-token'});assert.ok(protocols?.includes('issus.bearer.session.test-token'));assert.equal([...h.sockets.clients][0]!.protocol,'issus.v1');connection.close();await assert.rejects(()=>browserSocket(h.url+'?token=forbidden',{}),error=>error instanceof ClientError&&error.status===403);await assert.rejects(()=>browserSocket(h.url,{Authorization:'Bearer malformed value'}),error=>error instanceof ClientError&&error.status===401);}finally{await h.close();}
+});
+
+test('U3 explicit SSE subscription transport leaves receipt/HTTP authentication on the U1 client',async()=>{
+  const paths:string[]=[];const client=new IssusClient({server:'http://test.invalid',token:'in-memory',fetch:async(url,init)=>{assert.equal(new Headers(init?.headers).get('Authorization'),'Bearer in-memory');paths.push(new URL(url).pathname+new URL(url).search);return Response.json({ok:true});}});
+  assert.equal(browserStreamClient(client,'ws'),client);const sse=browserStreamClient(client,'sse');await sse.write('/v1/subscriptions',{method:'POST',key:'a',body:{}});await sse.write('/v1/deliveries/receipts',{method:'POST',key:'b',body:{}});
+  assert.deepEqual(paths,['/v1/subscriptions?transport=sse','/v1/deliveries/receipts']);
 });

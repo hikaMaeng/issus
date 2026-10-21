@@ -1,13 +1,15 @@
-import {ClientError, StreamClosed, type SocketFactory} from 'issus_domain/front';
+import {ClientError, StreamClosed, type IssusClient, type SocketFactory} from 'issus_domain/front';
 
 /** Same-origin browser WS uses the HttpOnly cookie; P7 owns reconnect/receipt/cursor semantics. */
-export const browserSocket: SocketFactory = (url, _headers, signal) => new Promise((resolve, reject) => {
+export const browserSocket: SocketFactory = (url, headers, signal) => new Promise((resolve, reject) => {
   const target = new URL(url);
-  if (target.host !== location.host || target.protocol !== (location.protocol === 'https:' ? 'wss:' : 'ws:')) {
+  if (target.host !== location.host || target.protocol !== (location.protocol === 'https:' ? 'wss:' : 'ws:') || target.username || target.password || [...target.searchParams.keys()].some(key => /token|bearer|authorization/i.test(key))) {
     reject(new ClientError(403, 'WS_ORIGIN_FORBIDDEN')); return;
   }
   if (signal?.aborted) {reject(signal.reason); return;}
-  const socket = new WebSocket(url, ['issus.v1']), queued: string[] = [];
+  const bearer = /^Bearer ([A-Za-z0-9._~-]+)$/.exec(headers.Authorization ?? headers.authorization ?? '')?.[1];
+  if ((headers.Authorization || headers.authorization) && !bearer) {reject(new ClientError(401,'WS_BEARER_INVALID')); return;}
+  const socket = new WebSocket(url, ['issus.v1', ...(bearer ? [`issus.bearer.${bearer}`] : [])]), queued: string[] = [];
   let opened = false, done = false, failure: unknown, bytes = 0;
   let waiting: {resolve: (value: IteratorResult<string>) => void; reject: (error: unknown) => void}|undefined;
   const finish = (error?: unknown) => {
@@ -48,3 +50,13 @@ export const browserSocket: SocketFactory = (url, _headers, signal) => new Promi
     });
   }, {once: true});
 });
+
+/** P7 owns reconnect/parser/receipts; explicit SSE only changes subscription transport metadata. */
+export function browserStreamClient(client: IssusClient, transport: 'ws'|'sse'): IssusClient {
+  if (transport === 'ws') return client;
+  return new Proxy(client, {get(target, property) {
+    if (property === 'write') return (path: string, options: Parameters<IssusClient['write']>[1], timeout?: number) => target.write(path === '/v1/subscriptions' ? path + '?transport=sse' : path, options, timeout);
+    const value: unknown = Reflect.get(target, property);
+    return typeof value === 'function' ? value.bind(target) : value;
+  }});
+}
