@@ -3,9 +3,17 @@ import {EventStore,PgmqClient,type ReactionTable,type WorkerExecute} from 'agent
 import {EventUnitOfWork,IntakeService,RoutingService,DeliveryReferenceService,DeliveryCommandService,InboxService,RetryService,DeadlineService,TickService,CoreError,type CompactPublication,type ReactionCoordinates,type EventTransaction,type Clock} from 'issus_domain/server';
 import type {EventEnvelope} from 'agent/common';
 import {RuntimeAuth} from '../auth/index.js';
+import {createHealth} from '../health/index.js';
 
 export type CompactReaction=(tx:EventTransaction,input:ReactionCoordinates)=>Promise<unknown>;
 export interface BindingOptions {schema?:string;clock?:Clock;queueName?:(name:string)=>string;reactions?:ReactionTable;publication?:CompactPublication;compactReaction?:CompactReaction}
+/** Workers verify broker-installed domain migrations; they never repair missing schema on startup. */
+export function createWorkerReadiness(options:BindingOptions={}) {
+ const ready=async(database:Pool):Promise<void>=>{
+  if(!(await createHealth({pool:database,schema:options.schema,queueName:options.queueName}).ready()).ok) throw new Error('issus worker dependencies are not ready');
+ };
+ return {initialize:ready,ready};
+}
 /** All role handlers share the worker server's pool and P4 transaction boundary. */
 export function createWorkerBindings(pool:Pool,options:BindingOptions={}) {
  const store=new EventStore(pool,undefined,{retentionDays:null}),queue=new PgmqClient(pool);

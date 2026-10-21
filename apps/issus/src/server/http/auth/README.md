@@ -12,6 +12,8 @@ I-P1은 `beforeQueueDelete` gate로 201 뒤 intake 행 1개를 유지하고 idle
 
 browser-session 만료는 `intake.uow.options.clock`에서 24시간 뒤인 명시적 Expires다. Express의 maxAge 기반 응답 시각 계산을 사용하지 않는다. 시험은 하네스 Clock을 고정하고 1초 이상 실제 간격 뒤 재시도하여 JSON·cookie token과 Path=/·HttpOnly·SameSite=Strict·Expires=Clock+24h를 검사한다(DECISION6310243238). HTTPS는 Secure도 설정한다.
 
-good32 HTTP 수용은 `fixtures.test.ts`의 댓글28 POST201·준비된 이슈 본문4 PATCH200이다. COMPACT/REPLY-IN/BOARD 참조를 먼저 생성하고 역사 기한은 주입 Clock으로 검사한다. bad5는 `core.test.ts`에서 HTTP422와 golden 사유 전체를 대조한다. COMPACT 예시의 정확 footer 추가 여부는 ASK6310536645 판정을 따른다.
+good32 HTTP 수용은 `fixtures.test.ts`의 댓글28 POST201·준비된 이슈 본문4 PATCH200이다. COMPACT/REPLY-IN/BOARD 참조를 먼저 생성하고 역사 기한은 주입 Clock으로 검사한다. 요청 body는 fixture Buffer를 UTF-8로 읽은 원문 그대로이며, DB `convert_to(body,'UTF8')` Buffer 및 canonical posted/edited fact body와 원본 bytes를 대조한다. COMPACT trimEnd·footer 추가는 금지한다(DECISION6312691996). bad5는 `core.test.ts`에서 HTTP422와 golden 사유 전체를 대조한다.
+
+`transaction-timeout.test.ts`는 실제 PG18/PGMQ·broker worker consumer·ExecutionStore·inline worker·runtime Pool·도메인 UoW를 연결한다. 25P04 4회 소진 후 lease 해제·원 큐 보존·실패 terminal0, 재전달 뒤 projection1·result1·반응 큐1을 확인한다. 배포된 worker entry 시험과는 구별한다. 계획은 [wave3 core](tests/plans/core-wave3-20261021.md), 실행 로그는 `.cache/core-s4/`다.
 
 `core.test.ts`는 등록/개명 fact의 model을 ROSTER 프로필로 재구축하고, close 차단 및 close fact append 실패에도 별도 제어 tx의 before-close due가 남는지 실제 DB로 확인한다. `setFailAppendAction`은 지정 action을 포함한 append만 실패시키는 시험 hook이다.

@@ -6,7 +6,7 @@ const common:Spec={values:['server','profile','profiles-file','token-file'],flag
 const specs:Record<string,Spec>={
  post:{values:['repo','issue','body-file','timeout','packet-file','sampled','compacted-by','compact-deferred-reason'],flags:['edit-body','dry-run']},
  watch:{values:['repo','state','limit','show','page-size','processed-file'],repeat:['me','mine','board'],flags:['full','peek','since-compact','compact-due','all-history']},
- subscribe:{values:['repo','issue','me','transport','cursor'],repeat:['board'],flags:['once','since-compact']},
+ subscribe:{values:['repo','issue','me','transport','cursor','until'],repeat:['board'],flags:['once','since-compact']},
  compact:{values:['repo','issue','out','body-file','packet-file','sampled','compacted-by','timeout'],flags:['dry-run']},
  alias:{values:['owner','repos','limit','repo','name','role','model','scope','sid','alias-id','body-file','announcement-issue'],flags:['deep']},
  board:{values:['repo','issue','user-board','owner','body-file']},

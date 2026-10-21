@@ -6,7 +6,7 @@ export interface SocketConnection extends AsyncIterable<string> {send(text:strin
 export type SocketFactory=(url:string,headers:Record<string,string>,signal?:AbortSignal)=>Promise<SocketConnection>;
 export interface StreamCheckpoint {subscriptionId:string;channels:string[];transportCursor?:string;closed?:boolean;generation?:number}
 export interface SubscribeOptions {
-  request:SubscriptionRequest; transport:'ws'|'sse'; once?:boolean; signal?:AbortSignal;
+  request:SubscriptionRequest; transport:'ws'|'sse'; once?:boolean; untilMs?:number; signal?:AbortSignal;
   checkpoint?:StreamCheckpoint; socket?:SocketFactory;
   key:(identity:unknown)=>string|Promise<string>;
   onFrame:(frame:DomainServerFrame)=>void|Promise<void>;
@@ -20,13 +20,19 @@ export class StreamClosed extends Error {
   constructor(readonly code:number) {super(`STREAM_CLOSED_${code}`);this.name='StreamClosed';}
 }
 
+/** The explicit subscription wait budget elapsed before completion. */
+export class StreamTimeout extends Error {
+  constructor() {super('STREAM_WAIT_TIMEOUT');this.name='StreamTimeout';}
+}
+
 /** Reconnects from receipt-confirmed immutable cursor; Ctrl-C closes only its subscription. */
 export async function subscribe(client:IssusClient,options:SubscribeOptions):Promise<void> {
-  let checkpoint=options.checkpoint, reconnects=0, socket:SocketConnection|undefined;
-  let generation=checkpoint?.generation??0;
-  const previous=checkpoint;
-  let allowPreviousResume=!!previous?.closed;
-  if(checkpoint?.closed) {generation++;checkpoint=undefined;}
+  if(options.untilMs!==undefined&&(!Number.isInteger(options.untilMs)||options.untilMs<=0||options.untilMs>2147483647)) throw new ClientError(0,'INVALID_STREAM_WAIT');
+  const deadline=new AbortController();
+  const signal=options.signal?AbortSignal.any([options.signal,deadline.signal]):deadline.signal;
+  const timer=options.untilMs===undefined?undefined:setTimeout(()=>deadline.abort(new StreamTimeout()),options.untilMs);
+  let checkpoint:StreamCheckpoint|undefined, resume=options.checkpoint, reconnects=0, socket:SocketConnection|undefined;
+  let generation=resume?(resume.generation??0)+1:0;
   const model=new StreamModel();
   const save=async(value:StreamCheckpoint):Promise<void>=>{try {await options.save(value);} catch {throw new FrameError('CHECKPOINT_WRITE_FAILED');}};
   const output=async(frame:DomainServerFrame):Promise<void>=>{try {await options.onFrame(frame);} catch {throw new FrameError('OUTPUT_FAILED');}};
@@ -38,40 +44,43 @@ export async function subscribe(client:IssusClient,options:SubscribeOptions):Pro
     }
     const accepted=model.accept(frame);
     if(accepted) await output(frame);
+    let receivedDelivery=false;
     if(frame.type==='event') {
       const payload=frame.event.payload as Record<string,unknown>;
       if(['issus.delivery.queued','issus.delivery.redelivered','issus.delivery.escalated'].includes(frame.event.action)&&typeof payload.deliveryId==='string'&&Number.isInteger(payload.attempt)) {
         const body={subscriptionId:checkpoint!.subscriptionId,deliveryIds:[payload.deliveryId],attempts:[payload.attempt]};
-        await client.write('/v1/deliveries/receipts',{method:'POST',key:await options.key({action:'receipt',body}),body,signal:options.signal,onAccepted:options.onAccepted});
+        await client.write('/v1/deliveries/receipts',{method:'POST',key:await options.key({action:'receipt',body}),body,signal,onAccepted:options.onAccepted});
+        receivedDelivery=true;
       }
     }
     if('cursor' in frame && frame.cursor) {
       checkpoint={...checkpoint!,transportCursor:frame.cursor};
       await save(checkpoint);
     }
-    return !!options.once && (frame.type==='subscribed'||frame.type==='replay') && frame.replayComplete;
+    return !!options.once && receivedDelivery;
   };
   try {
-    while(!options.signal?.aborted) {
+    while(!signal.aborted) {
       try {
         if(!checkpoint) {
-          const response=await client.write<SubscriptionResponse>('/v1/subscriptions',{method:'POST',key:await options.key({action:'subscribe',generation,body:options.request}),body:options.request,signal:options.signal,onAccepted:options.onAccepted});
-          const resumable=allowPreviousResume&&previous?.transportCursor&&JSON.stringify([...previous.channels].sort())===JSON.stringify([...response.channels].sort());
-          checkpoint={subscriptionId:response.subscriptionId,channels:response.channels,transportCursor:resumable?previous!.transportCursor:response.cursor,generation};
+          const response=await client.write<SubscriptionResponse>('/v1/subscriptions',{method:'POST',key:await options.key({action:'subscribe',generation,body:options.request}),body:options.request,signal,onAccepted:options.onAccepted});
+          const resumable=resume?.transportCursor&&JSON.stringify([...resume.channels].sort())===JSON.stringify([...response.channels].sort());
+          if(resume&&!resumable) model.resetOrdering();
+          checkpoint={subscriptionId:response.subscriptionId,channels:response.channels,transportCursor:resumable?resume!.transportCursor:response.cursor,generation};
           try {await options.onSubscription?.(response);} catch {throw new FrameError('OUTPUT_FAILED');}
           await save(checkpoint);
         }
         if(options.transport==='ws') {
           if(!options.socket) throw new ClientError(0,'WEBSOCKET_FACTORY_REQUIRED');
           const url=client.url('/ws');url.protocol=url.protocol==='https:'?'wss:':'ws:';
-          socket=await options.socket(url.href,client.headers(),options.signal);
+          socket=await options.socket(url.href,client.headers(),signal);
           await socket.send(JSON.stringify({type:'subscribe',subscriptionId:checkpoint.subscriptionId,channels:checkpoint.channels,...(checkpoint.transportCursor?{cursor:checkpoint.transportCursor}:{})}));
           for await(const text of socket) {if(await receive(decodeFrame(text))) return;}
           throw new StreamClosed(1001);
         } else {
           const url=client.url('/v1/stream');url.searchParams.set('subscription',checkpoint.subscriptionId);
           if(checkpoint.transportCursor) url.searchParams.set('cursor',checkpoint.transportCursor);
-          const response=await client.fetch(url,{headers:{...client.headers(),Accept:'text/event-stream',...(checkpoint.transportCursor?{'Last-Event-ID':checkpoint.transportCursor}:{})},signal:options.signal,redirect:'error'});
+          const response=await client.fetch(url,{headers:{...client.headers(),Accept:'text/event-stream',...(checkpoint.transportCursor?{'Last-Event-ID':checkpoint.transportCursor}:{})},signal,redirect:'error'});
           if(!response.ok) throw new ClientError(response.status,`HTTP_${response.status}`);
           if(!response.body||!response.headers.get('content-type')?.includes('text/event-stream')) throw new ClientError(0,'INVALID_SSE_RESPONSE');
           const reader=response.body.getReader(),parser=new SseFrameParser();
@@ -87,24 +96,34 @@ export async function subscribe(client:IssusClient,options:SubscribeOptions):Pro
         }
       } catch(error) {
         socket?.close();socket=undefined;
-        if(options.signal?.aborted) return;
+        if(signal.aborted) {if(deadline.signal.aborted&&!options.signal?.aborted) throw deadline.signal.reason;return;}
         if(error instanceof FrameError) throw error;
         if(error instanceof StreamClosed && [1008,4001,4401,4403].includes(error.code)) throw new ClientError(403,'STREAM_AUTH_REJECTED');
         if(error instanceof ClientError) {
           if(error.status===410||error.code==='CURSOR_SCOPE_MISMATCH') {
-            if(checkpoint) await client.write(`/v1/subscriptions/${encodeURIComponent(checkpoint.subscriptionId)}`,{method:'DELETE',key:await options.key({action:'close',subscriptionId:checkpoint.subscriptionId}),onAccepted:options.onAccepted}).catch(()=>undefined);
-            checkpoint=undefined;generation++;allowPreviousResume=false;model.resetOrdering();
+            resume=undefined;model.resetOrdering();
           } else if(error.status>=400&&error.status<500&&error.status!==429) throw error;
         }
         reconnects++;
         if(options.maxReconnects!==undefined&&reconnects>options.maxReconnects) throw error;
-        await abortableDelay(Math.min((options.reconnectMs??250)*2**Math.min(reconnects-1,6),10000),options.signal);
+        if(checkpoint) {
+          if(!(error instanceof ClientError&&(error.status===410||error.code==='CURSOR_SCOPE_MISMATCH'))) resume=checkpoint;
+          // A disconnect closes this server subscription; only its immutable cursor survives.
+          await client.write(`/v1/subscriptions/${encodeURIComponent(checkpoint.subscriptionId)}`,{method:'DELETE',key:await options.key({action:'close',subscriptionId:checkpoint.subscriptionId}),signal,onAccepted:options.onAccepted},5000).catch(()=>undefined);
+          await save({...checkpoint,closed:true});checkpoint=undefined;generation++;
+        }
+        await abortableDelay(Math.min((options.reconnectMs??250)*2**Math.min(reconnects-1,6),10000),signal);
       }
     }
+    if(deadline.signal.aborted&&!options.signal?.aborted) throw deadline.signal.reason;
+  } catch(error) {
+    if(signal.aborted) {if(deadline.signal.aborted&&!options.signal?.aborted) throw deadline.signal.reason;return;}
+    throw error;
   } finally {
+    if(timer!==undefined) clearTimeout(timer);
     socket?.close();
     if(checkpoint) {
-      await client.write(`/v1/subscriptions/${encodeURIComponent(checkpoint.subscriptionId)}`,{method:'DELETE',key:await options.key({action:'close',subscriptionId:checkpoint.subscriptionId}),onAccepted:options.onAccepted},5000).catch(()=>undefined);
+      await client.write(`/v1/subscriptions/${encodeURIComponent(checkpoint.subscriptionId)}`,{method:'DELETE',key:await options.key({action:'close',subscriptionId:checkpoint.subscriptionId}),signal:AbortSignal.timeout(5000),onAccepted:options.onAccepted},5000).catch(()=>undefined);
       await save({...checkpoint,closed:true});
     }
   }

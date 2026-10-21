@@ -37,6 +37,7 @@ export function createSocketPolicy(input: SocketPolicyInput): GatewaySocketPolic
     watchRevocation: input.watchRevocation,
     selectProtocol: input.selectProtocol,
     initialSubscribe: input.initialSubscribe,
+    projectEvent: input.projectEvent,
     guardIngress(frame, context) {
       const principal = context.principal;
       if (!allowed.has(frame.action) || !frame.transactionKey || frame.sessionId !== principal.sessionId) return null;

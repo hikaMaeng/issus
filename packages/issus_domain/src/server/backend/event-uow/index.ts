@@ -37,29 +37,50 @@ export class EventTransaction {
   }
 }
 export function identifier(name:string):string {if(!/^[a-z_][a-z0-9_]*$/.test(name)) throw new Error('invalid SQL identifier');return `"${name}"`;}
-/** Transient serialization/deadlock retries reuse the command key and never swallow append errors. */
+/** Serialization, deadlock and transaction-timeout retries retain the command identity. */
 export class EventUnitOfWork {
   constructor(readonly options:UowOptions) {}
   async run<T>(work:(tx:EventTransaction)=>Promise<T>,key?:string,identityScope?:string):Promise<T> {
+    const commandKey=key??randomUUID();
     for(let attempt=0;;attempt++) {
-      const client=await this.options.pool.connect();
       try {
-        await client.query('BEGIN');await client.query("SET LOCAL transaction_timeout='5s'");await client.query("SET LOCAL statement_timeout='5s'");await client.query("SET LOCAL lock_timeout='5s'");
-        const tx=new EventTransaction(client,this.options,key,identityScope);const result=await work(tx);await tx.flush();await client.query('COMMIT');return result;
+        return await this.transact(work,commandKey,identityScope,false);
       } catch(error) {
-        await client.query('ROLLBACK');
         const code=(error as {code?:string}).code;
-        if((code==='40001'||code==='40P01')&&attempt<3) {await new Promise(resolve=>setTimeout(resolve,[100,300,1000][attempt]));continue;}
+        if((code==='40001'||code==='40P01'||code==='25P04')&&attempt<3) {await new Promise(resolve=>setTimeout(resolve,[100,300,1000][attempt]));continue;}
         if(code==='23505') throw new CoreError(409,'CONFLICT');
         throw error;
-      } finally {client.release();}
+      }
     }
   }
   /** Preflight and readers cannot mutate any DB object, even through an injected hook. */
   async read<T>(work:(tx:EventTransaction)=>Promise<T>):Promise<T> {
+    return this.transact(work,randomUUID(),undefined,true);
+  }
+  /** A leased pg client needs its own error listener while pg-pool's idle listener is detached. */
+  private async transact<T>(work:(tx:EventTransaction)=>Promise<T>,key:string,identityScope:string|undefined,readOnly:boolean):Promise<T> {
     const client=await this.options.pool.connect();
-    try {await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');const result=await work(new EventTransaction(client,this.options));await client.query('COMMIT');return result;}
-    catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
+    let connectionError:Error|undefined,discard=false;
+    const onError=(error:Error):void=>{connectionError??=error;discard=true;};
+    client.on('error',onError);
+    try {
+      await client.query(readOnly?'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY':'BEGIN');
+      if(!readOnly) {await client.query("SET LOCAL transaction_timeout='5s'");await client.query("SET LOCAL statement_timeout='5s'");await client.query("SET LOCAL lock_timeout='5s'");}
+      const tx=new EventTransaction(client,this.options,key,identityScope),result=await work(tx);
+      if(connectionError) throw connectionError;
+      if(!readOnly) await tx.flush();
+      if(connectionError) throw connectionError;
+      await client.query('COMMIT');return result;
+    } catch(error) {
+      const original=connectionError??error;
+      // A failed rollback must not replace FATAL 25P04 with "not queryable".
+      if(!connectionError) try {await client.query('ROLLBACK');} catch {discard=true;}
+      if((original as {code?:string}).code==='25P04') discard=true;
+      throw original;
+    } finally {
+      // release(error) discards the connection and restores pg-pool's idle error listener.
+      try {client.release(discard);} finally {client.removeListener('error',onError);}
+    }
   }
   /** Immutable pagination may persist opaque cursor records in a repeatable-read snapshot. */
   async snapshot<T>(work:(tx:EventTransaction)=>Promise<T>):Promise<T> {return this.run(async tx=>{await tx.client.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');return work(tx);});}

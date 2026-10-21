@@ -17,4 +17,6 @@
 
 `createEventBroker`는 `options.ready`를 HTTP backend에 전달한다. 기본 `/ready`는 `extendHttp`보다 먼저 등록되며 queue·DB·앱 hook 성공을 모두 요구한다. 도메인 migration/초기화 판정은 앱의 hook이 소유한다.
 
+`createWorkerServer`는 HTTP listener를 먼저 열고 agent schema/큐→앱 initialize→consumer를 시작한다. 큐별 실제 poll 상태와 DB/앱 ready hook을 결합해 `/ready`를 판정하며 shutdown drain 동안503을 유지한다. WS `projectEvent`는 저장 fact와 독립인 payload 투영이고 bootstrap/replay/live 모두 같은 경로를 거친다.
+
 WS는 이전 hub 구독 해제 → 채널/앱 인가·bootstrap 배열 생성 → hub buffer 설치 → tail seed 완료 → 고정 high-water → subscribed → bootstrap event들 → bounded replay → replay 완료 frame → high-water 초과 buffer drain → live 순서다. 새 채널 seed와 replay 경계를 `hub.prepareChannels()`로 조정한다. 각 연결의 send-success를 await하고, 종료 hook은 해당 연결의 진행 작업 뒤 실행한다. 앱 저장소로의 lifecycle 연결은 `GatewaySocketHooks` 하나를 policy/service가 공유한다.

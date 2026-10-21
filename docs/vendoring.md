@@ -11,7 +11,7 @@
 | 관측 dirty 목록 | 아래 source dirty 전문; agent 경로 dirty 없음 |
 | 복사 시각 | `2026-10-21T05:04:42.946102+00:00` (UTC) |
 | 원본→목적 경로 | 아래 69행 및 [byte manifest](../packages/agent/docs/vendoring-files.json); server 공개 barrel도 포함 |
-| 파일별 SHA-256 | 아래 원본/최종 목적 hash; 원본 재검사 `2026-10-21T08:04:06.751408+00:00` 일치69/69 |
+| 파일별 SHA-256 | 아래 원본/최종 목적 hash; 원본 재검사 `2026-10-21T09:45:50.887351+00:00` 일치69/69 |
 | 라이선스 확인 결과 | **없음, 소유자 동일**. root/packages/agent 경로 LICENSE·COPYING 미발견, source package/root manifest license 미설정, 복사 대상 SPDX 미발견 |
 | 제외 목록 | `node_modules`, `dist`, `.env*`, `.git`, 원본 `.cache`·캐시·런타임 데이터; admin/vibeagent 구현. agent 직하 실제 제외 이름은 `dist`; 내용을 열거나 복사하지 않음 |
 | 패치별 이유·시험 | 아래 §1.1 행별 추적. 원본 56개 시험 유지, 설계 변경 기대값3건 갱신. 새 회귀·실제 TCP WS/별도 실DB 시험 추가 |
@@ -72,8 +72,8 @@
 | 원본→목적 상대 경로 | 원본 SHA-256 | 목적 SHA-256 |
 | --- | --- | --- |
 | `src/common/index.ts` | `801567895cf5a47b463852b77eb9ebc72b4d72bafb3911cde8c3605bac694221` | `5f205608a4c46c036c94c9dd6aa0387b61b80ba4548726fb192f8846ad331c6a` |
-| `src/common/protocol/channel/index.test.ts` | `a976fef3e121799e7c8d82360a7c0b85dc03cd8305b112c7590dfcbb3a10ece7` | `d4e81a604a1ee88165b877141feb3d26cc8139b26d6780ffae4cada77d2aedcc` |
-| `src/common/protocol/channel/index.ts` | `dd4fe39753cd2110689f73e3eb00df86be5f5b51d709ecbe66f846606ef4f273` | `61add397465c4a06e7bb309a67b932b4bd15449990f5dcb486630d8a4f1b09ce` |
+| `src/common/protocol/channel/index.test.ts` | `a976fef3e121799e7c8d82360a7c0b85dc03cd8305b112c7590dfcbb3a10ece7` | `1684915121d87003d92d8b19431645b810664a9a0c0b287cfc7a44c3e766e18e` |
+| `src/common/protocol/channel/index.ts` | `dd4fe39753cd2110689f73e3eb00df86be5f5b51d709ecbe66f846606ef4f273` | `56bf901f611b7238cbb0d3eb8c0b58066c35d881bb5a18056953252af84477be` |
 | `src/common/protocol/event/index.test.ts` | `2b0e7f09603c4d31d342c1170c60d7a6f508c0dcdcc595bec0dee0bc431a59ba` | `fbe909983331113a776eb836b0b0b836650df96ccea8127dd48298b3bb54bf6a` |
 | `src/common/protocol/event/index.ts` | `6a5873a18a0b5b122ef90bdcd6624a83c71bcd13b0cf30ed1876cf8e7430b9d6` | `18dfb27270bea1bf744253e34e4bd0aec3a301161fa837bf7e80bc7777582bc0` |
 | `src/common/protocol/metrics/index.ts` | `8a0fc81ab340ad4ff652ff3be52e65580565731d2b6acdf93a8b2f62d6e09ab2` | `46e30180b16395b09017023160bef695890ac8e4d764dc8cd519ea311517accc` |
@@ -109,20 +109,20 @@
 | `src/broker/loops/reaction-enqueue/index.ts` | `720d3e8bcbf44fa5c1d3ee6b900afaec692d0e1d6072727abf5a1488e489d574` | `e44022f3969a56451f02bb82329fc0c9f47b5bacf5d33067e743cf651e8cca22` |
 | `src/broker/loops/reaction-enqueue/lease.ts` | `1c5b07553cdf9224eb98a734228bbcbcf6b4f098d2c9d11ec0fb0313cb8fbdeb` | `24f9f2b0000e7d21a36dd315146eecfb7d31b9c627face5776f6b04fe92c6082` |
 | `src/broker/loops/worker-consumer/index.test.ts` | `5b55cd1abea092d5bd4e8fcefea1aad73944f577e1669ba7c89770d74d8aadcf` | `bccab5e306e7f7aa57d38756e3964bc92ed4bab72c946f9fc2d6781992868977` |
-| `src/broker/loops/worker-consumer/index.ts` | `fdf1d8202eef94444b8f7785f066335a8ec450d2be8367e5a3aed0339d350448` | `8c9ea7816c97434e27200d7255ce7d18e2a430e2d4b6992766e50fff839349b9` |
+| `src/broker/loops/worker-consumer/index.ts` | `fdf1d8202eef94444b8f7785f066335a8ec450d2be8367e5a3aed0339d350448` | `1c36244b9a08b76bac6aab12cdce5399487205e21dc6d754b8c6b7b20c166699` |
 | `src/broker/metrics/endpoint.ts` | `8f90132a136665605641eaee5cfbf6bce5c25d0a9521d3560356bdc1f93d35de` | `4b16d4128e950fe40bccf381264388a95e7c9be8c4fcff15765c8824c2877c51` |
 | `src/broker/metrics/registry.ts` | `3e35eff2531c9e2ce23b264d7e965663b8fb1af7c85df36858e3025c2e7bd94e` | `5fd2ac7e67a2a6387069eb653fde61f47b908ee32c2d65f4f02e745e8ca22b25` |
 | `src/broker/pgmq/client.ts` | `50c30e05d43c96e49e445e43e6f1c7f229e89ea44cad7f5661bb714c409959b9` | `5d166d8f962cf9cbdc785eb95b688054f170074f1ea3b1788d674d8131dbb602` |
-| `src/broker/policy/index.ts` | `601624d0dbd2a39719fbd25a771092133f6d648ac1761496dcefc2394dc1ac33` | `63f60751fd8a5b620ad6f7fb3a1f38347cc18b403dcb48909665b06c6ffe3b52` |
+| `src/broker/policy/index.ts` | `601624d0dbd2a39719fbd25a771092133f6d648ac1761496dcefc2394dc1ac33` | `14fe2380289f451152e0a8917459a4596e2da70e6189976582612dbda26790f6` |
 | `src/broker/queue/transport.ts` | `283760e9f8212f94db7cf8ff92bbcd96e3099e53f06558ddf96f7018b3da006d` | `701a01aee2562b914022a65eeda16593f02c10f640443e1e413fe29e8876320d` |
-| `src/broker/service/index.ts` | `92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0` | `9d21150da1f58a6d376f2b69f6957506e5408adca79a792bca0279fe82533cc9` |
+| `src/broker/service/index.ts` | `92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0` | `010a64f052462743df1d2e1e8c5733085a6970ede052129d4d233234321b0412` |
 | `src/broker/stream/hub.test.ts` | `88c427bb553268266d49905631b4b42bf0b48dd193ea16481838fc39984c5eff` | `45b02631e8e5ef9b8c2d0020c1c5923efe326c654ee84d5bf056944e3baabd42` |
 | `src/broker/stream/hub.ts` | `238eef34d4cd71cf76a5b8429531a711d8f04e2e17623de3ac2da440669b3b0a` | `6efec0dd8f123cccd8060ecd0173d0b7ef0b8e501721b103cc00127ca240eb8e` |
 | `src/broker/stream/mailbox/index.test.ts` | `ce98ddb37b0e2026f080ed9718c0e76644719387198fb4ead88e29596ec84ec1` | `850c72acff26dace61ec00e5c68815c612417cd589bdcfab7fefc141419e785d` |
 | `src/broker/stream/mailbox/index.ts` | `fbb646efbc979e7a11ce6dcb738752a7cb155457e6443382b514d82720bfe2ad` | `baf544272d68abffd33f863ac5429cd6094e8225ae52d09abd80e5773c70371d` |
 | `src/broker/stream/replay-buffer/index.test.ts` | `1ccadadebb45d6682405d775e7714c06339827984bae175d1920f92e77dadb6f` | `0394c0e15864d2e0b316eb96a42c50a687c86837eb3d34bf05a6e788603a5630` |
 | `src/broker/stream/replay-buffer/index.ts` | `4eb044f2a782ff886228d99c7fa69234f14a12eec0c01dd33ceda009a2cf83ee` | `417b0e4270af60741aae59cb41f97e0938013925db3bea1dbe118eaed19b61ed` |
-| `src/broker/transport/websocket.ts` | `416589e7950911c8be30b3353e22a644c470023fcc90eea767b1c6a13d1d35e4` | `87bf3334c5eba358c4baf2a8bab69589f85d1263900428d1c07848018874ec87` |
+| `src/broker/transport/websocket.ts` | `416589e7950911c8be30b3353e22a644c470023fcc90eea767b1c6a13d1d35e4` | `af8c1dfc8aaf0a0fb55fb75d67d883f119252dfac9c17ba6bda78625f5885336` |
 | `src/broker/worker/entry.ts` | `b0402cf57b172ef76eab8cd12eff2151e2954fa60d6cbc839a5e1de724ac51ba` | `8acf7106526831e9710e055f51ff4e402d1504de7a6170728916c9943d884f36` |
 | `src/broker/worker/index.ts` | `7d15a9c5b65a1ba40e24fbfe3faba652966a0a2c0c7662b5c4c70eae2cda1cfc` | `49191da16e22981777416a67d989790d0566bd1e2479e70da83a9d68b2791c0c` |
 | `src/broker/worker/inline.ts` | `50c4674fae3d87f08792cc0465bea42554948efdfa5a5f644dd8e4097854792f` | `a0925b0afa0b11d0e1087a1d53fb25fe01e32f28515ae118af36990f10af03a6` |
@@ -130,16 +130,28 @@
 | `src/broker/worker/pool.ts` | `ab8ddf7172993d32edbd3dd13940c2279080193fed367a3df58f0485189e5e73` | `ecdfd199f919881f30244a053a72fcc43b8ee9d8e40f2f0c98a61783f7a014de` |
 | `src/broker/worker/worker-exit-zero.fixture.mjs` | `22ecfd1f0976ec486cfba7d0f57a3752d62dca4c43835511fd4d600787478774` | `5551c1ea6e1aa6d5bfb5dc3d3e76f1d11a3b9691697804c7938c9a97402a5123` |
 | `src/broker/worker/worker-hang.fixture.mjs` | `70cf0a48e3df082801faf0c49641a4bd84917c065a4372f5300fd2c61c7034ed` | `d654d4d413b5228dc8e42e6ab41fc1703de1ab0bb36c3ee012805b6d1da9a441` |
-| `docs/api.md` | `fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2` | `d3e1c6beb1af855c17c0501b798e686d3e15eb536a2d4c3d8c81555b06a0a70b` |
-| `docs/architecture.md` | `d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d` | `3ae0d1ff85ad3f89ab44a143411a912790ff4f4626f0169ff13704844c0a710d` |
-| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `b5b8b1523534db547d1611ad87cdf57a35415d6eaefbeed4152b358ea9319437` |
-| `docs/internals.md` | `6b432d625800cb5c2629bf865e74f87bedda26246c97459c40f7cb365214b5af` | `f22afd0066720a5c754638941f29729f8dd861d34a5d7e33ac21a9ac8d149969` |
+| `docs/api.md` | `fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2` | `c2296fc3d9729edaae55c6397f6092ab5a6e2a5470293d6629dcc16c365d5e03` |
+| `docs/architecture.md` | `d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d` | `0d36e58a450d0f05870ae1f4961e428b745482e4e1c487a5e83faa999da25bb4` |
+| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `35444632c51b81f751ae36ab94e4100bae5dbb31ec7a7b52931c60fde53482b2` |
+| `docs/internals.md` | `6b432d625800cb5c2629bf865e74f87bedda26246c97459c40f7cb365214b5af` | `8c7fdcf9d48176ebecd5ca50acaa352d457be6df6c3ddf3ee36a7010991f9b79` |
 | `docs/overview.md` | `e41bc39247ecb1377ae946496a8b4bef3fba7ae509e7b4d91581a116b9bc4330` | `1860674d33c1f01e052cadedfff7f432686ec8da3e0082c3fb2ef6a832f3078e` |
-| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `4f076f3c148e6ecce7e6cb992fcb661ee9c499aebf6a33631999725900c43bde` |
-| `docs/usage.md` | `5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989` | `4c0a6211602f45d806a0ffd9cca978eb23a325b6ebfbf606f055d1bbf144e730` |
-| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `61435590be90007293d9a3d28312f10e7996980ecc59be9dba6466b7aaa4b54f` |
+| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `f427d6cf4c2b98fbd700c084720110f917b86ad427daf24db4a7180c59f6697a` |
+| `docs/usage.md` | `5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989` | `01dc0650d7afa805b99dda54573dd79bb81b5646319ed40f922c71a5273e238b` |
+| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `356afe061cda52c2e1e63c516a0f44f7417df3c2656bf538534b521faf3a1661` |
 | `tsconfig.json` | `91e1f7b5bbc091598ce4105676cad7096d69b75024deaec3085067475adf52dc` | `af39a06c246fc12775594c90b51ec8f1a15d88af85a972a6f7a8eee91fda8dfe` |
 | `package.json` | `223f963b06f2f3c9f944539cb07bba19c2b1617e783bcac26f62715dac576424` | `06870904e7a1588573ecba218595d6f3c001e43890e558e2ea54d1de36909a1c` |
+
+### P2 wave 3 수정 (issus-1-agent/s5)
+
+DECISION 6312691996 / VERIFY 6312691290 및 P5 ASK 6312754765.
+
+| 지적 | 패치·근거 |
+| --- | --- |
+| P0 WS 영수 UUID v8 거부 | common channel UUID v1–8/표준 variant 수용. 실제 PGMQ→consumer→event_store→WS replay→v8 영수 callback 2회·영속 증거1행·ACK 자동 생성0 검증 |
+| P1 worker readiness 고정200 | createWorkerServer initialize/ready 주입, 소비 큐별 실제 poll 상태 결합. 초기화·DB·큐·앱 schema/loop·종료 중503. 실제 schema/큐 제거503·복구200 검증 |
+| P5 상태 알림 투영 경계 | projectEvent를 policy/service/WS bootstrap·replay·live에 연결. canonical 좌표/payload 불변, wire payload만 투영. 실패/좌표 변경은 event 송신0·1011 |
+
+원본 파일69개 hash 재대조 일치, 원본 수정0. 신규 service 단위·wave3 실DB 시험은 원본 복사가 아닌 로컬 추가다. [계획](../packages/agent/tests/plans/agent-wave3-20261021.md), [보고](../packages/agent/tests/reports/agent-wave3/20261021_184500.md), `.cache/agent-s5/`. 표준 npm 시험은 sandbox spawn EPERM으로 본문 전 차단되어 호스트 재검증 요청6312918383. 대체 emit 실행 단위122/122·실DB10/10, lint/build exit0.
 
 ### P2 재동기화
 

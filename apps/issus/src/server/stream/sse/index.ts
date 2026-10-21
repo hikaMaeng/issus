@@ -8,6 +8,7 @@ import {coreAuthentication,coreHttpError} from '../../http/auth/index.js';
 import {endpoint,principal,type CoreHttpOptions} from '../../http/auth/context.js';
 import {authorizeDeliveryChannel,type SubscriptionService} from '../../http/subscriptions/index.js';
 import type {createStreamCallbacks} from '../callbacks/index.js';
+import {createDeliveryProjection} from '../projection/index.js';
 
 export interface SseRuntime {store:EventStore;hub:EventStreamHub;registerClose?:(close:()=>Promise<void>)=>(()=>void);stop():Promise<void>}
 /** SSE shares the agent hub/replay implementation, with a separately owned log reader when needed. */
@@ -21,6 +22,7 @@ export function createSseRuntime(pool:Pool):SseRuntime {
 const frame=(res:Response,value:ChannelServerFrame):void=>{const cursor='cursor' in value?value.cursor:undefined;res.write(`${cursor?`id:${cursor}\n`:''}event:frame\ndata:${JSON.stringify(value)}\n\n`);};
 /** SSE sends no implicit ACK/processed mutation. Receipts use the authenticated HTTP endpoint. */
 export function createSseRouter(o:CoreHttpOptions,subscriptions:SubscriptionService,runtime:SseRuntime,signals?:Pick<ReturnType<typeof createStreamCallbacks>,'watchRevocation'>):express.Router {
+ const projectEvent=createDeliveryProjection(subscriptions.uow);
  const router=express.Router();router.use('/v1/stream',coreAuthentication(o));
  router.get('/v1/stream',endpoint(async(req,res)=>{
   const p=principal(res),id=String(req.query.subscription??''),broker=res.locals.runtimePrincipal as RuntimePrincipal;
@@ -42,9 +44,9 @@ export function createSseRouter(o:CoreHttpOptions,subscriptions:SubscriptionServ
    if(closed) {done();return;}if(res.writableLength>1048576) {close();done();return;}
    if(BigInt(event.sequence)<=BigInt(positions[event.streamId]??'0')) {done();return;}
    const next={...positions,[event.streamId]:event.sequence};
-   void runtime.store.snapshotChannelCursor(s.channels,next,cursorScope(broker)).then(snapshot=>{
-    if(closed) {done();return;}positions=next;token=snapshot.token;
-    frame(res,{type:'event',event,cursor:token});if(res.writableLength>1048576) close();done();
+   void runtime.store.snapshotChannelCursor(s.channels,next,cursorScope(broker)).then(async snapshot=>{
+    if(closed) {done();return;}const projected=await projectEvent(event,broker);if(closed) {done();return;}positions=next;token=snapshot.token;
+    frame(res,{type:'event',event:projected,cursor:token});if(res.writableLength>1048576) close();done();
    }).catch(()=>{close();done();});
   },close);
   unregister=runtime.registerClose?.(close)??(()=>{});
@@ -58,7 +60,7 @@ export function createSseRouter(o:CoreHttpOptions,subscriptions:SubscriptionServ
   res.status(200).set({'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-store','Connection':'keep-alive','X-Accel-Buffering':'no'});res.flushHeaders();
   frame(res,{type:'ready',channels:s.channels});frame(res,{type:'subscribed',subscriptionId:id,channels:s.channels,cursor:token,replayComplete:replay.complete});
   for(const event of await subscriptions.bootstrapEvents(p,id,s.channels)) {
-   if(closed) return;if(res.writableLength>1048576){close();return;}const snapshot=await runtime.store.snapshotChannelCursor(s.channels,positions,cursorScope(broker));token=snapshot.token;frame(res,{type:'event',event,cursor:token});
+   if(closed) return;if(res.writableLength>1048576){close();return;}const snapshot=await runtime.store.snapshotChannelCursor(s.channels,positions,cursorScope(broker));token=snapshot.token;frame(res,{type:'event',event:await projectEvent(event,broker),cursor:token});
   }
   if(!replay.complete) unsubscribe();
   for(const event of replay.events) mailbox.enqueue(event);

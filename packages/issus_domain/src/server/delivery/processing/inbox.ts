@@ -6,7 +6,7 @@ import {receiveDeliveries} from '../receipt/index.js';
 import {processedCursor} from './index.js';
 
 export interface InboxQuery {repo?:unknown;issues?:unknown;board?:unknown;me?:unknown;mine?:unknown;sinceCompact?:unknown;cursor?:unknown;limit?:unknown}
-interface Scope {issues:IssueRow[];me:string[];sinceCompact:boolean;hash:string}
+interface Scope {issues:IssueRow[];me:string[];sinceCompact:boolean;hash:string;canonical?:boolean}
 interface Bound {issues:InboxBootstrap['issues'];ordinal:string;sequence:string}
 interface HistoryMetadata {revision:number;stats:ReturnType<typeof sinceCompactStats>;compactStatus:Record<string,unknown>}
 interface Snapshot {kind:'inbox-page'|'inbox-refresh';bound:Bound;response:InboxResponse;index:number;historyMetadata:Record<string,HistoryMetadata>}
@@ -17,7 +17,7 @@ const inScope=(r:{repo_id:string;issue_number:number},issues:IssueRow[])=>issues
 /** One snapshot builder for first pull, refresh, subscriptions and issue history. */
 export class InboxService {
  constructor(readonly uow:EventUnitOfWork) {}
- async scope(tx:EventTransaction,p:CorePrincipal,q:InboxQuery,includeBoards=true):Promise<Scope> {
+ async scope(tx:EventTransaction,p:CorePrincipal,q:InboxQuery,includeBoards=true,canonical=false):Promise<Scope> {
   await authorizePrincipal(tx,p);
   const ref=/^([^/]+)\/([^/]+)$/.exec(String(q.repo??''));if(!ref) throw new CoreError(400,'REPO_REQUIRED');
   const repo=(await tx.client.query(`SELECT r.id FROM ${tx.table('repo')} r JOIN ${tx.table('owner')} o ON o.id=r.owner_id WHERE lower(o.name)=lower($1) AND r.slug=$2 AND r.owner_id=$3`,[ref[1],ref[2],p.ownerId])).rows[0];
@@ -37,7 +37,7 @@ export class InboxService {
   for(const name of me) {const a=await aliasByName(tx,p.ownerId,name);for(const i of issues) if(!(await tx.client.query(`SELECT 1 FROM ${tx.table('alias_repo')} WHERE alias_id=$1 AND repo_id=$2`,[a.id,i.repo_id])).rowCount&&p.kind!=='bootstrap') throw new CoreError(403,'ME_SCOPE_FORBIDDEN');}
   if(q.sinceCompact!==undefined&&!['true','false'].includes(String(q.sinceCompact))) throw new CoreError(400,'INVALID_PAGINATION');
   const sinceCompact=String(q.sinceCompact)!=='false';
-  return {issues,me,sinceCompact,hash:requestHash('p5-inbox',{principal:p.id,ownerId:p.ownerId,...(p.kind==='session'?{aliasId:p.aliasId,sid:p.sid}:{}),issues:issues.map(i=>[i.repo_id,i.number]),me,sinceCompact})};
+  return {issues,me,sinceCompact,canonical,hash:requestHash('p5-inbox',{principal:p.id,ownerId:p.ownerId,...(p.kind==='session'?{aliasId:p.aliasId,sid:p.sid}:{}),issues:issues.map(i=>[i.repo_id,i.number]),me,sinceCompact,...(canonical?{canonical:true}:{})})};
  }
  private async load(tx:EventTransaction,p:CorePrincipal,scope:Scope,token:unknown):Promise<Snapshot> {
   if(typeof token!=='string'||!/^[0-9a-f-]{36}$/i.test(token)) throw new CoreError(409,'CURSOR_SCOPE_MISMATCH');
@@ -58,9 +58,9 @@ export class InboxService {
  async readOn(tx:EventTransaction,p:CorePrincipal,q:InboxQuery,limit=q.limit===undefined?100:Number(q.limit)):Promise<InboxResponse> {
    return (await this.pageOn(tx,p,q,limit)).response;
  }
- private async pageOn(tx:EventTransaction,p:CorePrincipal,q:InboxQuery,limit:number,includeBoards=true):Promise<{response:InboxResponse;historyMetadata:Record<string,HistoryMetadata>}> {
+ private async pageOn(tx:EventTransaction,p:CorePrincipal,q:InboxQuery,limit:number,includeBoards=true,canonical=false):Promise<{response:InboxResponse;historyMetadata:Record<string,HistoryMetadata>}> {
    if(!Number.isSafeInteger(limit)||limit<1||limit>500) throw new CoreError(400,'INVALID_PAGINATION');
-   await lockDeliveryOwner(tx,p.ownerId);const scope=await this.scope(tx,p,q,includeBoards);
+   await lockDeliveryOwner(tx,p.ownerId);const scope=await this.scope(tx,p,q,includeBoards,canonical);
    let snapshot=q.cursor?await this.load(tx,p,scope,q.cursor):undefined;
    if(!snapshot||snapshot.kind==='inbox-refresh') snapshot=await this.build(tx,p,scope,snapshot?.bound);
    const index=snapshot.index,items=snapshot.response.items.slice(index,index+limit),complete=index+limit>=snapshot.response.items.length;
@@ -106,12 +106,12 @@ export class InboxService {
   for(const issue of scope.issues) {
    const history=histories.get(`${issue.repo_id}:${issue.number}`)!,old=previous?.issues.find(o=>o.repoId===issue.repo_id&&o.issueNumber===issue.number);
    for(const c of history) {
-    const h=header(c.body);if(scope.me.includes(h._from)||c.id===issue.compact_comment_id) continue;
+    const h=header(c.body);if(!scope.canonical&&scope.me.includes(h._from)||c.id===issue.compact_comment_id) continue;
     if(incremental) {if(BigInt(c.id)<=BigInt(old!.throughCommentId)) continue;}
     else if(scope.sinceCompact&&issue.compact_comment_id&&BigInt(c.id)<BigInt(issue.compact_comment_id)) continue;
     const source=(await tx.client.query(`SELECT event_id,stream_id,sequence FROM event_store WHERE action='issus.comment.posted' AND payload->>'ownerId'=$1 AND payload->>'commentId'=$2 ORDER BY sequence LIMIT 1`,[p.ownerId,c.id])).rows[0];if(!source) throw new Error('canonical comment source coordinates missing');
     const priority=classify(h,c.body,scope.me);
-    items.set(`comment:${c.id}`,{viewKey:`comment:${c.id}`,commentId:c.id,sourceEventId:source.event_id,sourceStreamId:source.stream_id,sourceSequence:String(source.sequence),origin:'history',priority,content:{body:priority==='OTHER'?h._first:c.body,envelope:c.envelope}});
+    items.set(`comment:${c.id}`,{viewKey:`comment:${c.id}`,commentId:c.id,sourceEventId:source.event_id,sourceStreamId:source.stream_id,sourceSequence:String(source.sequence),origin:'history',priority,content:{body:priority==='OTHER'&&!scope.canonical?h._first:c.body,envelope:c.envelope}});
    }
   }
   const deliveries=own?(await tx.client.query<DeliveryRow & {processed:boolean}>(`SELECT d.*,p.delivery_id IS NOT NULL AS processed FROM ${tx.table('delivery')} d LEFT JOIN ${tx.table('processed')} p ON p.alias_id=d.recipient_alias_id AND p.delivery_id=d.id WHERE d.recipient_alias_id=$1 AND d.ordinal<=$2 ORDER BY d.ordinal`,[own,bound.ordinal])).rows:[];
@@ -125,14 +125,14 @@ export class InboxService {
     if(!inScope(r,scope.issues)) continue;
    }
    if(d.comment_id&&!comment) continue;
-   if(comment&&scope.me.includes(header(comment.body)._from)) continue;
+   if(comment&&!scope.canonical&&scope.me.includes(header(comment.body)._from)) continue;
    if(incremental) {if(BigInt(d.ordinal)<=BigInt(previous!.ordinal)&&BigInt(d.alias_event_sequence)<=BigInt(previous!.sequence)) continue;}
    else if(d.processed&&!items.has(`comment:${d.comment_id}`)&&!activeHolds.includes(d.comment_id??'')&&!ackState.some(a=>a.directiveId===d.comment_id&&a.state==='waiting')) continue;
    if(compact.some(c=>c.comment?.id===d.comment_id)) continue;
    const key=d.comment_id?`comment:${d.comment_id}`:`fact:${d.source_event_id}`,existing=items.get(key);
    if(existing&&(existing.sourceEventId!==d.source_event_id||existing.sourceStreamId!==d.source_stream_id||existing.sourceSequence!==String(d.source_sequence))) throw new Error('inbox canonical provenance mismatch');
    const priority=comment?classify(header(comment.body),comment.body,scope.me):d.classification;
-   items.set(key,{viewKey:key,...(d.comment_id?{commentId:d.comment_id}:{}),sourceEventId:d.source_event_id,sourceStreamId:d.source_stream_id,sourceSequence:String(d.source_sequence),origin:existing?'merged':'inbox',priority,content:comment?{body:priority==='OTHER'?header(comment.body)._first:comment.body,envelope:comment.envelope}:d.content,delivery:deliveryView(d)});
+   items.set(key,{viewKey:key,...(d.comment_id?{commentId:d.comment_id}:{}),sourceEventId:d.source_event_id,sourceStreamId:d.source_stream_id,sourceSequence:String(d.source_sequence),origin:existing?'merged':'inbox',priority,content:comment?{body:priority==='OTHER'&&!scope.canonical?header(comment.body)._first:comment.body,envelope:comment.envelope}:d.content,delivery:deliveryView(d)});
   }
   const snapshotId=randomUUID();
   const response:InboxResponse={bootstrap:{mode:incremental?'incremental':'snapshot',snapshotId,meAliases:scope.me,complete:false,issues:boundaries,inboxThroughOrdinal:bound.ordinal,inboxThroughEventSequence:bound.sequence},compact,items:[...items.values()],nextCursor:null,refreshCursor:null,processedCursor:null,pendingLegacy:{window:pendingWindow,global:pendingGlobal},windowPendingAck:pendingWindow,globalPendingAck:pendingGlobal,ackState,activeHolds,claims,handoffs,footers};
@@ -141,7 +141,7 @@ export class InboxService {
  /** Single-issue canonical shape for P1 to inject into P4's history route. */
  async history(tx:EventTransaction,p:CorePrincipal,repoId:string,number:number,q:Record<string,unknown>):Promise<Record<string,unknown>> {
   const repo=(await tx.client.query(`SELECT r.slug,o.name FROM ${tx.table('repo')} r JOIN ${tx.table('owner')} o ON o.id=r.owner_id WHERE r.id=$1`,[repoId])).rows[0];
-  const {response,historyMetadata}=await this.pageOn(tx,p,{...q,repo:`${repo.name}/${repo.slug}`,issues:[number]},q.limit===undefined?100:Number(q.limit),false),meta=historyMetadata[`${repoId}:${number}`];
+  const {response,historyMetadata}=await this.pageOn(tx,p,{...q,repo:`${repo.name}/${repo.slug}`,issues:[number]},q.limit===undefined?100:Number(q.limit),false,true),meta=historyMetadata[`${repoId}:${number}`];
   const boundary=response.bootstrap.issues.find(i=>i.repoId===repoId&&i.issueNumber===number)!;
   return {...response,compact:response.compact.find(c=>c.repoId===repoId&&c.issueNumber===number)?.comment??null,snapshot:{highWater:boundary.throughCommentId,revision:meta.revision,eventHighWater:boundary.eventHighWater},stats:meta.stats,compactStatus:meta.compactStatus,
    items:response.items.filter(i=>i.commentId).map(i=>({...i,id:i.commentId,body:i.content.body,envelope:i.content.envelope}))};

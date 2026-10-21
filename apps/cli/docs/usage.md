@@ -19,7 +19,13 @@ watch ISSUE는 N/owner/repo#N/서비스 issue URL이다. 숫자·show는 repo �
 
 compact out 생략시 cwd `compact_packet_<owner>_<repo>_<n>_<last-id>.md`, 옆에 `.meta.json`을 저장한다. alias repos는 comma split/빈 값 제거/dedupe, limit60 기본이며 owner registry 충돌 검사는 축소하지 않는다. board ensure는 `--repo o/r --owner ALIAS [--body-file F]`로 명시한다.
 
-구독: `issus subscribe --repo o/r --issue N [--me alias/sid] [--transport ws|sse] [--board N ...] [--cursor FILE] [--once]`. repo/issue는 필수·비반복, transport 기본ws, once=false, since-compact=true. cursor 기본 profile 디렉터리의 scope별 stream-cursors.json. stdout은 항상 JSONL이며 첫 줄은 `{subscription:...}`, 후속 줄은 P3 server frame이다. receipt는 자동, 업무 ACK는 post로 별도 작성한다.
+구독: `issus subscribe --repo o/r --issue N [--me alias/sid] [--transport ws|sse] [--board N ...] [--cursor FILE] [--once] [--until <ms>]`. repo/issue는 필수·비반복, transport 기본ws, once=false, since-compact=true. until은 비반복 양수 정수 밀리초(1–2147483647)이며 생략하면 대기 상한이 없다. cursor 기본 profile 디렉터리의 scope별 stream-cursors.json. stdout은 항상 JSONL이며 구독을 만들 때마다 `{subscription:...}`, 후속 줄은 P3 server frame이다. receipt는 자동, 업무 ACK는 post로 별도 작성한다.
+
+`--once`는 ready/subscribed/replay 완료와 일반 상태 알림을 지나 첫 queued/redelivered/escalated delivery의 출력·HTTP 영수·cursor 저장이 성공한 뒤 exit0이다. `--until 60000`은 연결·재접속·영수 대기를 포함한 60초 상한이며 만료 exit3이다. once와 함께 쓸 수 있고, once가 없으면 delivery 뒤에도 대기하다 상한에서3이다. 종료 때 현재 구독만 닫고 마지막 확정 cursor를 보존한다(정리 요청 상한5초).
+
+백그라운드 깨우기 예: `issus subscribe --repo o/r --issue N --once --until 60000`의 stdout JSONL과 종료 알림을 후속 세션에 넘긴다. exit0은 transport 영수이며 업무 ACK·반영을 뜻하지 않는다. Codex 래퍼의 후속 실행이 필요한 ACK/반영을 별도로 작성한다. Monitor 실제 세션 깨우기는 배포 후 오케스트레이터 실기 확인 대상이다.
+
+단절·재실행에서는 새 subscription ID/key를 발급한다. 같은 scope/channel 집합이면 마지막 영수 확정 cursor를 새 구독에 넘기고 eventId 중복 출력을 막는다. scope 불일치·만료 cursor는 새 snapshot부터 읽는다. 저장된 subscription ID는 연결 재사용에 쓰지 않는다.
 
 인증: `ISSUS_URL`·`ISSUS_TOKEN` env 또는 `issus auth set --server URL --token-stdin`(redirected stdin). `--profile NAME --profiles-file FILE`로 profile을 고른다. 기본은 `~/.config/issus/profiles.json`, `ISSUS_CONFIG_DIR`·`ISSUS_PROFILES_FILE`로 변경 가능. `--token-file FILE`은 명시 파일에서만 읽는다. 토큰을 인자나 로그로 전달하지 않는다.
 

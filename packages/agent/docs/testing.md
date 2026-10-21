@@ -1,5 +1,7 @@
 # 시험
 
+wave 3 DECISION 6312691996 및 P5 ASK 6312754765: [계획](../tests/plans/agent-wave3-20261021.md), `tests/reports/agent-wave3/`. parser의 UUID v8 수용/오류 거부, 실제 HTTP worker 초기화·poll·DB·앱 hook·종료, 실제 PGMQ→consumer→event_store→WS 영수와 실제 schema/queue 제거·복구를 검증한다. WS 투영은 bootstrap/replay/live·원본 불변·좌표 보존·실패1011을 확인한다. 앱 도메인 delivery_receipt/worker·scheduler 조립은 P5 소유 시험과 구별한다.
+
 계획: [P2 계획](../tests/plans/agent-vendoring-20261021.md). 결과는 `tests/reports/agent-vendoring/`의 timestamp 기록을 정본으로 삼으며 이 문서에 과거 원본 통과 수를 재사용하지 않는다.
 
 DECISION 6309173472 후속은 [계획](../tests/plans/agent-p2-followup-20261021.md)과 `tests/reports/agent-p2-followup/`을 따른다. env 회귀는 PORT=65536·경계·소수 및 lease≤visibility 거부를 확인한다. 실DB 회귀는 replyChannel 없는 comment fact→reaction queue→worker→result를 실행하고 저장 audience=worker·큐 삭제·client high-water/replay 제외를 확인한다. result까지 bounds를 강제로 넓힌 replay와 뒤의 client fact 재생도 대조한다.

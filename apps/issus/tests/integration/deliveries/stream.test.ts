@@ -8,7 +8,7 @@ import {startDeliveryHarness,seedSessions} from './harness.js';
 test('P5 real WS and SSE immutable transport',{timeout:120000},async t=>{
  const h=await startDeliveryHarness();
  try {
-  const {A,B,I,number}=await seedSessions(h),channel=`alias:${B.principal.ownerId}:${B.aliasId}`;
+  const {A,B,I,number,repoId}=await seedSessions(h),channel=`alias:${B.principal.ownerId}:${B.aliasId}`;
   const sub=()=>h.http('/v1/subscriptions',{channels:[],from:'now',repo:'tester/delivery',issues:[number]},B.token);
   const append=async(count:number,tag:string)=>h.store.appendMany(Array.from({length:count},(_,index):EventDraft=>({eventId:randomUUID(),eventVersion:1,kind:'fact',action:'p5.transport.boundary',streamId:`channel:${channel}`,channel,transactionKey:randomUUID(),correlationId:randomUUID(),source:'worker',audience:'client',payload:{ownerId:B.principal.ownerId,index,tag},createdAt:h.clock.now().toISOString()})));
   await t.test('I-10 >256 replay resumes without loss and original token is immutable',async()=>{
@@ -56,6 +56,8 @@ test('P5 real WS and SSE immutable transport',{timeout:120000},async t=>{
     const receipt=await h.http('/v1/deliveries/receipts',{deliveryIds:[event.event.payload.deliveryId],attempts:[0],subscriptionId:opened.body.subscriptionId},B.token);assert.equal(receipt.status,200,JSON.stringify(receipt));
     assert.equal((await h.pool.query(`SELECT transport FROM "${h.schema}".delivery_receipt WHERE delivery_id=$1`,[event.event.payload.deliveryId])).rows[0].transport,'sse');
     const received=await until(f=>f.type==='event'&&f.event.action==='issus.delivery.delivered'&&f.event.payload.deliveryId===event.event.payload.deliveryId);assert.notEqual(received.cursor,event.cursor);
+    const isolated=JSON.parse(JSON.stringify(received)).event.payload;
+    assert.deepEqual(isolated.issue,{repoId,issueNumber:number});assert.equal(isolated.commentId,posted.body.commentId);assert.equal(isolated.priority,'ME');assert.equal(isolated.delivery.state,'delivered');assert.equal(isolated.envelope.TO,B.alias);assert.match(isolated.content.body,/SSE 실제 전달/);
     const saved=await h.store.openChannelCursor(opened.body.channels,event.cursor,cursorScope(await h.auth.verify(B.token)));assert.equal(saved.positions[event.event.streamId],event.event.sequence);
    }finally{controller.abort();await reader.cancel().catch(()=>{});}
    for(let i=0;i<50;i++){const row=(await h.pool.query(`SELECT closed_at FROM "${h.schema}".subscription WHERE id=$1`,[opened.body.subscriptionId])).rows[0];if(row.closed_at) break;await new Promise(r=>setTimeout(r,10));}

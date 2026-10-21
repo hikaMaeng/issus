@@ -18,7 +18,7 @@ const help=`Usage: issus <command> [options]
 post --repo o/r --issue N --body-file FILE [--edit-body] [--dry-run]
 watch --repo o/r [--me ALIAS ...] [--mine TEXT ...] [--board ISSUE ...] [--peek] ISSUE...
 watch --repo o/r --show ID
-subscribe --repo o/r --issue N [--me ALIAS/sid] [--transport ws|sse] [--once]
+subscribe --repo o/r --issue N [--me ALIAS/sid] [--transport ws|sse] [--once] [--until MS]
 compact [prepare|status|post] --repo o/r --issue N [--out FILE]
 alias [check] --owner OWNER [--deep] [--repos o/r,o/r] ALIAS
 alias register --owner O --repo o/r --name A --role R --model M --scope S --body-file F [--sid SID]
@@ -37,6 +37,7 @@ Env: ISSUS_URL (ISSUS_SERVER_URL alias), ISSUS_TOKEN, ISSUS_CONFIG_DIR, ISSUS_PR
 Exit: 0 success; 1 rejected; 2 usage/file/connection/auth/server; 3 pending/timeout.
 watch defaults to since-compact; --all-history selects full history. --peek never advances state.
 post --dry-run performs local validation + authenticated, read-only server preflight.
+subscribe --once waits for the first delivery receipt; --until MS expires with exit 3.
 COMPACT post requires --packet-file FILE --sampled id,id --compacted-by ALIAS.
 `;
 

@@ -30,8 +30,11 @@ export async function produceTick(options:ProducerOptions):Promise<boolean> {
  }catch(e){await c.query('ROLLBACK');throw e;}finally{c.release();}
 }
 /** No overlapping timer jobs and no waiting for ACK inside the producer. */
-export function createSchedulerProducer(options:ProducerOptions):Service {
- let timer:ReturnType<typeof setInterval>|undefined,active:Promise<unknown>|undefined;
- const once=()=>{if(active) return;active=produceTick(options).catch(e=>options.onError?.(e)).finally(()=>{active=undefined;});};
- return {async start(){once();timer=setInterval(once,5000);},async stop(){if(timer) clearInterval(timer);await active;}};
+export function createSchedulerProducer(options:ProducerOptions):Service & {ready():Promise<void>} {
+ let timer:ReturnType<typeof setInterval>|undefined,active:Promise<void>|undefined,started=false,healthy=false;
+ const once=():Promise<void>=>{
+  if(active) return active;
+  active=produceTick(options).then(()=>{healthy=true;},e=>{healthy=false;options.onError?.(e);}).finally(()=>{active=undefined;});return active;
+ };
+ return {async start(){started=true;await once();timer=setInterval(()=>{void once();},5000);},async ready(){if(!started||!healthy) throw new Error('scheduler producer is not ready');},async stop(){started=false;healthy=false;if(timer) clearInterval(timer);await active;}};
 }

@@ -14,6 +14,8 @@
 
 ## 전송
 
+송신 직전 `projectEvent`는 canonical envelope를 deep copy해 호출한다. payload 외 필드는 원본과 대조하며, wire payload만 복사해 채택한다. mailbox가 await 순서를 유지하므로 bootstrap→replay→live와 send-success 순서 및 불변 cursor 계약은 동일하다.
+
 송신마다 새 transport cursor snapshot을 만들며 기존 UUID/처리 cursor에 쓰지 않는다. socket send callback 성공 뒤 앱의 `onSendSuccess`를 await한다. hub 구독과 buffer가 먼저 설치되고 tail seed 완료 뒤 high-water를 잡는다. subscribed 뒤 onSubscribe가 반환한 bootstrap event를 먼저 쓴다. 해당 history stream의 좌표는 구독 positions에 합치지 않으며 각 frame에 현재 positions의 새 UUID만 발급한다. replay event 송신이 끝나면 replay 완료 frame을 먼저 쓰고 buffered live를 보낸다. 256건 재생이 incomplete면 live 구독을 해제하고 마지막 수신 snapshot으로 재구독한다. 준비/구독/이벤트/재생/오류 프레임은 `common/protocol/channel`을 따른다.
 
 close handler는 즉시 timer·hub·mailbox를 정리한다. 연결의 frame chain과 마지막 send-success가 끝나면 수용된 subscriptionId의 종료 hook을 한 번 호출한다. 전송기 단위 pending 종료 집합을 shutdown에서 await한다. callback 오류 payload는 client에 노출하지 않으며 실패 수만 `websocketHookFailures`에 남긴다.
@@ -21,3 +23,7 @@ close handler는 즉시 timer·hub·mailbox를 정리한다. 연결의 frame cha
 로컬 revoke 감시는 close/error handler 설치 뒤 등록한다. unsubscribe를 소비하기 전에 noop으로 바꾸어 중복 신호·shutdown 재진입에도 한 번만 실행한다. 등록 중 동기 revoke가 발생하면 ready를 보내지 않고 반환 cleanup을 즉시 실행한다. 해제 오류가 있어도 mailbox/종료 fact callback 정리는 계속한다.
 
 ws handleProtocols는 앱 selector에 offered Set 복사본을 전달하고 원 offered 집합으로 선택 결과를 대조한다. initialSubscribe는 ready write 완료 뒤 기존 handle로 직렬화하고 반환 type도 subscribe로 제한한다. 인증 실패는 이 hook을 실행하지 않으며 잘못된 초기 scope/채널은 수동 경로와 동일한 error/1008이다.
+
+## worker readiness
+
+health listener bind→agent schema/queue→앱 initialize→consumer 순서다. 각 lane의 read 성공/실패는 큐별 readiness 집합을 갱신한다. `/ready`는 초기화·consumer·전체 집합을 확인한 뒤 DB/queue/앱 hook을 await하고 종료 상태를 다시 확인한다. shutdown 시작부터503을 유지하며 consumer drain·worker pool 정리 뒤 HTTP/database를 닫는다.

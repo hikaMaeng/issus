@@ -1,0 +1,11 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../../../..",
+    "outDir": "../../.cache/integration-js",
+    "noEmit": false,
+    "types": ["node"]
+  },
+  "files": ["subscribe-reconnect.test.ts", "../../../issus/tests/integration/deliveries/harness.ts"],
+  "include": []
+}

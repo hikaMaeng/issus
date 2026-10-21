@@ -18,6 +18,8 @@ export type GatewayBootstrapFrame = Omit<ChannelEventFrame, "cursor"> & { cursor
 export type GatewaySubscribeResult = void | readonly GatewayBootstrapFrame[];
 /** App lifecycle hooks. A successful write is transport evidence, never TYPE:ACK. */
 export interface GatewaySocketHooks {
+  /** Builds a per-principal wire payload; canonical coordinates and stored facts stay unchanged. */
+  projectEvent?(event: EventEnvelope, principal: Principal): Promise<EventEnvelope>;
   /** Validates the subscription and optionally returns authorized history before replay. */
   onSubscribe?(frame: ChannelSubscribeFrame, principal: Principal): GatewaySubscribeResult | Promise<GatewaySubscribeResult>;
   /** Handles authenticated client receipts independently of send-success. */
@@ -107,16 +109,32 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
       return decisions.every(Boolean);
     };
     const validSession = async (): Promise<boolean> => !policy.revalidate || await policy.revalidate(context);
+    const project = async (event: EventEnvelope): Promise<EventEnvelope | undefined> => {
+      if (!policy.projectEvent) return event;
+      try {
+        const projected = await policy.projectEvent(structuredClone(event), context.principal);
+        if (!projected || Object.entries(event).some(([key, value]) => key !== "payload" && projected[key as keyof EventEnvelope] !== value)
+          || Object.keys(projected).some((key) => !(key in event))
+          || !projected.payload || typeof projected.payload !== "object" || Array.isArray(projected.payload)) throw new Error("invalid event projection");
+        return { ...event, payload: structuredClone(projected.payload) };
+      } catch {
+        metrics.increment("websocketHookFailures");
+        fail("EVENT_PROJECTION_FAILED", "전달 프레임을 구성하지 못했습니다", 1011, true);
+        return undefined;
+      }
+    };
     const mailbox = new ConnectionMailbox(env.websocketMailboxMax, (event, done) => {
       if (closed || closing || socket.readyState !== WebSocket.OPEN) { done(); return; }
       if (socket.bufferedAmount >= env.websocketBufferedBytes) { slow(); done(); return; }
       if (!cursorToken || BigInt(event.sequence) <= BigInt(positions[event.streamId] ?? "0")) { done(); return; }
       const nextPositions = { ...positions, [event.streamId]: event.sequence };
-      void eventStore.snapshotChannelCursor(channels, nextPositions, scope).then((snapshot) => {
+      void eventStore.snapshotChannelCursor(channels, nextPositions, scope).then(async (snapshot) => {
         if (closed || closing) { done(); return; }
+        const projected = await project(event);
+        if (!projected || closed || closing) { done(); return; }
         // This only changes connection memory. A previous UUID is never updated.
         positions = nextPositions; cursorToken = snapshot.token;
-        const packet = { type: "event", event, cursor: snapshot.token } as const;
+        const packet = { type: "event", event: projected, cursor: snapshot.token } as const;
         const recipient = subscriptionId!;
         sendFrame(packet, (error) => {
           if (error) { metrics.increment("websocketSendFailures"); socket.close(1011, "websocket send failed"); }
@@ -195,8 +213,11 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
           try { snapshot = await eventStore.snapshotChannelCursor(channels, positions, scope); }
           catch { fail("CURSOR_PERSISTENCE_FAILED", "커서를 저장하지 못했습니다", 1011, true); return; }
           if (closed || closing) return;
-          const packet = parseChannelServerFrame({ ...proposed, cursor: snapshot.token });
-          if (!packet || packet.type !== "event" || packet.event.audience === "worker") throw new Error("invalid bootstrap event");
+          const parsed = parseChannelServerFrame({ ...proposed, cursor: snapshot.token });
+          if (!parsed || parsed.type !== "event" || parsed.event.audience === "worker") throw new Error("invalid bootstrap event");
+          const projected = await project(parsed.event);
+          if (!projected || closed || closing) return;
+          const packet = { ...parsed, event: projected };
           cursorToken = snapshot.token;
           await write(packet);
           metrics.increment("websocketDelivered");

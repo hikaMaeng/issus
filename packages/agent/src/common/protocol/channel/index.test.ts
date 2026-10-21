@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseChannelCursor, parseChannelClientFrame, parseChannelServerFrame } from "./index.js";
+import { deterministicEventId } from "../../../server/id/index.js";
+
+test("receipt accepts server deterministic UUID v8 and keeps malformed UUIDs rejected", () => {
+  const id = deterministicEventId("delivery:wave3:1");
+  assert.equal(id[14], "8");
+  const receipt = { type: "receipt", subscriptionId: "716c013a-bb36-4b1e-a99f-d59af19e27f3", cursor: "716c013a-bb36-4b1e-a99f-d59af19e27f3", deliveryIds: [id], attempts: [0] };
+  assert.deepEqual(parseChannelClientFrame(receipt), receipt);
+  for (const bad of [id.replace(/-8/, "-9"), id.slice(0, -1), id.replace(/-/g, ""), "not-a-uuid", id.slice(0, 19) + "7" + id.slice(20)]) {
+    assert.equal(parseChannelClientFrame({ ...receipt, deliveryIds: [bad] }), undefined, bad);
+  }
+});
 
 test("channel cursor only accepts an opaque UUID reference", () => {
   assert.equal(parseChannelCursor("716c013a-bb36-4b1e-a99f-d59af19e27f3"), "716c013a-bb36-4b1e-a99f-d59af19e27f3");

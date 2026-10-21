@@ -19,7 +19,11 @@ export function parseCommentRequest(input:unknown):CommentRequestResult {
     if (typeof obj.compactPacketToken!=='string' || !obj.compactPacketToken) add('COMPACT_METADATA','compactPacketToken','COMPACT compactPacketToken 필수');
     if (!Array.isArray(obj.sampledIds) || obj.sampledIds.some(v=>typeof v!=='string'||!/^\d+$/u.test(v)) || new Set(obj.sampledIds).size!==obj.sampledIds.length) add('COMPACT_METADATA','sampledIds','sampledIds는 중복 없는 숫자 id 배열');
     if (typeof obj.compactedBy!=='string'||!aliasOk(obj.compactedBy)) add('COMPACT_METADATA','compactedBy','COMPACT compactedBy 별칭 필수');
-    else if (strip(body).split(/\r\n|\r|\n/u).at(-1)!==`compacted-by:${obj.compactedBy}`) add('COMPACT_METADATA','compactedBy','compacted-by footer와 compactedBy 불일치');
+    else { // DECISION 6313329886(§6.3 정리): 마지막 줄은 `compacted-by:<compactedBy>`로 시작하고 뒤에는 괄호 설명 등 접미사 허용(별칭 문자 연속은 다른 별칭 → 불일치). 정본 compact.md 원문 수용.
+      const last=strip(body).split(/\r\n|\r|\n/u).at(-1)??'';
+      const head=`compacted-by:${obj.compactedBy}`;
+      if (!last.startsWith(head)||/^[a-z0-9가-힣-]/u.test(last.slice(head.length))) add('COMPACT_METADATA','compactedBy','compacted-by footer와 compactedBy 불일치');
+    }
   } else for (const k of ['compactPacketToken','sampledIds','compactedBy']) if (k in obj) add('METADATA_FORBIDDEN',k,`${k}는 COMPACT에만 허용`);
   if ('compactDeferredReason' in obj) {
     if (t!=='DECISION' && t!=='HANDOFF') add('METADATA_FORBIDDEN','compactDeferredReason','compactDeferredReason은 DECISION/HANDOFF에만 허용');

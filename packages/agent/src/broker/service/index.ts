@@ -82,12 +82,18 @@ function createRuntime(env: AgentEnv): Runtime {
   return { env, database, queueDatabase, queue: new PgmqClient(queueDatabase), metrics, stopMetrics: () => clearInterval(timer) };
 }
 
-function internalHealthServer(runtime: Runtime): ReturnType<typeof createServer> {
+function internalHealthServer(runtime: Runtime, ready: () => Promise<void>): ReturnType<typeof createServer> {
   return createServer((request, response) => {
     if (writeMetrics(request, response, runtime.env, runtime.metrics)) return;
-    response.writeHead(request.url === "/health" || request.url === "/ready" ? 200 : 404);
-    response.end();
-  }).listen(runtime.env.port);
+    if (request.url !== "/ready") {
+      response.writeHead(request.url === "/health" ? 200 : 404);
+      response.end();
+      return;
+    }
+    void Promise.resolve().then(ready).then(() => {
+      response.writeHead(200); response.end();
+    }, () => { response.writeHead(503); response.end(); });
+  });
 }
 
 // ============================================================ event broker ====
@@ -109,6 +115,7 @@ export interface EventBrokerOptions {
   watchRevocation?: SocketPolicyInput["watchRevocation"];
   selectProtocol?: SocketPolicyInput["selectProtocol"];
   initialSubscribe?: SocketPolicyInput["initialSubscribe"];
+  projectEvent?: SocketPolicyInput["projectEvent"];
   /** Reply channel for a session. Defaults to `<sessionId>` on the session prefix. */
   replyChannelFor?(sessionId: string): string;
   /** Client bundle served at `/`. Omit to serve no client. */
@@ -228,6 +235,7 @@ export function createEventBroker(options: EventBrokerOptions): Service {
           watchRevocation: options.socketPolicy.watchRevocation ?? options.watchRevocation,
           selectProtocol: options.socketPolicy.selectProtocol ?? options.selectProtocol,
           initialSubscribe: options.socketPolicy.initialSubscribe ?? options.initialSubscribe,
+          projectEvent: options.socketPolicy.projectEvent ?? options.projectEvent,
           authorizeChannel: options.authorizeChannel,
           guardIngress: (frame, context) => {
             if (!options.allowedActions.includes(frame.action)) return null;
@@ -241,6 +249,7 @@ export function createEventBroker(options: EventBrokerOptions): Service {
           onDisconnect: options.onDisconnect, onSendSuccess: options.onSendSuccess,
           watchRevocation: options.watchRevocation,
           selectProtocol: options.selectProtocol, initialSubscribe: options.initialSubscribe,
+          projectEvent: options.projectEvent,
         }),
         options.ingressQueueFor,
       );
@@ -350,6 +359,10 @@ export interface WorkerServerOptions {
   queues?: readonly string[];
   /** Queues carrying reactions require complete source coordinates and deterministic identity. */
   reactionQueues?: readonly string[];
+  /** Runs once after agent schemas/queues exist, before the consumer starts. Rejection leaves /ready at 503. */
+  initialize?(database: Pool): Promise<void>;
+  /** Application schema/loop check, awaited on every /ready request; throw or reject for 503. */
+  ready?(database: Pool): Promise<void>;
   env?: AgentEnv;
 }
 
@@ -380,27 +393,53 @@ export function createWorkerServer(options: WorkerServerOptions): Service {
       // The worker writes domain history, so it owns that schema and its retention.
       const commandQueues = options.queues?.length ? options.queues : env.queues;
 
+      let initialized = false;
+      let stopping = false;
+      let running = false;
+      const polled = new Set<string>();
+      let consumer: ReturnType<typeof startWorkerConsumer> | undefined;
+      let pool: ReturnType<typeof createInlinePool> | undefined;
+      const assertRunning = (): void => {
+        if (!initialized || stopping || !running || commandQueues.some((name) => !polled.has(name))) throw new Error("worker not ready");
+      };
+      const server = internalHealthServer(runtime, async () => {
+        assertRunning();
+        await Promise.all([queue.check(), database.query("SELECT 1"), options.ready?.(database)]);
+        assertRunning();
+      });
+      stopService = async () => {
+        stopping = true;
+        consumer?.stop();
+        await consumer?.done;
+        await pool?.destroy();
+        await closeHttpServer(server);
+        runtime.stopMetrics(); await queueDatabase.end(); await database.end();
+      };
+      await new Promise<void>((resolve, reject) => {
+        server.once("error", reject);
+        server.listen(env.port, () => { server.off("error", reject); resolve(); });
+      });
+
       await eventStore.ensureSchema();
       await executions.ensureSchema();
       for (const name of new Set(commandQueues)) await queue.ensure(name);
+      await options.initialize?.(database);
+      initialized = true;
+      if (stopping) return;
 
       // Durable facts and execution results have no automatic retention job.
       const execute = options.executeWith ? options.executeWith(database) : options.execute;
       const inline = Boolean(execute);
       const maxInFlight = inline ? (options.maxConcurrent ?? 256) : env.maxWorkerThreads + env.maxQueue;
-      const pool = execute
+      pool = execute
         ? createInlinePool(execute, maxInFlight)
         : createWorkerPool({ minWorkerThreads: env.minWorkerThreads, maxWorkerThreads: env.maxWorkerThreads, maxQueue: env.maxQueue, workerUrl: options.worker! });
-      const consumer = startWorkerConsumer({ queue, commandQueues, reactionQueues: options.reactionQueues, eventStore, executions, pool, metrics, visibilitySeconds: env.visibilityTimeoutSeconds, pollSeconds: env.pollSeconds, batchSize: env.pollBatchSize, maxInFlight, maxExecutionAttempts: env.maxExecutionAttempts, terminalPersistenceAlertAttempts: env.terminalPersistenceAlertAttempts, terminalPersistenceBackoffMaxSeconds: env.terminalPersistenceBackoffMaxSeconds });
-      const server = internalHealthServer(runtime);
+      running = true;
+      consumer = startWorkerConsumer({ queue, commandQueues, reactionQueues: options.reactionQueues, eventStore, executions, pool, metrics, visibilitySeconds: env.visibilityTimeoutSeconds, pollSeconds: env.pollSeconds, batchSize: env.pollBatchSize, maxInFlight, maxExecutionAttempts: env.maxExecutionAttempts, terminalPersistenceAlertAttempts: env.terminalPersistenceAlertAttempts, terminalPersistenceBackoffMaxSeconds: env.terminalPersistenceBackoffMaxSeconds,
+        onPoll: (name, healthy) => { if (healthy) polled.add(name); else polled.delete(name); } });
+      void consumer.done.then(() => { running = false; }, () => { running = false; });
       console.log(JSON.stringify({ event: "worker.server.started", mode: inline ? "inline" : "threads", maxInFlight, queues: commandQueues }));
 
-      stopService = async () => {
-        consumer.stop(); server.close();
-        await consumer.done;
-        await pool.destroy();
-        runtime.stopMetrics(); await queueDatabase.end(); await database.end();
-      };
     },
     async stop(): Promise<void> { await stopService?.(); },
   };

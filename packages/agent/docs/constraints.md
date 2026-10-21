@@ -1,5 +1,9 @@
 # 제약
 
+- WS UUID parser는 v1–8과 표준 variant만 허용한다. 영수 v8 허용이 소유권 검사를 대체하지 않으며 subscription/session/cursor 검증과 도메인 receipt 검사는 유지한다.
+- worker readiness는 앱 `initialize`·`ready`를 통해 migration/필수 loop 준비를 주입받는다. 초기화 성공만으로 준비 완료를 판단하지 않고 모든 소비 큐의 실제 read 성공을 요구한다.
+- `projectEvent`는 payload 투영만 허용한다. 좌표/action/audience/provenance 변경 및 canonical fact 수정은 금지다.
+
 - PostgreSQL canonical stream sequence는 10진 문자열 bigint다. 다른 stream 순번끼리 비교하지 않는다. 앱의 canonical fact는 session별이 아니라 설계의 채널 stream을 명시한다.
 - `appendManyOn`/`sendOn` 호출자는 반드시 열린 동일 transaction client를 전달한다. broker는 외부 tx를 commit하지 않는다.
 - 이벤트·execution 결과 자동 prune 없음. `prune(null)`은 SQL을 보내지 않는다. cursor TTL은 별도 30일이며 만료/다른 scope는 HTTP410/409 또는 WS error 후1008이다.

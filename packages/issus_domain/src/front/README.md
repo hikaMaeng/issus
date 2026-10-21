@@ -8,3 +8,4 @@ issus 환경 독립 HTTP·스트림 소비와 cursor/inbox 상태 모델. React�
 | 시험 | [testing](docs/testing.md) |
 
 공개 import는 `issus_domain/front`. 최상위 export 조립은 P1, 소비는 CLI/P8 소유다.
+스트림은 연결마다 새 구독에 확정 cursor를 넘기며, once는 첫 delivery 영수 후 완료한다. `untilMs` 만료는 `StreamTimeout`이다.

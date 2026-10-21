@@ -31,7 +31,7 @@ export function terminalPersistenceVisibilitySeconds(readCount: number, visibili
  * no other system for the append to get out of step with, and nothing left to
  * bridge.
  */
-export function startWorkerConsumer(input: { queue: EventQueueTransport; commandQueues: readonly string[]; eventStore: EventStore; executions: ExecutionStore; pool: WorkerPool; metrics: MetricsRegistry; visibilitySeconds: number; pollSeconds: number; batchSize: number; maxInFlight: number; maxExecutionAttempts: number; terminalPersistenceAlertAttempts?: number; terminalPersistenceBackoffMaxSeconds?: number; reactionQueues?: readonly string[] }): BrokerLoop {
+export function startWorkerConsumer(input: { queue: EventQueueTransport; commandQueues: readonly string[]; eventStore: EventStore; executions: ExecutionStore; pool: WorkerPool; metrics: MetricsRegistry; visibilitySeconds: number; pollSeconds: number; batchSize: number; maxInFlight: number; maxExecutionAttempts: number; terminalPersistenceAlertAttempts?: number; terminalPersistenceBackoffMaxSeconds?: number; reactionQueues?: readonly string[]; onPoll?: (queue: string, healthy: boolean) => void }): BrokerLoop {
   let stopped = false;
   const persistResult = async (draft: Parameters<EventStore["append"]>[0]): Promise<EventEnvelope> => input.eventStore.append(draft);
   const process = async (message: { id: string; event: IngressEvent; readCount: number; queueName: string }): Promise<void> => {
@@ -221,6 +221,7 @@ export function startWorkerConsumer(input: { queue: EventQueueTransport; command
   const lane = async (queueName: string): Promise<void> => { let backoffMs = 100; while (!stopped) {
     try {
       const messages = await input.queue.read(queueName, { visibilityTimeoutSeconds: input.visibilitySeconds, quantity: input.batchSize, pollSeconds: input.pollSeconds });
+      input.onPoll?.(queueName, true);
       input.metrics.increment("queueReads"); input.metrics.increment("queueMessages", messages.length);
       backoffMs = 100;
       for (const message of messages) {
@@ -228,7 +229,7 @@ export function startWorkerConsumer(input: { queue: EventQueueTransport; command
         if (stopped) break;
         schedule({ id: message.id, event: message.event as IngressEvent, readCount: message.readCount, queueName });
       }
-    } catch (error) { input.metrics.increment("brokerReadFailures"); console.error(JSON.stringify({ event: "worker.consumer.retry", queue: queueName, backoffMs, error: error instanceof Error ? error.message : String(error) })); await wait(backoffMs); backoffMs = nextReadBackoff(backoffMs); }
+    } catch (error) { input.onPoll?.(queueName, false); input.metrics.increment("brokerReadFailures"); console.error(JSON.stringify({ event: "worker.consumer.retry", queue: queueName, backoffMs, error: error instanceof Error ? error.message : String(error) })); await wait(backoffMs); backoffMs = nextReadBackoff(backoffMs); }
   } };
   const done = Promise.all(input.commandQueues.map((queueName) => lane(queueName))).then(async () => { await Promise.allSettled(inFlight); });
   return { stop: () => { stopped = true; }, done };

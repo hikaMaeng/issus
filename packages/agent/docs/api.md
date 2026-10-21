@@ -20,12 +20,15 @@
 
 `EventBrokerOptions.ready?: () => Promise<void>`는 `createWebBackend`의 같은 옵션으로 전달된다. `/ready` 요청마다 `queue.check()`·`checkDatabase()`·선택 hook을 함께 await한다. 전부 성공하면 HTTP200 `{status:"ready"}`, 하나라도 throw/거부하면 HTTP503 `{status:"unavailable"}`이며 내부 오류는 노출하지 않는다. hook을 생략하면 기존 queue·DB 검사만 수행한다. `/health`는 별도 liveness 응답이다.
 
-`ChannelClientFrame`: `subscribe{subscriptionId,channels,cursor?}`, `receipt{subscriptionId,deliveryIds,attempts,cursor}`, `event+IngressCommand`. subscriptionId/cursor/deliveryId는 UUID, receipt는 동일 길이의 deliveryIds/attempts와 최대100건을 요구한다. 외부 event의 서버 발급 필드·source3개는 거부한다. server frame은 기존 `ready`, `subscribed`, `event`, `replay`, `error{code,message,retryable}` 5종이다. `ChannelEventFrame`은 기존 event wire의 이름 있는 타입이며 새 frame type을 추가하지 않는다. scope 오류의 message는 설계 §5.4와 동일하다.
+`WorkerServerOptions.initialize?(database:Pool):Promise<void>`는 agent schema·소비 큐 생성 후, consumer 시작 전 1회 실행한다. `ready?(database:Pool):Promise<void>`는 매 `/ready` 요청에서 기본 DB/queue 연결 검사와 함께 await한다. 초기화 중/실패, 모든 소비 큐의 최초 poll 성공 전, 어느 큐든 poll 실패 후 재성공 전, 앱 검사 throw/거부, consumer 종료·shutdown 중은503이다. `/health`는200이다. 시작 실패 후에도 관측용 listener를 유지하며 소유 앱은 `stop()`으로 정리한다. schema 준비 판단은 앱이 주입하고 `ready` 생략은 도메인 migration 준비를 보증하지 않는다. `startWorkerConsumer({onPoll?})`는 각 큐 read 성공/실패를 `(queueName,healthy)`로 알린다.
+
+`ChannelClientFrame`: `subscribe{subscriptionId,channels,cursor?}`, `receipt{subscriptionId,deliveryIds,attempts,cursor}`, `event+IngressCommand`. subscriptionId/cursor/deliveryId는 UUID v1–8 및 표준 variant를 허용한다(서버 `deterministicEventId`는 v8). receipt는 동일 길이의 deliveryIds/attempts와 최대100건을 요구한다. 외부 event의 서버 발급 필드·source3개는 거부한다. server frame은 기존 `ready`, `subscribed`, `event`, `replay`, `error{code,message,retryable}` 5종이다. `ChannelEventFrame`은 기존 event wire의 이름 있는 타입이며 새 frame type을 추가하지 않는다. scope 오류의 message는 설계 §5.4와 동일하다.
 
 `agent/broker`는 `GatewaySocketHooks`를 공개한다. `SocketPolicyInput`·`GatewaySocketPolicy`가 같은 계약을 상속하며 `EventBrokerOptions`의 동명 옵션도 socket policy로 전달한다. 별도 `socketPolicy`를 주입하면 그 객체에 있는 hook을 우선하고 누락된 hook은 `EventBrokerOptions`에서 보완한다.
 
 ```ts
 interface GatewaySocketHooks {
+  projectEvent?(event: EventEnvelope, principal: Principal): Promise<EventEnvelope>;
   onSubscribe?(frame: ChannelSubscribeFrame, principal: Principal): GatewaySubscribeResult | Promise<GatewaySubscribeResult>;
   onReceipt?(frame: ChannelReceiptFrame, principal: Principal): void | Promise<void>;
   onDisconnect?(subscriptionId: string, principal: Principal, reason: string): void | Promise<void>;
@@ -37,6 +40,8 @@ interface GatewaySocketHooks {
 type GatewayBootstrapFrame = Omit<ChannelEventFrame, "cursor"> & {cursor?: string};
 type GatewaySubscribeResult = void | readonly GatewayBootstrapFrame[];
 ```
+
+`projectEvent`는 bootstrap/replay/live의 event 송신 전에 await한다. 복제한 envelope와 현재 principal을 넘기고 반환 payload만 사용한다. 좌표·action·audience·provenance 등 payload 이외 필드의 변경/추가, object가 아닌 payload, hook throw/거부는 `EVENT_PROJECTION_FAILED` retryable error 뒤1011로 닫고 해당 event를 송신하지 않는다. cursor positions 및 저장 canonical fact는 바꾸지 않는다. `onSendSuccess`는 실제 투영된 wire frame을 받는다. hook 생략은 기존 payload를 그대로 전송한다.
 
 `GatewayBootstrapFrame`·`GatewaySubscribeResult`도 `agent/broker`에서 공개한다. `onSubscribe`는 기존처럼 void를 반환하거나 권한 검사한 canonical event frame 배열을 반환한다. 순서는 subscribed → 반환 bootstrap event들 → replay event들 → replay 완료 → live다. 구독 채널 밖 history는 앱이 repo/scope 권한을 검사하며 canonical envelope를 그대로 반환한다. worker audience·잘못된 event·control frame은 bootstrap으로 보낼 수 없다. 각 bootstrap event는 **현재 구독 positions 그대로** 새 scoped cursor를 발급한다. 앱이 준 cursor는 사용하지 않고 history stream의 sequence로 구독 위치를 전진시키지 않는다. §5.5 metadata/items는 앱의 기존 subscription HTTP 응답/builder가 제공한다. 새 type:bootstrap은 미승인 제안이며 제공하지 않는다.
 

@@ -25,7 +25,7 @@ export type ChannelServerFrame =
 
 /** Cursor and subscription identifiers are opaque UUID references. */
 export function parseChannelCursor(token: string | undefined): string | undefined {
-  return token && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token) ? token : undefined;
+  return token && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token) ? token : undefined;
 }
 function record(value: unknown): value is Record<string, unknown> { return !!value && typeof value === "object" && !Array.isArray(value); }
 function channels(value: unknown): value is string[] { return Array.isArray(value) && value.length <= 32 && value.every((c) => typeof c === "string" && c.length > 0 && c.length <= 128); }

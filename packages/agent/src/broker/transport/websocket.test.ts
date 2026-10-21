@@ -70,6 +70,58 @@ async function harness(initial: EventEnvelope[] = [], hooks: GatewaySocketHooks 
   };
 }
 
+test("projection enriches bootstrap/replay/live payloads once, preserving canonical facts and cursor positions", { timeout: 5000 }, async () => {
+  const original = event(1); original.payload = { nested: { unchanged: true } };
+  const bootstrap = { ...event(10), channel: "canonical-history", payload: { bootstrap: true } };
+  const projected: string[] = []; const sent: ChannelServerFrame[] = [];
+  const h = await harness([original], {
+    onSubscribe: async () => [{ type: "event", event: bootstrap }],
+    projectEvent: async (input, identity) => {
+      assert.deepEqual(identity, principal); projected.push(input.eventId); await delay(2);
+      if (input.eventId === original.eventId) (input.payload.nested as { unchanged: boolean }).unchanged = false;
+      return { ...input, payload: { ...input.payload, issue: 1, envelope: "FROM:issus-1-agent/s5 TO:ALL TYPE:NOTE" } };
+    },
+    onSendSuccess: async (_id, _principal, frame) => { sent.push(frame); },
+  });
+  try {
+    const c = await h.connect(); c.subscribe();
+    await c.until(() => c.frames.some((frame) => frame.type === "replay"));
+    const live = event(2); h.rows.push(live); h.hub.publish(live);
+    await c.until(() => sent.length === 3);
+    const frames = c.frames.filter((frame) => frame.type === "event");
+    assert.deepEqual(projected, [bootstrap.eventId, original.eventId, live.eventId]);
+    assert.deepEqual(frames.map((frame) => frame.event.eventId), projected);
+    for (const frame of frames) {
+      assert.equal(frame.event.payload.issue, 1); assert.ok(frame.event.payload.envelope);
+      const source = [bootstrap, original, live].find((item) => item.eventId === frame.event.eventId)!;
+      assert.equal(frame.event.sequence, source.sequence); assert.equal(frame.event.streamId, source.streamId);
+      assert.equal(frame.event.channel, source.channel); assert.equal(frame.event.audience, source.audience);
+    }
+    assert.deepEqual(h.snapshots.get(frames[0]!.cursor)!.positions, {});
+    assert.deepEqual(h.snapshots.get(frames[2]!.cursor)!.positions, { [live.streamId]: "2" });
+    assert.deepEqual(original.payload, { nested: { unchanged: true } });
+    assert.deepEqual(bootstrap.payload, { bootstrap: true }); assert.deepEqual(live.payload, {});
+    assert.deepEqual(sent.filter((frame) => frame.type === "event"), frames);
+  } finally { await h.close(); }
+});
+
+test("projection rejection or coordinate/audience mutation sends no event and closes retryably", { timeout: 5000 }, async () => {
+  const bad: Array<NonNullable<GatewaySocketHooks["projectEvent"]>> = [
+    async () => { throw new Error("projection database unavailable"); },
+    async (input) => ({ ...input, eventId: randomUUID() }),
+    async (input) => ({ ...input, audience: "worker" }),
+    async (input) => ({ ...input, payload: [] as never }),
+  ];
+  for (const projectEvent of bad) {
+    const h = await harness([event(1)], { projectEvent });
+    try {
+      const c = await h.connect(); c.subscribe(); await c.until(() => c.closes.length > 0);
+      assert.equal(c.closes[0], 1011); assert.equal(c.frames.some((frame) => frame.type === "event"), false);
+      assert.ok(c.frames.some((frame) => frame.type === "error" && frame.code === "EVENT_PROJECTION_FAILED" && frame.retryable));
+    } finally { await h.close(); }
+  }
+});
+
 test("unauthenticated WS upgrade returns HTTP 401 before any subscription", { timeout: 5000 }, async () => {
   const h = await harness();
   try { await assert.rejects(h.connect("invalid"), /401/); assert.equal(h.reads(), 0); assert.deepEqual(h.hub.activeChannels(), []); }

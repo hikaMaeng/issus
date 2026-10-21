@@ -41,5 +41,9 @@ export const runtimeAuthMigration:SqlMigration={id:'0002-runtime-auth',sql:AUTH_
 export const runtimeHistoryMigration:SqlMigration={id:'0003-canonical-history',sql:`CREATE TABLE issus.history_snapshot(id uuid PRIMARY KEY,principal_id uuid NOT NULL,scope_hash text NOT NULL,snapshot jsonb NOT NULL,expires_at timestamptz NOT NULL); CREATE INDEX history_snapshot_expiry ON issus.history_snapshot(expires_at);`};
 /** Explicit connection URL; optional namespace is for isolated integration harnesses only. */
 export function createRuntimePool(databaseUrl:string,brokerSchema='public'):Pool {
-  ident(brokerSchema);const pool=new Pool({connectionString:databaseUrl,max:12,options:`-c search_path=${brokerSchema},public`});pool.on('error',()=>{});return pool;
+  ident(brokerSchema);const pool=new Pool({connectionString:databaseUrl,max:12,options:`-c search_path=${brokerSchema},public`});
+  // pg-pool removes its idle listener on checkout. UoW captures the cause and owns release/retry;
+  // other runtime borrowers must also survive an asynchronous FATAL between queries.
+  pool.on('connect',client=>{client.on('error',()=>{});});
+  pool.on('error',()=>{});return pool;
 }

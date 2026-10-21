@@ -16,6 +16,14 @@ test('P5 snapshots retain COMPACT and changes crossing page boundaries',{timeout
    const token=randomUUID();await h.pool.query(`INSERT INTO "${h.schema}".compact_packet(id,owner_id,repo_id,issue_number,previous_compact_id,through_id,snapshot_revision,packet_hash,token_hash,snapshot,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'{}',$10)`,[randomUUID(),A.principal.ownerId,repoId,number,issue.compact_comment_id,through,issue.revision,sha256(token),sha256(token),new Date(h.clock.now().getTime()+600000)]);
    const response=await h.http(`${I}/comments`,{body:`FROM:${A.alias}/s1 TO:ALL TYPE:COMPACT${issue.compact_comment_id?` RE:${issue.compact_comment_id}`:''} SEEN:${through}\n## ===== COMPACT #${number} through ${through} =====\n스냅샷 경계. 미확인: 없음.\nNEXT: 다음 구간.\n---\ncompacted-by:${A.alias}`,compactPacketToken:token,sampledIds:tail.slice(-3),compactedBy:A.alias},A.token);assert.equal(response.status,201,JSON.stringify(response));await h.settle();return response.body.commentId as string;
   }
+  await t.test('canonical history includes own full bodies while inbox still omits own FROM',async()=>{
+   const id=await post('작성자 자신의 원문 전체.');
+   const canonical=await h.http(`${I}/comments?limit=500`,undefined,A.token);assert.equal(canonical.status,200,JSON.stringify(canonical));
+   assert.match(canonical.body.items.find((i:any)=>i.id===id).body,/작성자 자신의 원문 전체/);
+   const ownInbox=await h.http(`/v1/inbox?repo=tester/delivery&issues=${number}&limit=500`,undefined,A.token);assert.equal(ownInbox.status,200);
+   assert.ok(!ownInbox.body.items.some((i:any)=>i.commentId===id));
+   assert.equal((await h.http(`${I}/comments?cursor=${ownInbox.body.refreshCursor}`,undefined,A.token)).status,409);
+  });
   await t.test('I-15 state updates during incremental pagination wait for the next refresh',async()=>{
    let start=await pull();start=await pull(start.body.refreshCursor);const previous=start.body.refreshCursor;
    const ids=[await post('증분 페이지 첫 항목.'),await post('증분 페이지 두번째 항목.')];

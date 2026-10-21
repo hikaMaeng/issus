@@ -11,7 +11,8 @@ const root=new URL('../../../../../../packages/issus_domain/tests/fixtures/issue
 test('fixture HTTP live writes: comment28 + body4',{skip:!process.env.ISSUS_TEST_DATABASE_URL},async t=>{
   const files=(await readdir(root)).filter(f=>f.endsWith('.md')).sort();assert.equal(files.length,32);let posted=0,edited=0;
   for(const filename of files) await t.test(filename,async()=>{
-    const original=await readFile(new URL(filename,root),'utf8'),isBody=original.startsWith('STATE:');
+    const originalBytes=await readFile(new URL(filename,root)),original=originalBytes.toString('utf8'),isBody=original.startsWith('STATE:');
+    assert.deepEqual(Buffer.from(original,'utf8'),originalBytes,'fixture is lossless UTF-8');
     const e=isBody?bodyEnvelope(original).envelope! as unknown as Record<string,string>:envelope(original.split('\n')[0]);
     const h=await startCoreHarness();
     const q=(table:string)=>`"${h.schema}"."${table}"`;
@@ -47,18 +48,22 @@ test('fixture HTTP live writes: comment28 + body4',{skip:!process.env.ISSUS_TEST
       if(isBody) {
         if(e.COMPACT) await h.pool.query(`UPDATE ${q('issue')} SET compact_comment_id=$3 WHERE repo_id=$1 AND number=$2`,[repoId,number,e.COMPACT]);
         const response=await h.http(`/v1/repos/tester/fixtures/issues/${number}/body`,{body:original},author.token,{method:'PATCH',headers:{'if-match':'1'}});assert.equal(response.status,200,JSON.stringify(response.body));
-        assert.equal((await h.pool.query(`SELECT body FROM ${q('issue')} WHERE repo_id=$1 AND number=$2`,[repoId,number])).rows[0].body,original);edited++;
+        assert.deepEqual((await h.pool.query(`SELECT convert_to(body,'UTF8') AS bytes FROM ${q('issue')} WHERE repo_id=$1 AND number=$2`,[repoId,number])).rows[0].bytes,originalBytes);edited++;
+        const facts=(await h.pool.query("SELECT convert_to(payload->>'body','UTF8') AS bytes FROM event_store WHERE action='issus.issue.body.edited' AND payload->>'repoId'=$1 AND payload->>'issueNumber'=$2",[repoId,String(number)])).rows;
+        assert.equal(facts.length,1);assert.deepEqual(facts[0].bytes,originalBytes,'canonical body fact preserves fixture bytes');
       } else {
-        let body=original;const metadata:Record<string,unknown>={};
+        const metadata:Record<string,unknown>={};
         if(['DECISION','HANDOFF'].includes(e.TYPE)) metadata.compactDeferredReason='역사 고정물 문맥 시험: 선행 요약 생략';
         if(e.TYPE==='COMPACT') {
           const previous=refs(e.RE)[0]??null;if(previous) await h.pool.query(`UPDATE ${q('issue')} SET compact_comment_id=$3 WHERE repo_id=$1 AND number=$2`,[repoId,number,previous]);
           const token=randomBytes(32).toString('base64url');const samples=[...refIds].filter(id=>!previous||BigInt(id)>BigInt(previous)).slice(0,3);
           await h.pool.query(`INSERT INTO ${q('compact_packet')}(id,owner_id,repo_id,issue_number,previous_compact_id,through_id,snapshot_revision,packet_hash,token_hash,snapshot,expires_at) VALUES($1,$2,$3,$4,$5,$6,1,$7,$8,'{}','2030-01-01T00:00Z')`,[randomUUID(),h.bootstrap.ownerId,repoId,number,previous,e.SEEN,sha256('fixture'),sha256(token)]);
-          body=original.trimEnd()+'\ncompacted-by:p4-24-compact';Object.assign(metadata,{compactPacketToken:token,sampledIds:samples,compactedBy:'p4-24-compact'});
+          Object.assign(metadata,{compactPacketToken:token,sampledIds:samples,compactedBy:'p4-24-compact'});
         }
-        const response=await h.http(`/v1/repos/tester/fixtures/issues/${number}/comments`,{body,...metadata},author.token);assert.equal(response.status,201,filename+JSON.stringify(response.body));
-        const row=(await h.pool.query(`SELECT body FROM ${q('comment')} WHERE id=$1`,[response.body.commentId])).rows[0];assert.equal(row.body,body);posted++;
+        const response=await h.http(`/v1/repos/tester/fixtures/issues/${number}/comments`,{body:original,...metadata},author.token);assert.equal(response.status,201,filename+JSON.stringify(response.body));
+        const row=(await h.pool.query(`SELECT convert_to(body,'UTF8') AS bytes FROM ${q('comment')} WHERE id=$1`,[response.body.commentId])).rows[0];assert.deepEqual(row.bytes,originalBytes);posted++;
+        const facts=(await h.pool.query("SELECT convert_to(payload->>'body','UTF8') AS bytes FROM event_store WHERE event_id=$1 AND action='issus.comment.posted'",[response.body.eventId])).rows;
+        assert.equal(facts.length,1);assert.deepEqual(facts[0].bytes,originalBytes,'canonical comment fact preserves fixture bytes');
       }
       assert.deepEqual(h.failures,[]);
     }finally{await h.cleanup();}

@@ -8,3 +8,5 @@ issus 5초 tick·ACK 기한·재전달 scheduler.
 | 시험 | [testing](docs/testing.md) |
 
 [구조](docs/architecture.md) · [사용](docs/usage.md) · [내부](docs/internals.md)
+
+준비 상태: agent initialize/ready 훅에 DB·PGMQ·migration0001–0003·필수 큐 검사를 연결한다. 미준비503, 복구200.
