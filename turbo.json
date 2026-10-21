@@ -48,7 +48,13 @@
         "APPDATA",
         "LOCALAPPDATA",
         "TEMP",
-        "TMP"
+        "TMP",
+        "ISSUS_TEST_SCHEMA",
+        "ISSUS_TEST_BROKER_SCHEMA",
+        "ISSUS_TEST_BOOTSTRAP_TOKEN",
+        "ISSUS_TEST_OWNER",
+        "HEADLESS_BROWSER_PLAYWRIGHT_ROOT",
+        "ISSUS_TEST_CLI_RUN_MODULE"
       ]
     },
     "test:integration": {
@@ -68,7 +74,13 @@
         "APPDATA",
         "LOCALAPPDATA",
         "TEMP",
-        "TMP"
+        "TMP",
+        "ISSUS_TEST_SCHEMA",
+        "ISSUS_TEST_BROKER_SCHEMA",
+        "ISSUS_TEST_BOOTSTRAP_TOKEN",
+        "ISSUS_TEST_OWNER",
+        "HEADLESS_BROWSER_PLAYWRIGHT_ROOT",
+        "ISSUS_TEST_CLI_RUN_MODULE"
       ]
     },
     "test:browser": {
@@ -88,7 +100,13 @@
         "APPDATA",
         "LOCALAPPDATA",
         "TEMP",
-        "TMP"
+        "TMP",
+        "ISSUS_TEST_SCHEMA",
+        "ISSUS_TEST_BROKER_SCHEMA",
+        "ISSUS_TEST_BOOTSTRAP_TOKEN",
+        "ISSUS_TEST_OWNER",
+        "HEADLESS_BROWSER_PLAYWRIGHT_ROOT",
+        "ISSUS_TEST_CLI_RUN_MODULE"
       ]
     }
   }
