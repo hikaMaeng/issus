@@ -25,15 +25,16 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "ws": "8.22.0",
-    "@types/ws": "8.18.2",
-    "@types/node": "24.19.2",
-    "typescript": "7.0.2",
-    "tsx": "4.23.15",
-    "esbuild": "0.28.2",
     "@types/express": "5.0.6",
-    "vite": "8.3.4",
+    "@types/node": "24.19.2",
     "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0"
+    "@types/react-dom": "19.3.0",
+    "@types/ws": "8.18.2",
+    "esbuild": "0.28.2",
+    "playwright": "1.59.1",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "ws": "8.22.0"
   }
 }

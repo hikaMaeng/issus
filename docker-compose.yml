@@ -3,6 +3,8 @@ name: issus
 services:
   issus-db:
     container_name: issus-db
+    # 브로커·워커·스케줄러 풀 + 호스트 시험 풀이 기본 100을 넘긴다(통합 시험 53300 too many clients 관측). ndx_business와 같이 200.
+    command: ["postgres", "-c", "max_connections=200"]
     image: issus-db:local
     build:
       context: .
