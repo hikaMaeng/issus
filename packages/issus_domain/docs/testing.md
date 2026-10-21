@@ -1,5 +1,7 @@
 # 시험
 
+[intake 후속 시험](../src/server/intake/docs/testing.md)은 alias model 프로필 재구축과 before-close 별도 제어 tx의 due 실패 보존을 검증한다. [intake README](../src/server/intake/README.md)를 함께 따른다.
+
 기본 명령은 저장소 root에서 `npm test -w issus_domain`, `npm run lint -w issus_domain`, `npm run build -w issus_domain`이다. test는 node --test+tsx, lint는 tsc --noEmit이다. fixture는 패키지 cwd 기준으로 읽는다.
 
 `validation/comment/fixture.test.ts`는 원본 46파일 SHA-256과 37행 합성 digest, good32/bad5의 실제 Python dry-run 결과·사유 순서를 대조한다. good의 `board-body.md`, `issue-body-*.md`만 body validator로 보낸다. `domain/parity.test.ts`는 Python이 생성한 추가 문법·날짜·header/classification/COMPACT·masking·거리·pending golden을 대조한다. `logic/domain.test.ts`는 window/global·REPORT RE/직접 ACK 분리·수신자·임계·역순 상태를 검사한다. `protocol/runtime/wire.test.ts`는 command15/fact28 shape, metadata 보존, unknown/server-only key·WS mutation 거부를 검사한다.

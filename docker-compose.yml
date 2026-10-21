@@ -36,6 +36,10 @@ services:
         required: false
     environment:
       PORT: "${ISSUS_PORT:-18140}"
+      ISSUS_BOOTSTRAP_TOKEN_FILE: /run/secrets/issus-bootstrap-token
+    secrets:
+      - source: issus_bootstrap_token
+        target: issus-bootstrap-token
     ports:
       - "127.0.0.1:${ISSUS_HOST_PORT:-18140}:${ISSUS_PORT:-18140}"
     depends_on:
@@ -109,3 +113,7 @@ networks:
 volumes:
   issus_pgdata:
     name: issus_pgdata
+
+secrets:
+  issus_bootstrap_token:
+    file: ${ISSUS_BOOTSTRAP_TOKEN_SOURCE:-./apps/issus/docker/volumes/bootstrap-token}

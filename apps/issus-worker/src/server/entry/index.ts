@@ -15,7 +15,8 @@ export function workerExecute(b:WorkerBindings,queueName:(name:string)=>string=(
 }
 /** The worker frame owns pool, execution fence, queue consumer and health listener. */
 export function createIssusWorker(options:BindingOptions={},source:NodeJS.ProcessEnv=process.env):Service {
- const env=readEnv({...source,AGENT_ROLE:'worker'}),queues=[QUEUES.intake,QUEUES.route,QUEUES.delivery,QUEUES.compact].map(n=>options.queueName?.(n)??n);
+ const queues=[QUEUES.intake,QUEUES.route,QUEUES.delivery,QUEUES.compact].map(n=>options.queueName?.(n)??n);
+ const env=readEnv({...source,AGENT_ROLE:'worker',AGENT_QUEUE:queues[0],AGENT_QUEUES:queues.join(','),ISSUS_EVENT_RETENTION_DAYS:'null'});
  const bindings={compactReaction:applyCompactReaction,publication:compactPublication,...options};
  return createWorkerServer({env,queues,reactionQueues:[QUEUES.route,QUEUES.compact].map(n=>options.queueName?.(n)??n),maxConcurrent:8,executeWith:pool=>workerExecute(createWorkerBindings(pool,bindings),options.queueName)});
 }

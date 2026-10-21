@@ -9,6 +9,8 @@ issus의 인증·도메인 명령 HTTP·읽기 전용 preflight·이슈 조회 �
 
 [구조](docs/architecture.md) · [사용](docs/usage.md) · [내부](docs/internals.md)
 
-P4 공개 조립은 `src/server/http/auth/index.ts`의 `createCoreHttpRouter(options)`다. P1은 createEventBroker.extendHttp에서 static fallback보다 먼저 연결한다. 독립 `createCoreTestApp`은 HTTP/실DB 시험 전용이며 production entry를 수정하지 않는다. P5 stream/inbox/delivery, P6 compact API, P8 front는 각 담당 경계다.
+production 조립은 `src/server/entry/broker/index.ts`의 `createBroker`다. 동일 UoW/auth에 core·delivery·subscriptions·compact 라우트, canonical+inbox history reader, WS/SSE와 세션 revoke를 연결한다. `allowedActions=[]`로 WS 명령을 금지한다. [core HTTP 계약](src/server/http/auth/README.md)은 주입 UoW Clock의 cookie Expires24h·preflight 전체 큐 fingerprint·32/5 fixture를 설명한다.
 
 P6는 `src/server/http/compact/index.ts`의 `installCompactRoutes`를 공통 인증 뒤에 연결한다. status/prepare/packet과 기존 comments 게시의 metadata 왕복은 [API](docs/api.md#compact-p6), 검증은 [domain COMPACT 계획](../../packages/issus_domain/tests/plans/compact-20261021.md)을 따른다.
+
+WS는 Authorization bearer 또는 `issus.v1`+`issus.bearer.<token>` 쌍을 받으며 응답 protocol은 `issus.v1`이다. query token은 거부한다. Monitor는 기존 subscription과 opaque cursor로 alias 채널을 자동 구독한다. SSE는 같은 bootstrap/권한/receipt 계약을 사용하며 종료 시 subscription.closed 저장 후 tail과 broker를 멈춘다.

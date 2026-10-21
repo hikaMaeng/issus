@@ -80,6 +80,8 @@ command business payload 뒤 서버가 `CommandContext {actor,idempotencyKey}`�
 
 ## P4 backend·intake
 
+[intake API](../src/server/intake/docs/api.md): alias model 필수 fact/프로필 재구축, close 전 `refreshCompactSegment(tx,issue,'before-close')`의 별도 제어 tx와 close 실패 후 due 보존 계약.
+
 공개 서버 타입·함수의 고정 표는 [README](../README.md). `CoreCommand={principal,action,payload,idempotencyKey}`, `HttpResult={httpStatus,response}`이며 외부 actor·repo/issue·provenance는 HTTP에서 받지 않는다. `CoreError(status,code,reasons?,details?)`만 공개 오류로 직렬화하고 SQL/stack은 노출하지 않는다.
 
 `UowOptions={pool,eventStore,queue,schema?,clock?,reactions?,queueName?}`. eventStore는 `appendManyOn`, queue는 `sendOn`을 제공한다. `run`은 projection→결과 기록→await append→await queue→COMMIT을 묶으며 실패하면 전부 롤백한다. `read`는 REPEATABLE READ READ ONLY, `snapshot`은 커서 생성이 허용된 REPEATABLE READ다. `flush`는 UoW 내부에서 1회 호출한다.

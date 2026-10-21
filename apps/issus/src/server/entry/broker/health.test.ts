@@ -3,7 +3,9 @@ import { test } from 'node:test';
 import { once } from 'node:events';
 import { createWebBackend, MetricsRegistry, readEnv } from 'agent/broker';
 import type { CoreHttpOptions } from '../../http/auth/index.js';
-import { brokerOptions } from './index.js';
+import { brokerOptions, type BrokerServices } from './index.js';
+import { QUEUES } from 'issus_domain/common';
+import { reactions } from '../../reactions/table/index.js';
 
 async function harness(ready: () => Promise<{ ok: boolean; checks: Record<string, boolean> }>) {
   const core = {
@@ -13,7 +15,14 @@ async function harness(ready: () => Promise<{ ok: boolean; checks: Record<string
     health: { live: () => ({ ok: true, service: 'issus' }), ready }
   } as unknown as CoreHttpOptions;
   const env = readEnv({ DATABASE_URL: 'postgresql://unused/test', PORT: '18140' });
-  const options = brokerOptions(env, core);
+  const services = {
+    inbox: {}, deliveries: {}, subscriptions: {},
+    stream: { authorizeChannel: () => false, onSubscribe: async () => [], onReceipt: async () => {}, onDisconnect: async () => {},
+      watchRevocation: () => () => {}, selectProtocol: () => 'issus.v1', initialSubscribe: async () => undefined,
+      socketPolicy: { verifyUpgrade: async () => null, guardIngress: () => null } },
+    openSse: () => ({ stop: async () => {} })
+  } as unknown as BrokerServices;
+  const options = brokerOptions(env, core, services);
   const app = createWebBackend({
     env, metrics: new MetricsRegistry(), queue: { check: async () => {} } as never,
     verifier: options.verifier, authorizeChannel: options.authorizeChannel, ready: options.ready,
@@ -35,8 +44,10 @@ test('broker health and ready use the real agent surface and P4 readiness hook',
     ok = true;
     assert.deepEqual(await (await fetch(`${h.origin}/ready`)).json(), { status: 'ready' });
     assert.deepEqual(h.options.allowedActions, []);
-    assert.deepEqual(h.options.ingressQueues, []);
-    assert.equal(h.options.reactions, undefined);
+    assert.deepEqual(h.options.ingressQueues, Object.values(QUEUES));
+    assert.deepEqual(h.options.reactions, reactions);
+    assert.equal(h.options.reactionsName, 'issus-v1');
+    for (const hook of ['onSubscribe', 'onReceipt', 'onDisconnect', 'watchRevocation', 'selectProtocol', 'initialSubscribe'] as const) assert.equal(typeof h.options[hook], 'function');
     assert.equal(await h.options.authorizeChannel('issue:any:1', {} as never), false);
   } finally { await h.close(); }
 });
@@ -45,10 +56,13 @@ test('P4 HTTP authentication is installed by extendHttp', async () => {
   const h = await harness(async () => ({ ok: true, checks: {} }));
   try {
     assert.equal((await fetch(`${h.origin}/v1/auth/me`)).status, 401);
+    assert.equal((await fetch(`${h.origin}/v1/inbox`)).status, 401);
+    assert.equal((await fetch(`${h.origin}/v1/stream`)).status, 401);
     assert.equal((await fetch(`${h.origin}/v1/repos/tester/core/issues/1/compact/status`)).status, 401);
     const response = await fetch(`${h.origin}/v1/auth/me`, { headers: { authorization: 'Bearer test-only' } });
     assert.equal(response.status, 200);
     assert.equal((await response.json() as { id: string }).id, 'bootstrap-test');
+    assert.equal((await fetch(`${h.origin}/v1/validate`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode: 'comment', body: 'invalid' }) })).status, 422);
   } finally { await h.close(); }
 });
 

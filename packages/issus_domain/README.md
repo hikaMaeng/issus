@@ -11,6 +11,8 @@ P5 [라우팅·전달·스케줄](docs/delivery.md): `RoutingService`, `Delivery
 
 [구조](docs/architecture.md) · [사용](docs/usage.md) · [내부](docs/internals.md) · [baseline](src/server/backend/schema/README.md)
 
+P4 후속: [intake](src/server/intake/README.md) · [API](src/server/intake/docs/api.md) · [내부](src/server/intake/docs/internals.md) · [시험](src/server/intake/docs/testing.md). model fact/프로필 재구축과 close 전 별도 제어 tx의 compact-due 보존 계약을 담는다.
+
 설계 정본은 [design v2.1](../../docs/design.md). 순수 계약은 `issus_domain/common`, 서버는 `issus_domain/server`로 소비한다. 최상위 barrel 연결은 P1 소유이며 P4 서버 공개 경계는 `src/server/backend/index.ts`와 `src/server/intake/index.ts`다. 전달·스케줄·COMPACT 패킷 생성은 P5/P6 소유다.
 
 | 서버 공개 API | 고정 시그니처/용도 |

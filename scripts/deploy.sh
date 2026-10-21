@@ -101,6 +101,7 @@ check_toolchain_node() {
 check_toolchain_node
 
 require_tool npm
+node scripts/prepare-bootstrap.mjs
 
 if [[ ! -d apps ]]; then
   echo "missing apps/ directory" >&2

@@ -4,6 +4,10 @@ npm test와 npm run lint를 workspace 단위로 실행한다. 실제 DB·배포 
 
 [P4 계획](../tests/plans/core-20261021.md): I-02 핵심 멱등/중복·I-07 close/handoff·I-08 실제 워커 프로세스 종료 회복·preflight 무변경·세션 예외·문법32/거부5/실제게시28·본문교체4. I-02 delivery/receipt는 P5 소유라 별도 검증한다. fixture COMPACT1개는 v2.1 정확 footer를 덧붙인 live 변형이며 원문32의 문법 검증과 구별한다.
 
+[core HTTP 후속 계약](../src/server/http/auth/README.md): fingerprint 전에 `auth/testing.ts`의 `waitForIdle()`로 앞선 worker의 `pgmq.delete`까지 기다린다. 이후 모든 큐를 계속 비교하며 I-P1 무변경 범위를 줄이지 않는다. cookie 시험은 전역 Date mock 없이 주입 UoW Clock과 Expires24h를 사용한다.
+
+[wave 3 조립 계획](../../../tests/plans/wave3-assembly-20261021.md)은 독립 하네스와 구별하여 실제 broker·worker·scheduler 엔트리 bundle의 health/ready·inbox·WS/SSE·publication 연결을 검증한다. 호스트에서 표준 runner·Vite·Docker·Monitor 실기를 재확인한다.
+
 로그/수치는 tests/reports/core와 `.cache/p4/`에 보관한다. Codex 환경의 tsx/esbuild spawn EPERM은 표준 npm 실패로 기록하고 tsc 임시 JS emit+node --test로 같은 시험을 수행한다. 해당 하네스의 성공은 production entry·Docker·브라우저 시험을 뜻하지 않는다.
 
 UI는 main 랜드마크1개와 이름 issus인 level-1 heading을 노출한다. getByRole(main),getByRole(heading,{name:issus,level:1})를 사용한다. P4에는 UI 조작 시험이 없다.

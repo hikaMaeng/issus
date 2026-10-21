@@ -1,5 +1,7 @@
 # 내부 계약
 
+[intake 내부 계약](../src/server/intake/docs/internals.md)과 [README](../src/server/intake/README.md)에 alias model 재구축과 before-close 별도 제어 tx를 기록한다. close 본 tx가 실패해도 앞선 compact-due는 보존한다.
+
 P5 라우팅 수신자·상태기계·pendingLegacy/ackState·H/A/E cursor의 저장/동시성 계약은 [delivery](delivery.md)에 있다. alias fact sequence와 delivery 투영은 같은 P4 UoW client로 원자 저장한다.
 
 `header`는 `{values, _type, _from, _to, _cc, _re, _sup, _first, _noenv}`다. `values`는 원 봉투 키를 보존하고 underscore 필드는 watcher 정규화 값이다. TYPE 레거시 mapping과 첫 값 우선 중복 처리는 정본대로다.

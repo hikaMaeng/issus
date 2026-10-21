@@ -89,6 +89,6 @@ packet JSON은 markdown/count/chars/maskedCount/bodyLine1/previousCompact/commen
 
 markdown 응답은 X-Compact-Packet-Token/Hash/Through-Id/Snapshot-Revision 헤더로 증거를 준다. 모든 compact 응답은 Cache-Control:no-store다. prepare의 같은 key/payload는 원 snapshot 응답을 재생하며 새 상태를 요약하려면 새 key로 준비한다. snapshot 뒤 새 댓글/revision은 게시 시409 COMPACT_STALE, TTL24h 경과410 COMPACT_PACKET_EXPIRED다.
 
-P6 `readCompactHistory`를 주입한 GET I/comments는 `compact` 원문과 `compactStatus` 통계를 분리한다. 기본 sinceCompact=true이며 기존 cursor의 경계는 이후 새 COMPACT와 무관하게 유지한다. P5 통합 뒤에는 동일 경계를 보존하는 `createInboxHistoryReader(inbox)`가 이 접점을 인계한다. close 요청 before-close는 P4 core/s3 조립 항목이며 별도 제어 tx에 기록해 close 실패에도 보존한다(DECISION 6310243238).
+production GET I/comments는 `createInboxHistoryReader(inbox)`로 canonical+inbox를 병합하며 `compact` 원문과 `compactStatus` 통계를 분리한다. 기본 sinceCompact=true이고 기존 cursor의 경계는 이후 새 COMPACT와 무관하게 유지한다. P6 단독 하네스는 `readCompactHistory`를 쓴다. close 요청 before-close는 P4 core/s3의 별도 제어 tx에 기록해 close 실패에도 보존한다(DECISION 6310243238).
 
 COMPACT 줄2는 `## ===== COMPACT #<실제이슈> through <SEEN> =====`, TO:ALL·전체≤2000codepoint·footer compacted-by:<compactedBy>. tail≥3이면 서로 다른 원 id≥3, 1–2면 전부, control-only0이면 []다. 이전 COMPACT가 있으면 RE에 포함한다. 요청 metadata wrapper/unknown key는422. raw token은 발급 응답/비공개 sidecar 외 저장/이벤트/로그에 남기지 않는다. 제어/생략사유 감사와 구간 밖 의무 부록은 [domain 계약](../../../packages/issus_domain/docs/compact.md)에 따른다.
