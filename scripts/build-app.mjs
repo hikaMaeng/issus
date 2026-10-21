@@ -11,14 +11,14 @@ if (!relative(resolve(root, 'apps'), cwd).match(/^[^./\\][^/\\]*$/)) throw new E
 const manifest = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8'));
 const require = createRequire(join(cwd, 'package.json'));
 const isBroker = manifest.name === 'issus';
-const isCli = manifest.name === 'issus-cli';
+const isCli = manifest.name === '@issus/cli';
 if (isBroker && !process.argv.includes('--server-only')) {
   const vite = join(dirname(require.resolve('vite/package.json')), 'bin/vite.js');
   const result = spawnSync(process.execPath, [vite, 'build'], { stdio: 'inherit', cwd });
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 const entry = isCli ? 'src/entry/index.ts' : isBroker ? 'src/server/entry/broker/index.ts' : 'src/server/entry/index.ts';
-const output = entry.replace(/^src\//, 'dist/').replace(/\.ts$/, '.js');
+const output = isCli ? 'dist/index.js' : entry.replace(/^src\//, 'dist/').replace(/\.ts$/, '.js');
 const esbuild = join(dirname(require.resolve('esbuild/package.json')), 'bin/esbuild');
 const result = spawnSync(process.execPath, [esbuild, entry, `--outfile=${output}`, '--bundle', '--platform=node', '--format=esm', '--target=node24',
   "--banner:js=import { createRequire as __issusCreateRequire } from 'node:module'; const require = __issusCreateRequire(import.meta.url);",

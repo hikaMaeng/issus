@@ -1,0 +1,2185 @@
+{
+  "provenance": {
+    "generatedAt": "2026-10-21T05:42:25.477154+00:00",
+    "sourceHashes": {
+      "issue_post.py": "67d01e961496f842f5764161c382a9c0abb291d6e62e99811e1e72e9c95b55fd",
+      "issue_watch.py": "b73600dc3352269285c245a03240097f983b1ff40e3a42e678fae8c7773a9d70",
+      "alias_check.py": "e1de9205f8c142390dba933fb3617864f26c02b52b7cac1f11112e5a65e18283",
+      "compact_prepare.py": "617e8c64305792cb36e08d3ef7502c282cd688b191f951971367a57d1fd246f6",
+      "board_find.py": "563d8ac13b97e8f6f7a4a4540a1ed2b683f445f9ebd153e92b51399f50461070"
+    },
+    "pythonVersion": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+    "unicodeVersion": "15.1.0",
+    "masksNote": "masks[].inputRot13/textRot13은 커밋 가드·GitHub push protection(비밀 패턴, base64도 해독함) 때문에 ASCII 문자만 ROT13으로 보관한다. 값은 정본 compact_prepare.py MASKS 시험용 가짜 문자열이다."
+  },
+  "validation": [
+    {
+      "name": "header ''",
+      "mode": "comment",
+      "body": "\n본문",
+      "reasons": [
+        "첫 줄이 비어 있음 — 봉투 필요"
+      ]
+    },
+    {
+      "name": "header '\\ufeffFROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE'",
+      "mode": "comment",
+      "body": "﻿FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "파일 첫머리 BOM 제거 필요(봉투가 깨짐)"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE X:1'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE X:1\n본문",
+      "reasons": [
+        "알 수 없는 봉투 키 X — 허용: ACK-BY CC DESTRUCTIVE DUE FROM GATE MIRROR-OF RE REPLY-IN SEEN STATE SUPERSEDES TO TYPE"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE TYPE:NOTE'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE TYPE:NOTE\n본문",
+      "reasons": [
+        "봉투 키 중복 TYPE"
+      ]
+    },
+    {
+      "name": "header 'FROM: x'",
+      "mode": "comment",
+      "body": "FROM: x\n본문",
+      "reasons": [
+        "레거시 첫 줄 거부(`작성:`·`TYPE: X`·`FROM: x`) — 봉투 1줄 `FROM:<alias> TO:<alias|ALL> TYPE:<T>`로 작성"
+      ]
+    },
+    {
+      "name": "header '작성자: 별칭'",
+      "mode": "comment",
+      "body": "작성자: 별칭\n본문",
+      "reasons": [
+        "레거시 첫 줄 거부(`작성:`·`TYPE: X`·`FROM: x`) — 봉투 1줄 `FROM:<alias> TO:<alias|ALL> TYPE:<T>`로 작성"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE 자유 문구'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE 자유 문구\n본문",
+      "reasons": [
+        "봉투 토큰 형식 오류 '자유' — `KEY:value`, 값에 공백 금지(`TYPE: X`·자유 문구 불가)",
+        "봉투 토큰 형식 오류 '문구' — `KEY:value`, 값에 공백 금지(`TYPE: X`·자유 문구 불가)"
+      ]
+    },
+    {
+      "name": "header 'TO:ALL TYPE:NOTE'",
+      "mode": "comment",
+      "body": "TO:ALL TYPE:NOTE\n본문",
+      "reasons": [
+        "필수 봉투 키 없음 FROM"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain TYPE:NOTE'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain TYPE:NOTE\n본문",
+      "reasons": [
+        "필수 봉투 키 없음 TO"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain TO:ALL'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain TO:ALL\n본문",
+      "reasons": [
+        "필수 봉투 키 없음 TYPE"
+      ]
+    },
+    {
+      "name": "header '\\ufeff\\ufeffFROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE'",
+      "mode": "comment",
+      "body": "﻿﻿FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "파일 첫머리 BOM 제거 필요(봉투가 깨짐)"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain/s1\\x85TO:issus-1-orch\\x85TYPE:NOTE'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1TO:issus-1-orchTYPE:NOTE\n본문",
+      "reasons": [
+        "필수 봉투 키 없음 TO",
+        "필수 봉투 키 없음 TYPE"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain/s1\\x1cTO:issus-1-orch\\x1cTYPE:NOTE'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1\u001cTO:issus-1-orch\u001cTYPE:NOTE\n본문",
+      "reasons": [
+        "필수 봉투 키 없음 TO",
+        "필수 봉투 키 없음 TYPE"
+      ]
+    },
+    {
+      "name": "header 'FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\\ufeff'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE﻿\n본문",
+      "reasons": [
+        "TYPE 'NOTE﻿' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY"
+      ]
+    },
+    {
+      "name": "TYPE ACK",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ACK\n본문",
+      "reasons": [
+        "TYPE ACK: RE 필수"
+      ]
+    },
+    {
+      "name": "TYPE ALIAS",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ALIAS\n본문",
+      "reasons": [
+        "TYPE ALIAS: TO:ALL 필수"
+      ]
+    },
+    {
+      "name": "TYPE ASK",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ASK\n본문",
+      "reasons": [
+        "지시성 TYPE ASK: ACK-BY 필수",
+        "TYPE ASK: 본문에 `ASK @<TO>: <요청 1개>` 줄 정확히 1개(현재 0) — 요청이 둘이면 댓글 둘"
+      ]
+    },
+    {
+      "name": "TYPE CHECKPOINT",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:CHECKPOINT\n본문",
+      "reasons": [
+        "TYPE 'CHECKPOINT' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: REPORT)"
+      ]
+    },
+    {
+      "name": "TYPE CLAIM",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:CLAIM\n본문",
+      "reasons": [
+        "TYPE CLAIM: DUE 필수",
+        "TYPE CLAIM: SEEN 필수"
+      ]
+    },
+    {
+      "name": "TYPE COMPACT",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:COMPACT\n본문",
+      "reasons": [
+        "TYPE COMPACT: SEEN 필수",
+        "TYPE COMPACT: TO:ALL 필수(요약은 전원 공유)",
+        "TYPE COMPACT: 2번째 줄은 정확히 `## ===== COMPACT #<이슈> through <SEEN id> =====` (강한 마커)"
+      ]
+    },
+    {
+      "name": "TYPE CORRECTION",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:CORRECTION\n본문",
+      "reasons": [
+        "TYPE 'CORRECTION' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: <원TYPE> SUPERSEDES:<id>)"
+      ]
+    },
+    {
+      "name": "TYPE DECISION",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:DECISION\n본문",
+      "reasons": [
+        "지시성 TYPE DECISION: ACK-BY 필수"
+      ]
+    },
+    {
+      "name": "TYPE DIAG",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:DIAG\n본문",
+      "reasons": [
+        "TYPE 'DIAG' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: REPORT)"
+      ]
+    },
+    {
+      "name": "TYPE DONE",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:DONE\n본문",
+      "reasons": [
+        "TYPE 'DONE' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: REPORT STATE:done)"
+      ]
+    },
+    {
+      "name": "TYPE GATE",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:GATE\n본문",
+      "reasons": [
+        "TYPE 'GATE' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: DECISION GATE:<g>)"
+      ]
+    },
+    {
+      "name": "TYPE HANDOFF",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:HANDOFF\n본문",
+      "reasons": [
+        "지시성 TYPE HANDOFF: ACK-BY 필수",
+        "TYPE HANDOFF: REPLY-IN 필수"
+      ]
+    },
+    {
+      "name": "TYPE HOLD",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:HOLD\n본문",
+      "reasons": [
+        "지시성 TYPE HOLD: ACK-BY 필수"
+      ]
+    },
+    {
+      "name": "TYPE MOVE",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:MOVE\n본문",
+      "reasons": [
+        "TYPE 'MOVE' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: HANDOFF)"
+      ]
+    },
+    {
+      "name": "TYPE NOTE",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "TYPE NOTICE",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTICE\n본문",
+      "reasons": [
+        "TYPE 'NOTICE' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: NOTE)"
+      ]
+    },
+    {
+      "name": "TYPE PLAN",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN\n본문",
+      "reasons": [
+        "TYPE PLAN: DUE 필수"
+      ]
+    },
+    {
+      "name": "TYPE READY",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:READY\n본문",
+      "reasons": [
+        "TYPE 'READY' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: NOTE DUE:<iso>)"
+      ]
+    },
+    {
+      "name": "TYPE REF",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:REF\n본문",
+      "reasons": [
+        "TYPE 'REF' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: NOTE)"
+      ]
+    },
+    {
+      "name": "TYPE RELEASE",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:RELEASE\n본문",
+      "reasons": [
+        "TYPE RELEASE: RE 필수"
+      ]
+    },
+    {
+      "name": "TYPE REPLY",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:REPLY\n본문",
+      "reasons": [
+        "TYPE 'REPLY' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: ACK)"
+      ]
+    },
+    {
+      "name": "TYPE REPORT",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:REPORT\n본문",
+      "reasons": [
+        "TYPE REPORT: STATE 필수"
+      ]
+    },
+    {
+      "name": "TYPE REQUEST",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:REQUEST\n본문",
+      "reasons": [
+        "TYPE 'REQUEST' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: ASK)"
+      ]
+    },
+    {
+      "name": "TYPE RESTORE",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:RESTORE\n본문",
+      "reasons": [
+        "TYPE 'RESTORE' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: RELEASE)"
+      ]
+    },
+    {
+      "name": "TYPE REVIEW",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:REVIEW\n본문",
+      "reasons": [
+        "TYPE 'REVIEW' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: VERIFY)"
+      ]
+    },
+    {
+      "name": "TYPE SLOT",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:SLOT\n본문",
+      "reasons": [
+        "TYPE 'SLOT' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: CLAIM)"
+      ]
+    },
+    {
+      "name": "TYPE STATUS",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:STATUS\n본문",
+      "reasons": [
+        "TYPE 'STATUS' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: REPORT STATE:)"
+      ]
+    },
+    {
+      "name": "TYPE SUPPLY",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:SUPPLY\n본문",
+      "reasons": [
+        "TYPE 'SUPPLY' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY (대체: NOTE)"
+      ]
+    },
+    {
+      "name": "TYPE UNLISTED",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:UNLISTED\n본문",
+      "reasons": [
+        "TYPE 'UNLISTED' 허용 안 됨 — ACK ALIAS ASK CLAIM COMPACT DECISION HANDOFF HOLD NOTE PLAN RELEASE REPORT VERIFY"
+      ]
+    },
+    {
+      "name": "TYPE VERIFY",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:VERIFY\n본문",
+      "reasons": [
+        "TYPE VERIFY: RE 필수",
+        "TYPE VERIFY: 본문에 `VERDICT:PASS|FAIL|BLOCKED` 필수"
+      ]
+    },
+    {
+      "name": "sid s1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "sid s2",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s2 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "sid by-issus-1-base",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/by-issus-1-base TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "sid by-BAD",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/by-BAD TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM 대리 게시자 'BAD' 별칭 문법 위반"
+      ]
+    },
+    {
+      "name": "sid abcdefghijklmn",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/abcdefghijklmn TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM sid 'abcdefghijklmn' — `[a-z0-9-]` 12자 이하(짧게, 과제·이슈 인코딩 금지)"
+      ]
+    },
+    {
+      "name": "sid a/b",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/a/b TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM sid 'a/b' — `[a-z0-9-]` 12자 이하(짧게, 과제·이슈 인코딩 금지)"
+      ]
+    },
+    {
+      "name": "sid S1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/S1 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM sid 'S1' — `[a-z0-9-]` 12자 이하(짧게, 과제·이슈 인코딩 금지)"
+      ]
+    },
+    {
+      "name": "sid ",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/ TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "sid ---",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/--- TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "FROM 아스나",
+      "mode": "comment",
+      "body": "FROM:아스나 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM 별칭 '아스나' 문법 위반 — `<proj>-<n>-<role>`(예 p4-24-review) 또는 `<proj>-<role>`, 소문자·숫자·한글·'-', ≤24자 (join-naming.md#이름, examples/alias-register.md)"
+      ]
+    },
+    {
+      "name": "FROM aa-가나",
+      "mode": "comment",
+      "body": "FROM:aa-가나 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "FROM aa-12345-abcdefghijk",
+      "mode": "comment",
+      "body": "FROM:aa-12345-abcdefghijk TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "FROM A1-role",
+      "mode": "comment",
+      "body": "FROM:A1-role TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM 별칭 'A1-role' 문법 위반 — `<proj>-<n>-<role>`(예 p4-24-review) 또는 `<proj>-<role>`, 소문자·숫자·한글·'-', ≤24자 (join-naming.md#이름, examples/alias-register.md)"
+      ]
+    },
+    {
+      "name": "FROM ab-cd",
+      "mode": "comment",
+      "body": "FROM:ab-cd TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "FROM ab-１２-cd",
+      "mode": "comment",
+      "body": "FROM:ab-１２-cd TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "FROM reviewer",
+      "mode": "comment",
+      "body": "FROM:reviewer TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM 별칭 'reviewer' 문법 위반 — `<proj>-<n>-<role>`(예 p4-24-review) 또는 `<proj>-<role>`, 소문자·숫자·한글·'-', ≤24자 (join-naming.md#이름, examples/alias-register.md)"
+      ]
+    },
+    {
+      "name": "FROM aa-reviewer",
+      "mode": "comment",
+      "body": "FROM:aa-reviewer TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "FROM ab-𐵀-cd",
+      "mode": "comment",
+      "body": "FROM:ab-𐵀-cd TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": [
+        "FROM 별칭 'ab-𐵀-cd' 문법 위반 — `<proj>-<n>-<role>`(예 p4-24-review) 또는 `<proj>-<role>`, 소문자·숫자·한글·'-', ≤24자 (join-naming.md#이름, examples/alias-register.md)"
+      ]
+    },
+    {
+      "name": "recipient ALL",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:ALL TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "recipient all",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:all TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "recipient issus-1-orch",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "recipient a,b",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:a,b TYPE:NOTE\n본문",
+      "reasons": [
+        "TO 'a,b' — 정확히 1명 또는 ALL. 알릴 사람은 CC:, 각각 시킬 일은 댓글 둘"
+      ]
+    },
+    {
+      "name": "recipient #1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:#1 TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '#1' — 이슈번호·IP 지칭 금지, 별칭만"
+      ]
+    },
+    {
+      "name": "recipient 12345",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:12345 TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '12345' — 이슈번호·IP 지칭 금지, 별칭만"
+      ]
+    },
+    {
+      "name": "recipient 192.168.0.1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:192.168.0.1 TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '192.168.0.1' — 이슈번호·IP 지칭 금지, 별칭만"
+      ]
+    },
+    {
+      "name": "recipient a/s1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:a/s1 TYPE:NOTE\n본문",
+      "reasons": [
+        "TO 'a/s1' — 별칭 문자 `[A-Za-z0-9가-힣_.-]{2,24}`만(sid·@·공백 금지)"
+      ]
+    },
+    {
+      "name": "recipient @aa-bb",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:@aa-bb TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '@aa-bb' — 별칭 문자 `[A-Za-z0-9가-힣_.-]{2,24}`만(sid·@·공백 금지)"
+      ]
+    },
+    {
+      "name": "recipient 오케스트레이터",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:오케스트레이터 TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '오케스트레이터' — 역할명 지칭 금지, 등록된 별칭만"
+      ]
+    },
+    {
+      "name": "recipient reviewer",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:reviewer TYPE:NOTE\n본문",
+      "reasons": [
+        "TO 'reviewer' — 역할명 지칭 금지, 등록된 별칭만"
+      ]
+    },
+    {
+      "name": "recipient Legacy_Name",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:Legacy_Name TYPE:NOTE\n본문",
+      "reasons": []
+    },
+    {
+      "name": "recipient ²",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:² TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '²' — 이슈번호·IP 지칭 금지, 별칭만"
+      ]
+    },
+    {
+      "name": "recipient ①",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:① TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '①' — 이슈번호·IP 지칭 금지, 별칭만"
+      ]
+    },
+    {
+      "name": "recipient 𐩀",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:𐩀 TYPE:NOTE\n본문",
+      "reasons": [
+        "TO '𐩀' — 이슈번호·IP 지칭 금지, 별칭만"
+      ]
+    },
+    {
+      "name": "CC ALL",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:ALL\n본문",
+      "reasons": [
+        "CC 'ALL' 불가"
+      ]
+    },
+    {
+      "name": "CC all",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:all\n본문",
+      "reasons": [
+        "CC 'ALL' 불가"
+      ]
+    },
+    {
+      "name": "CC issus-1-orch",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:issus-1-orch\n본문",
+      "reasons": [
+        "CC 'issus-1-orch'가 TO와 같음"
+      ]
+    },
+    {
+      "name": "CC ",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:\n본문",
+      "reasons": [
+        "봉투 토큰 형식 오류 'CC:' — `KEY:value`, 값에 공백 금지(`TYPE: X`·자유 문구 불가)"
+      ]
+    },
+    {
+      "name": "CC ,,",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:,,\n본문",
+      "reasons": []
+    },
+    {
+      "name": "CC a/b",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:a/b\n본문",
+      "reasons": [
+        "CC 'a/b' — 별칭 문자 `[A-Za-z0-9가-힣_.-]{2,24}`만(sid·@·공백 금지)"
+      ]
+    },
+    {
+      "name": "CC aa-bb,,cc-dd",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:aa-bb,,cc-dd\n본문",
+      "reasons": []
+    },
+    {
+      "name": "CC 192.168.1.1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE CC:192.168.1.1\n본문",
+      "reasons": [
+        "CC '192.168.1.1' — 이슈번호·IP 지칭 금지, 별칭만"
+      ]
+    },
+    {
+      "name": "STATE done",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE STATE:done\n본문",
+      "reasons": [
+        "STATE는 REPORT·ACK·DECISION에만 — TYPE NOTE에서 제거"
+      ]
+    },
+    {
+      "name": "STATE queued",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE STATE:queued\n본문",
+      "reasons": [
+        "STATE는 REPORT·ACK·DECISION에만 — TYPE NOTE에서 제거"
+      ]
+    },
+    {
+      "name": "STATE RUNNING",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE STATE:RUNNING\n본문",
+      "reasons": [
+        "STATE 'RUNNING' enum 아님 — blocked|cancelled|done|failed|hold|pending-user|queued|running",
+        "STATE는 REPORT·ACK·DECISION에만 — TYPE NOTE에서 제거"
+      ]
+    },
+    {
+      "name": "STATE unknown",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE STATE:unknown\n본문",
+      "reasons": [
+        "STATE 'unknown' enum 아님 — blocked|cancelled|done|failed|hold|pending-user|queued|running",
+        "STATE는 REPORT·ACK·DECISION에만 — TYPE NOTE에서 제거"
+      ]
+    },
+    {
+      "name": "DUE 2024-02-29T23:59+09:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-02-29T23:59+09:00\n본문",
+      "reasons": []
+    },
+    {
+      "name": "DUE 2023-02-29T12:00+09:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2023-02-29T12:00+09:00\n본문",
+      "reasons": [
+        "DUE '2023-02-29T12:00+09:00' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 2024-04-31T12:00+09:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-04-31T12:00+09:00\n본문",
+      "reasons": [
+        "DUE '2024-04-31T12:00+09:00' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 0000-01-01T00:00+00:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:0000-01-01T00:00+00:00\n본문",
+      "reasons": [
+        "DUE '0000-01-01T00:00+00:00' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 9999-12-31T23:59:59-2359",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:9999-12-31T23:59:59-2359\n본문",
+      "reasons": []
+    },
+    {
+      "name": "DUE 2024-01-01T24:00+09:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-01-01T24:00+09:00\n본문",
+      "reasons": [
+        "DUE '2024-01-01T24:00+09:00' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 2024-01-01T23:60+09:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-01-01T23:60+09:00\n본문",
+      "reasons": [
+        "DUE '2024-01-01T23:60+09:00' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 2024-01-01T23:59:60+09:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-01-01T23:59:60+09:00\n본문",
+      "reasons": [
+        "DUE '2024-01-01T23:59:60+09:00' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 2024-01-01T00:00+00:99",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-01-01T00:00+00:99\n본문",
+      "reasons": []
+    },
+    {
+      "name": "DUE 2024-01-01T00:00+23:60",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-01-01T00:00+23:60\n본문",
+      "reasons": [
+        "DUE '2024-01-01T00:00+23:60' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 18:30",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:18:30\n본문",
+      "reasons": [
+        "DUE '18:30' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE 2024-01-01T00:00Z",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:2024-01-01T00:00Z\n본문",
+      "reasons": [
+        "DUE '2024-01-01T00:00Z' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "DUE ２０２４-01-01T00:00+09:00",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:PLAN DUE:２０２４-01-01T00:00+09:00\n본문",
+      "reasons": [
+        "DUE '２０２４-01-01T00:00+09:00' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00 (날짜 필수)"
+      ]
+    },
+    {
+      "name": "RE1,a",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE RE:1,a\n본문",
+      "reasons": [
+        "RE '1,a' — comment id(숫자) 목록만"
+      ]
+    },
+    {
+      "name": "RE１２３４５６",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE RE:１２３４５６\n본문",
+      "reasons": []
+    },
+    {
+      "name": "SEEN1,2",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE SEEN:1,2\n본문",
+      "reasons": []
+    },
+    {
+      "name": "SUPERSEDES",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE SUPERSEDES:\n본문",
+      "reasons": [
+        "봉투 토큰 형식 오류 'SUPERSEDES:' — `KEY:value`, 값에 공백 금지(`TYPE: X`·자유 문구 불가)"
+      ]
+    },
+    {
+      "name": "REPLY-IN#1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE REPLY-IN:#1\n본문",
+      "reasons": []
+    },
+    {
+      "name": "REPLY-INa/b#1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE REPLY-IN:a/b#1\n본문",
+      "reasons": []
+    },
+    {
+      "name": "REPLY-INa/b/c#1",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE REPLY-IN:a/b/c#1\n본문",
+      "reasons": [
+        "REPLY-IN 'a/b/c#1' — `#n` 또는 `owner/repo#n`"
+      ]
+    },
+    {
+      "name": "MIRROR-OFftp://x",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE MIRROR-OF:ftp://x\n본문",
+      "reasons": [
+        "MIRROR-OF 'ftp://x' — URL 필요"
+      ]
+    },
+    {
+      "name": "MIRROR-OFhttps://x",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE MIRROR-OF:https://x\n본문",
+      "reasons": []
+    },
+    {
+      "name": "content 'ASK @issus-1-orch: 하나'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @issus-1-orch: 하나",
+      "reasons": []
+    },
+    {
+      "name": "content 'ASK @other-aa: 하나\\nASK @issus-1-orch: 둘'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ASK\nASK @other-aa: 하나\nASK @issus-1-orch: 둘",
+      "reasons": [
+        "지시성 TYPE ASK: ACK-BY 필수",
+        "`ASK @other-aa:` 줄의 대상이 TO(issus-1-orch)와 다름",
+        "TYPE ASK: 본문에 `ASK @<TO>: <요청 1개>` 줄 정확히 1개(현재 2) — 요청이 둘이면 댓글 둘"
+      ]
+    },
+    {
+      "name": "content 'ASK @other-aa: 요청'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\nASK @other-aa: 요청",
+      "reasons": [
+        "`ASK @other-aa:` 줄의 대상이 TO(issus-1-orch)와 다름",
+        "TYPE NOTE에 `ASK @` 줄 — 요청은 TYPE ASK로 따로"
+      ]
+    },
+    {
+      "name": "content ' VERDICT:PASS'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:VERIFY RE:123456\n VERDICT:PASS",
+      "reasons": []
+    },
+    {
+      "name": "content 'VERDICT:PASS한글'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:VERIFY RE:123456\nVERDICT:PASS한글",
+      "reasons": [
+        "TYPE VERIFY: 본문에 `VERDICT:PASS|FAIL|BLOCKED` 필수"
+      ]
+    },
+    {
+      "name": "content '## ===== COMPACT #1 through 123457 ====='",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:COMPACT SEEN:123456\n## ===== COMPACT #1 through 123457 =====",
+      "reasons": [
+        "TYPE COMPACT: TO:ALL 필수(요약은 전원 공유)",
+        "TYPE COMPACT: 마커의 through 123457 ≠ SEEN 123456"
+      ]
+    },
+    {
+      "name": "content '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n본문'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n\n\n\n\n\n\n\n\n\n\n\n\n본문",
+      "reasons": [
+        "봉투 다음 12줄 안에 내용 없음 — 결론 1–3줄 필수"
+      ]
+    },
+    {
+      "name": "content '---\\n   '",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n---\n   ",
+      "reasons": [
+        "봉투 다음 12줄 안에 내용 없음 — 결론 1–3줄 필수"
+      ]
+    },
+    {
+      "name": "content '\\ufeff'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n﻿",
+      "reasons": []
+    },
+    {
+      "name": "emoji 4000",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "reasons": []
+    },
+    {
+      "name": "emoji 4001",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "reasons": [
+        "본문 4001자 > 4000자 — 파일·커밋 링크+요약으로"
+      ]
+    },
+    {
+      "name": "COMPACT size 2000",
+      "mode": "comment",
+      "body": "FROM:aa-bb TO:ALL TYPE:COMPACT SEEN:123456\n## ===== COMPACT #1 through 123456 =====\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "reasons": []
+    },
+    {
+      "name": "COMPACT size 2001",
+      "mode": "comment",
+      "body": "FROM:aa-bb TO:ALL TYPE:COMPACT SEEN:123456\n## ===== COMPACT #1 through 123456 =====\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "reasons": [
+        "TYPE COMPACT: 본문 2001자 > 2000자 — 결정·열린 지시·CLAIM·VERDICT·다음 행동만, 상세는 원 id"
+      ]
+    },
+    {
+      "name": "COMPACT size 4001",
+      "mode": "comment",
+      "body": "FROM:aa-bb TO:ALL TYPE:COMPACT SEEN:123456\n## ===== COMPACT #1 through 123456 =====\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "reasons": [
+        "본문 4001자 > 4000자 — 파일·커밋 링크+요약으로",
+        "TYPE COMPACT: 본문 4001자 > 2000자 — 결정·열린 지시·CLAIM·VERDICT·다음 행동만, 상세는 원 id"
+      ]
+    },
+    {
+      "name": "ASK anchor '\\r'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ASK\n내용\rASK @issus-1-orch: 요청",
+      "reasons": [
+        "지시성 TYPE ASK: ACK-BY 필수",
+        "TYPE ASK: 본문에 `ASK @<TO>: <요청 1개>` 줄 정확히 1개(현재 0) — 요청이 둘이면 댓글 둘"
+      ]
+    },
+    {
+      "name": "VERIFY anchor '\\r'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:VERIFY RE:123456\n내용\rVERDICT:PASS",
+      "reasons": [
+        "TYPE VERIFY: 본문에 `VERDICT:PASS|FAIL|BLOCKED` 필수"
+      ]
+    },
+    {
+      "name": "ASK anchor '\\u2028'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ASK\n내용 ASK @issus-1-orch: 요청",
+      "reasons": [
+        "지시성 TYPE ASK: ACK-BY 필수",
+        "TYPE ASK: 본문에 `ASK @<TO>: <요청 1개>` 줄 정확히 1개(현재 0) — 요청이 둘이면 댓글 둘"
+      ]
+    },
+    {
+      "name": "VERIFY anchor '\\u2028'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:VERIFY RE:123456\n내용 VERDICT:PASS",
+      "reasons": [
+        "TYPE VERIFY: 본문에 `VERDICT:PASS|FAIL|BLOCKED` 필수"
+      ]
+    },
+    {
+      "name": "ASK anchor '\\x85'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ASK\n내용ASK @issus-1-orch: 요청",
+      "reasons": [
+        "지시성 TYPE ASK: ACK-BY 필수",
+        "TYPE ASK: 본문에 `ASK @<TO>: <요청 1개>` 줄 정확히 1개(현재 0) — 요청이 둘이면 댓글 둘"
+      ]
+    },
+    {
+      "name": "VERIFY anchor '\\x85'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:VERIFY RE:123456\n내용VERDICT:PASS",
+      "reasons": [
+        "TYPE VERIFY: 본문에 `VERDICT:PASS|FAIL|BLOCKED` 필수"
+      ]
+    },
+    {
+      "name": "ASK anchor '\\ufeff'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:ASK\n내용﻿ASK @issus-1-orch: 요청",
+      "reasons": [
+        "지시성 TYPE ASK: ACK-BY 필수",
+        "TYPE ASK: 본문에 `ASK @<TO>: <요청 1개>` 줄 정확히 1개(현재 0) — 요청이 둘이면 댓글 둘"
+      ]
+    },
+    {
+      "name": "VERIFY anchor '\\ufeff'",
+      "mode": "comment",
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:VERIFY RE:123456\n내용﻿VERDICT:PASS",
+      "reasons": [
+        "TYPE VERIFY: 본문에 `VERDICT:PASS|FAIL|BLOCKED` 필수"
+      ]
+    },
+    {
+      "name": "body ''",
+      "mode": "issue-body",
+      "body": "",
+      "reasons": [
+        "이슈 본문 첫 줄은 `STATE:<enum> OWNER:<alias> UPDATED:<iso> [REPLY-IN:#n] [COMPACT:<id>] [BOARD:#n]` 순서로 STATE OWNER UPDATED 먼저 — 현재: "
+      ]
+    },
+    {
+      "name": "body '\\ufeffSTATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00'",
+      "mode": "issue-body",
+      "body": "﻿STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00",
+      "reasons": [
+        "파일 첫머리 BOM 제거 필요"
+      ]
+    },
+    {
+      "name": "body 'STATE:no OWNER:a/b UPDATED:bad'",
+      "mode": "issue-body",
+      "body": "STATE:no OWNER:a/b UPDATED:bad",
+      "reasons": [
+        "STATE 'no' enum 아님 — blocked|cancelled|done|failed|hold|pending-user|queued|running",
+        "OWNER 'a/b' 별칭 문법 위반",
+        "UPDATED 'bad' 시각 형식 오류 — YYYY-MM-DDTHH:MM+09:00"
+      ]
+    },
+    {
+      "name": "body 'STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00 X:x'",
+      "mode": "issue-body",
+      "body": "STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00 X:x",
+      "reasons": [
+        "이슈 본문 첫 줄은 `STATE:<enum> OWNER:<alias> UPDATED:<iso> [REPLY-IN:#n] [COMPACT:<id>] [BOARD:#n]` 형식 — 토큰 'X:x' 불가(현재: STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00 X:x)"
+      ]
+    },
+    {
+      "name": "body 'OWNER:aa-bb STATE:running UPDATED:2024-01-01T00:00+09:00'",
+      "mode": "issue-body",
+      "body": "OWNER:aa-bb STATE:running UPDATED:2024-01-01T00:00+09:00",
+      "reasons": []
+    },
+    {
+      "name": "body 'STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00 BOARD:a/b#12 COMPACT:a'",
+      "mode": "issue-body",
+      "body": "STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00 BOARD:a/b#12 COMPACT:a",
+      "reasons": [
+        "COMPACT 'a' — 최신 COMPACT comment id(숫자)"
+      ]
+    },
+    {
+      "name": "body 'STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00 COMPACT:²'",
+      "mode": "issue-body",
+      "body": "STATE:running OWNER:aa-bb UPDATED:2024-01-01T00:00+09:00 COMPACT:²",
+      "reasons": []
+    }
+  ],
+  "headers": [
+    {
+      "body": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE\n본문",
+      "header": {
+        "FROM": "issus-1-domain/s1",
+        "TO": "issus-1-orch",
+        "TYPE": "NOTE",
+        "_type": "NOTE",
+        "_from": "issus-1-domain",
+        "_to": [
+          "issus-1-orch"
+        ],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE",
+        "_noenv": false
+      },
+      "classification": "OTHER",
+      "compact": false
+    },
+    {
+      "body": "작성: aa-bb / s1 | 역할\nTYPE: REQUEST\nTO: @cc-dd / ee-ff\nRE: 123456,1",
+      "header": {
+        "TYPE": "REQUEST",
+        "TO": "cc-dd,ee-ff",
+        "RE": "123456,1",
+        "FROM": "aa-bb",
+        "_type": "ASK",
+        "_from": "aa-bb",
+        "_to": [
+          "cc-dd",
+          "ee-ff"
+        ],
+        "_cc": [],
+        "_re": [
+          "123456"
+        ],
+        "_sup": [],
+        "_first": "작성: aa-bb / s1 | 역할",
+        "_noenv": true
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "**FROM: aa-bb/s1**\n**TO: cc-dd**\n**TYPE: REVIEW**",
+      "header": {
+        "FROM": "aa-bb/s1",
+        "TO": "cc-dd",
+        "TYPE": "REVIEW",
+        "_type": "VERIFY",
+        "_from": "aa-bb",
+        "_to": [
+          "cc-dd"
+        ],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "**FROM: aa-bb/s1**",
+        "_noenv": true
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "TYPE: NOTE\nRE: 123456",
+      "header": {
+        "TYPE": "NOTE",
+        "RE": "123456",
+        "_type": "NOTE",
+        "_from": "",
+        "_to": [],
+        "_cc": [],
+        "_re": [
+          "123456"
+        ],
+        "_sup": [],
+        "_first": "TYPE: NOTE",
+        "_noenv": true
+      },
+      "classification": "ALL",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TYPE:COMPACT",
+      "header": {
+        "FROM": "aa-bb",
+        "TYPE": "COMPACT",
+        "_type": "COMPACT",
+        "_from": "aa-bb",
+        "_to": [],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TYPE:COMPACT",
+        "_noenv": true
+      },
+      "classification": "ALL",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:cc-dd TYPE:NOTE X:yes\n@ee-ff한글",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "cc-dd",
+        "TYPE": "NOTE",
+        "X": "yes",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "cc-dd"
+        ],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:cc-dd TYPE:NOTE X:yes",
+        "_noenv": false
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "invalid\n## ===== COMPACT #1 through 123456 =====",
+      "header": {
+        "_type": "",
+        "_from": "",
+        "_to": [],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "invalid",
+        "_noenv": true
+      },
+      "classification": "ALL",
+      "compact": true
+    },
+    {
+      "body": "﻿\nFROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE",
+      "header": {
+        "FROM": "issus-1-domain/s1",
+        "TO": "issus-1-orch",
+        "TYPE": "NOTE",
+        "_type": "NOTE",
+        "_from": "issus-1-domain",
+        "_to": [
+          "issus-1-orch"
+        ],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE",
+        "_noenv": false
+      },
+      "classification": "OTHER",
+      "compact": false
+    },
+    {
+      "body": "\nFROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE",
+      "header": {
+        "FROM": "issus-1-domain/s1",
+        "TO": "issus-1-orch",
+        "TYPE": "NOTE",
+        "_type": "NOTE",
+        "_from": "issus-1-domain",
+        "_to": [
+          "issus-1-orch"
+        ],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:issus-1-domain/s1 TO:issus-1-orch TYPE:NOTE",
+        "_noenv": false
+      },
+      "classification": "OTHER",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:cc-dd TYPE:HOLD",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "cc-dd",
+        "TYPE": "HOLD",
+        "_type": "HOLD",
+        "_from": "aa-bb",
+        "_to": [
+          "cc-dd"
+        ],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:cc-dd TYPE:HOLD",
+        "_noenv": false
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:ALL TYPE:REQUEST",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "ALL",
+        "TYPE": "REQUEST",
+        "_type": "REQUEST",
+        "_from": "aa-bb",
+        "_to": [
+          "all"
+        ],
+        "_cc": [],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:ALL TYPE:REQUEST",
+        "_noenv": false
+      },
+      "classification": "ALL",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-dd",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@CC-DD.",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-ddx",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "CC",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-dd한",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "CC",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-dd-é",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "CC",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-ddé",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "CC",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-dd_",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "CC",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-dd😀",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc.dd",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "CC",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-dd́",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "ME",
+      "compact": false
+    },
+    {
+      "body": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd\n@cc-dd𐵀",
+      "header": {
+        "FROM": "aa-bb",
+        "TO": "other-aa",
+        "TYPE": "NOTE",
+        "CC": "cc-dd",
+        "_type": "NOTE",
+        "_from": "aa-bb",
+        "_to": [
+          "other-aa"
+        ],
+        "_cc": [
+          "cc-dd"
+        ],
+        "_re": [],
+        "_sup": [],
+        "_first": "FROM:aa-bb TO:other-aa TYPE:NOTE CC:cc-dd",
+        "_noenv": false
+      },
+      "classification": "ME",
+      "compact": false
+    }
+  ],
+  "masks": [
+    {
+      "maskedCount": 1,
+      "inputRot13": "-----ORTVA EFN CEVINGR XRL-----\nn\no\n-----RAQ EFN CEVINGR XRL-----",
+      "textRot13": "[ZNFXRQ:crz]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "tuc_nnnnnnnnnnnnnnnnnnnn",
+      "textRot13": "[ZNFXRQ:tvguho-gbxra]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "tvguho_cng_____________________",
+      "textRot13": "[ZNFXRQ:tvguho-gbxra]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "NXVNNNNNNNNNNNNNNNNN",
+      "textRot13": "[ZNFXRQ:njf-xrl]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "fx-nnnnnnnnnnnnnnnn",
+      "textRot13": "[ZNFXRQ:ncv-xrl]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "kbko-nnnnnnnnnn",
+      "textRot13": "[ZNFXRQ:ncv-xrl]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "ORNERE kkkkkkkkkkkkkkkk",
+      "textRot13": "[ZNFXRQ:ornere]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "cnffjbeq:rknzcyr",
+      "textRot13": "[ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 4,
+      "inputRot13": "cnffjq=k frperg:l gbxra=m ncv-xrl=d",
+      "textRot13": "[ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "crefba@rknzcyr.grfg",
+      "textRot13": "[ZNFXRQ:rznvy]"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "tuc_nnnnnnnnnnnnnnnnnnn",
+      "textRot13": "tuc_nnnnnnnnnnnnnnnnnnn"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "fx-nnnnnnnnnnnnnnn",
+      "textRot13": "fx-nnnnnnnnnnnnnnn"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "ornere fubeg",
+      "textRot13": "ornere fubeg"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "k@n.p",
+      "textRot13": "k@n.p"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "한글tuc_nnnnnnnnnnnnnnnnnnnn",
+      "textRot13": "한글tuc_nnnnnnnnnnnnnnnnnnnn"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "tuc_nnnnnnnnnnnnnnnnnnnn한글",
+      "textRot13": "tuc_nnnnnnnnnnnnnnnnnnnn한글"
+    },
+    {
+      "maskedCount": 2,
+      "inputRot13": "gbxra=tuc_nnnnnnnnnnnnnnnnnnnn",
+      "textRot13": "[ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 3,
+      "inputRot13": "Ornere kkkkkkkkkkkkkkkk gbxra=fx-nnnnnnnnnnnnnnnn",
+      "textRot13": "[ZNFXRQ:ornere] [ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "한글cnffjbeq=k",
+      "textRot13": "한글cnffjbeq=k"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "cnffjbeq=nop",
+      "textRot13": "[ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "K@rknzcyr.grfg",
+      "textRot13": "K@rknzcyr.grfg"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "NCV_XRL=k",
+      "textRot13": "[ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "ncı_xrl=k",
+      "textRot13": "[ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "Ornere ıııııııııııııııı",
+      "textRot13": "[ZNFXRQ:ornere]"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "Ornere﻿kkkkkkkkkkkkkkkk",
+      "textRot13": "Ornere﻿kkkkkkkkkkkkkkkk"
+    },
+    {
+      "maskedCount": 0,
+      "inputRot13": "fx-nnnnnnnnnnnnnnnn한글",
+      "textRot13": "fx-nnnnnnnnnnnnnnnn한글"
+    },
+    {
+      "maskedCount": 2,
+      "inputRot13": "urnqre gbxra=rknzcyr\nobql gbxra=rknzcyr",
+      "textRot13": "urnqre [ZNFXRQ:cnffjbeq]\nobql [ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 1,
+      "inputRot13": "cnffjbeq\u001c=\u001cnop",
+      "textRot13": "[ZNFXRQ:cnffjbeq]"
+    },
+    {
+      "maskedCount": 2,
+      "inputRot13": "-----ORTVA CEVINGR XRL-----\nk\n-----RAQ CEVINGR XRL-----\n-----ORTVA CEVINGR XRL-----\nl\n-----RAQ CEVINGR XRL-----",
+      "textRot13": "[ZNFXRQ:crz]\n[ZNFXRQ:crz]"
+    }
+  ],
+  "times": [
+    {
+      "value": "2024-02-29T23:59+09:00",
+      "valid": true
+    },
+    {
+      "value": "2023-02-29T12:00+09:00",
+      "valid": false
+    },
+    {
+      "value": "2024-04-31T12:00+09:00",
+      "valid": false
+    },
+    {
+      "value": "0000-01-01T00:00+00:00",
+      "valid": false
+    },
+    {
+      "value": "9999-12-31T23:59:59-2359",
+      "valid": true
+    },
+    {
+      "value": "2024-01-01T24:00+09:00",
+      "valid": false
+    },
+    {
+      "value": "2024-01-01T23:60+09:00",
+      "valid": false
+    },
+    {
+      "value": "2024-01-01T23:59:60+09:00",
+      "valid": false
+    },
+    {
+      "value": "2024-01-01T00:00+00:99",
+      "valid": true
+    },
+    {
+      "value": "2024-01-01T00:00+23:60",
+      "valid": false
+    },
+    {
+      "value": "18:30",
+      "valid": false
+    },
+    {
+      "value": "2024-01-01T00:00Z",
+      "valid": false
+    },
+    {
+      "value": "２０２４-01-01T00:00+09:00",
+      "valid": false
+    }
+  ],
+  "aliases": [
+    {
+      "a": "abc",
+      "b": "abc",
+      "dist1": true
+    },
+    {
+      "a": "abc",
+      "b": "abx",
+      "dist1": true
+    },
+    {
+      "a": "abc",
+      "b": "ab",
+      "dist1": true
+    },
+    {
+      "a": "abc",
+      "b": "abcd",
+      "dist1": true
+    },
+    {
+      "a": "abc",
+      "b": "acb",
+      "dist1": false
+    },
+    {
+      "a": "가나",
+      "b": "가다",
+      "dist1": true
+    },
+    {
+      "a": "😀a",
+      "b": "😀b",
+      "dist1": true
+    }
+  ],
+  "pending": [
+    {
+      "name": "my RE ACK",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:ACK RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE ALIAS",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:ALIAS RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE ASK",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:ASK RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE CLAIM",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:CLAIM RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE COMPACT",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:COMPACT RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE DECISION",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:DECISION RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE HANDOFF",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:HANDOFF RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE HOLD",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:HOLD RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE NOTE",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:NOTE RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE PLAN",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:PLAN RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE RELEASE",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:RELEASE RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE REPORT",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:REPORT RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "my RE VERIFY",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd/by-aa-bb TO:aa-bb TYPE:VERIFY RE:1000000,1000001\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": []
+    },
+    {
+      "name": "SUPERSEDES cc-dd",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:cc-dd TO:aa-bb TYPE:NOTE SUPERSEDES:1000000\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": [
+        "1000001"
+      ]
+    },
+    {
+      "name": "SUPERSEDES other-aa",
+      "rows": [
+        {
+          "id": "1000000",
+          "body": "FROM:aa-bb/s1 TO:cc-dd TYPE:ASK ACK-BY:2026-10-21T18:00+09:00\nASK @cc-dd: 요청"
+        },
+        {
+          "id": "1000001",
+          "body": "FROM:aa-bb TO:other-aa TYPE:HOLD\n@cc-dd"
+        },
+        {
+          "id": "1000002",
+          "body": "FROM:cc-dd TO:cc-dd TYPE:DECISION\n내용"
+        },
+        {
+          "id": "1000003",
+          "body": "FROM:other-aa TO:aa-bb TYPE:NOTE SUPERSEDES:1000000\n내용"
+        }
+      ],
+      "me": [
+        "cc-dd"
+      ],
+      "pending": [
+        "1000001"
+      ]
+    }
+  ]
+}

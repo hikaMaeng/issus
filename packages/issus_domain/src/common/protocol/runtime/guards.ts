@@ -1,0 +1,14 @@
+export type Test=(value:unknown)=>boolean;
+export type Shape={required:Record<string,Test>;optional?:Record<string,Test>};
+export const object=(v:unknown):v is Record<string,unknown>=>!!v && typeof v==='object' && !Array.isArray(v);
+export const text:Test=v=>typeof v==='string';
+export const nonempty:Test=v=>typeof v==='string'&&v.length>0;
+export const number:Test=v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=1;
+export const natural:Test=v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=0;
+export const decimal:Test=v=>typeof v==='string'&&/^\d+$/u.test(v);
+export const bool:Test=v=>typeof v==='boolean';
+export const texts:Test=v=>Array.isArray(v)&&v.every(text);
+export const issue:Test=v=>shape(v,{required:{repoId:nonempty,issueNumber:number}});
+export const state:Test=v=>typeof v==='string'&&['queued','running','blocked','hold','done','failed','cancelled','pending-user'].includes(v);
+export const shape=(v:unknown,s:Shape):v is Record<string,unknown>=>object(v)&&Object.entries(s.required).every(([k,test])=>Object.hasOwn(v,k)&&test(v[k]))&&Object.entries(v).every(([k,val])=>(s.required[k]??s.optional?.[k])?.(val)===true);
+export const uuid:Test=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(v);

@@ -1,5 +1,5 @@
 {
-  "name": "issus-cli",
+  "name": "@issus/cli",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -21,6 +21,6 @@
     "esbuild": "0.28.2"
   },
   "bin": {
-    "issus": "./dist/entry/index.js"
+    "issus": "dist/index.js"
   }
 }

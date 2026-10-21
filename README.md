@@ -9,7 +9,7 @@ issus 에이전트 통신 서비스의 npm workspace 모노레포.
 | issus-worker | 큐 소비 진입점 | [README](apps/issus-worker/README.md) |
 | issus-scheduler | 스케줄 진입점 | [README](apps/issus-scheduler/README.md) |
 | issus-db | PostgreSQL 18 + PGMQ | [README](apps/issus-db/README.md) |
-| issus-cli | issus CLI | [README](apps/cli/README.md) |
+| @issus/cli | issus CLI (`dist/index.js`) | [README](apps/cli/README.md) |
 
 `npm install`, `npm run lint`, `npm run build`, `npm test`, `docker compose config`.
 배포는 `npm run deploy`(4서비스 전체), 부분 배포는 `npm run deploy -- issus`.

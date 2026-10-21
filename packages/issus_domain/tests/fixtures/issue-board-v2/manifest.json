@@ -1,0 +1,494 @@
+{
+  "sourceRoot": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab",
+  "copiedAt": "2026-10-21T05:42:18.415470+00:00",
+  "canonical37Sha256": "a2387942ff0739cea867846f69b74e34b0dac42f58117d81f2353af38f520404",
+  "sources": [
+    {
+      "path": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\scripts\\issue_post.py",
+      "sha256": "67d01e961496f842f5764161c382a9c0abb291d6e62e99811e1e72e9c95b55fd",
+      "scope": "check_comment/check_issue_body/parse_envelope/iso_ok/alias_ok/check_recipient/constants"
+    },
+    {
+      "path": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\scripts\\issue_watch.py",
+      "sha256": "b73600dc3352269285c245a03240097f983b1ff40e3a42e678fae8c7773a9d70",
+      "scope": "header/ids/mentioned/to_me/classify/is_compact/since_compact_stats/pending main"
+    },
+    {
+      "path": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\scripts\\alias_check.py",
+      "sha256": "e1de9205f8c142390dba933fb3617864f26c02b52b7cac1f11112e5a65e18283",
+      "scope": "ALIAS/dist1/grammar/near collision"
+    },
+    {
+      "path": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\scripts\\compact_prepare.py",
+      "sha256": "617e8c64305792cb36e08d3ef7502c282cd688b191f951971367a57d1fd246f6",
+      "scope": "MASKS/mask"
+    },
+    {
+      "path": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\scripts\\board_find.py",
+      "sha256": "563d8ac13b97e8f6f7a4a4540a1ed2b683f445f9ebd153e92b51399f50461070",
+      "scope": "reference only"
+    }
+  ],
+  "files": [
+    {
+      "path": "good/ack-accept.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\ack-accept.md",
+      "sourceRelativePath": "examples/ack-accept.md",
+      "sha256": "6d0b95cc95754c96cc52d45a9053b1c59fd7450f3f2f092c41397823586852e6",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/ack-objection.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\ack-objection.md",
+      "sourceRelativePath": "examples/ack-objection.md",
+      "sha256": "cccd2d75c622ab4f6e6dc8d82c85237b775538768a12d17f2816ff8f839fbc0b",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/ack-yield.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\ack-yield.md",
+      "sourceRelativePath": "examples/ack-yield.md",
+      "sha256": "72ebfc33e9d10bf2b7fd789f3fac229d6bd614875905832ab46fbc90aafaf391",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/alias-register.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\alias-register.md",
+      "sourceRelativePath": "examples/alias-register.md",
+      "sha256": "24311b60fca9c83610999cbc4e6d5d7a9d16e6a5c20a737dd5339f34770edeef",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/alias-rename.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\alias-rename.md",
+      "sourceRelativePath": "examples/alias-rename.md",
+      "sha256": "0f91dc37d2b81f046c6379449a5bdbe76c533d9cf3049d6aa1764bdc7227bea1",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/ask-noenv.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\ask-noenv.md",
+      "sourceRelativePath": "examples/ask-noenv.md",
+      "sha256": "a8e5c648e8a30af70b9325cc1b1e14be3de3dd7403016099ff6652be260e9c9f",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/ask-slot-1.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\ask-slot-1.md",
+      "sourceRelativePath": "examples/ask-slot-1.md",
+      "sha256": "f9ea7a25da8f25b3db7466d9b10d5d118d6c1acfeb1f270202fdd3cb860da167",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/ask-slot-2.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\ask-slot-2.md",
+      "sourceRelativePath": "examples/ask-slot-2.md",
+      "sha256": "54ca84b1380b929b4a553d7a9aa6eb43c4f59a0ec9f401e221fac52deb255dba",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/ask.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\ask.md",
+      "sourceRelativePath": "examples/ask.md",
+      "sha256": "e5e31e4aa08ec36100ba997414d5f8b322a91004c53a05f7da4946760a4c48ff",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/board-body.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\board-body.md",
+      "sourceRelativePath": "examples/board-body.md",
+      "sha256": "fb64a36045c04ffc1428f76210bb8dc0d3de44afbd1df2575f6d3ada58d75559",
+      "kind": "good",
+      "mode": "issue-body",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/board-lesson.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\board-lesson.md",
+      "sourceRelativePath": "examples/board-lesson.md",
+      "sha256": "64049e2c3101a18a90ba61cac0dfaf40478bc428f6315e3e30c8e678804371a5",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/board-note.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\board-note.md",
+      "sourceRelativePath": "examples/board-note.md",
+      "sha256": "4ce9a539c92f0eb82d708a8723d84679e2c31c2afd17739955c6b177eaa1fd79",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/claim.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\claim.md",
+      "sourceRelativePath": "examples/claim.md",
+      "sha256": "979a44beb20a56e0e26b5b8c32877d9a6fde5b5e26305c7e0b3a1a2b3e5be34c",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/compact.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\compact.md",
+      "sourceRelativePath": "examples/compact.md",
+      "sha256": "cdd1552541d7806d902ac9638c1c0ddcf87decc9955422cb5ab449034f9357fa",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/decision-criteria.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\decision-criteria.md",
+      "sourceRelativePath": "examples/decision-criteria.md",
+      "sha256": "388076815e68dae770e26bbad7e406a3efe239ea3205ef79a4224579d5618ff7",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/decision-unhold.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\decision-unhold.md",
+      "sourceRelativePath": "examples/decision-unhold.md",
+      "sha256": "e6ab8a4ae6640bdcfac3188f6071aea13c6b967ab71203fec940aa962581887e",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/decision-user.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\decision-user.md",
+      "sourceRelativePath": "examples/decision-user.md",
+      "sha256": "142ec3dc48827abc8fe17287acbc6e93a940d232b31a1bbb2ceb5e80f41b81ce",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/handoff.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\handoff.md",
+      "sourceRelativePath": "examples/handoff.md",
+      "sha256": "7c3acbb1e412754c881fe831f6ca77328198e366d558c5ed5d98a515a2eeb569",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/hold.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\hold.md",
+      "sourceRelativePath": "examples/hold.md",
+      "sha256": "a9f07c431f1b575721a7767c4257e29c9e88c899cafcaa81effbe18fece93c5c",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/issue-body-cancelled.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\issue-body-cancelled.md",
+      "sourceRelativePath": "examples/issue-body-cancelled.md",
+      "sha256": "7011fb9131a44ba7bb76be16d2324899c90d7deb6a0e6b6d34a93a107f410c34",
+      "kind": "good",
+      "mode": "issue-body",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/issue-body-closing.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\issue-body-closing.md",
+      "sourceRelativePath": "examples/issue-body-closing.md",
+      "sha256": "d16a0b28837f42fa8f536c596f367168cc32395480e2e70a9bd87b467fa87438",
+      "kind": "good",
+      "mode": "issue-body",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/issue-body-running.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\issue-body-running.md",
+      "sourceRelativePath": "examples/issue-body-running.md",
+      "sha256": "778ca954d4827c3f346ab341fb97c7d876d0865da17a72230ce391d7e94b0883",
+      "kind": "good",
+      "mode": "issue-body",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/note-cc.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\note-cc.md",
+      "sourceRelativePath": "examples/note-cc.md",
+      "sha256": "5ba4c5a7c1496009c0766c27d99bd7b0287eb643b7171b6a809fc109adacc6d0",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/note-session-resume.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\note-session-resume.md",
+      "sourceRelativePath": "examples/note-session-resume.md",
+      "sha256": "6bbb6a19e65abb3ce887be8f1f1c1129c5ad3144a495cb4afe938550bc6b0d9e",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/note.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\note.md",
+      "sourceRelativePath": "examples/note.md",
+      "sha256": "65699fb3d00ff095978f5db571a629fcdb6928d199c85744188ebcdab7a0f7cf",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/plan-revision.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\plan-revision.md",
+      "sourceRelativePath": "examples/plan-revision.md",
+      "sha256": "7cb5970035d4fd48918bd7439a8fdee3a724097f9307d4007806c1156793baf5",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/plan.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\plan.md",
+      "sourceRelativePath": "examples/plan.md",
+      "sha256": "71e32fb70e27c49ec0a882c27f0c19e74f08a559e241cde1ac2c83ebbb499ef1",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/release.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\release.md",
+      "sourceRelativePath": "examples/release.md",
+      "sha256": "f3dcf92c3023291f725011977cbc138357a611ada06b49555038258d5c259a49",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/report-final.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\report-final.md",
+      "sourceRelativePath": "examples/report-final.md",
+      "sha256": "1d18c6c1bd483a83e4997b306ef8c47dd6371e5185a1b525a5d09142eae2aa1e",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/report-fix-candidate.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\report-fix-candidate.md",
+      "sourceRelativePath": "examples/report-fix-candidate.md",
+      "sha256": "02e6247436db2abb6062727bc5752ab22d0cc59d24ecf51e2ff59f754284a5c1",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/report-progress.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\report-progress.md",
+      "sourceRelativePath": "examples/report-progress.md",
+      "sha256": "4528209c09fe3bb3c710ec76c8460fbce854f0e432b39813f4c4b3902a39bce7",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "good/verify.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\verify.md",
+      "sourceRelativePath": "examples/verify.md",
+      "sha256": "302551c36e4302a2cac7856df8090a83742f8e79f897481446e39fca1e9a8311",
+      "kind": "good",
+      "mode": "comment",
+      "expected": "pass",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "bad/alias-character.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\bad\\alias-character.md",
+      "sourceRelativePath": "examples/bad/alias-character.md",
+      "sha256": "4971389f8f9c2b3bd3d0f7e70e794fe5189d37e9093981ec15487d0aa13e768a",
+      "kind": "bad",
+      "mode": "comment",
+      "expected": "reject",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "bad/ask-no-to-two-requests.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\bad\\ask-no-to-two-requests.md",
+      "sourceRelativePath": "examples/bad/ask-no-to-two-requests.md",
+      "sha256": "79d78836c596a31c5741c231804386d84698754e8c3f987f3815dbeb32bb00e7",
+      "kind": "bad",
+      "mode": "comment",
+      "expected": "reject",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "bad/compact-no-marker.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\bad\\compact-no-marker.md",
+      "sourceRelativePath": "examples/bad/compact-no-marker.md",
+      "sha256": "77561a86f2574885a97040df2fb44754c951958088b767544b8c124cf70867d3",
+      "kind": "bad",
+      "mode": "comment",
+      "expected": "reject",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "bad/noenv-fix-candidate.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\bad\\noenv-fix-candidate.md",
+      "sourceRelativePath": "examples/bad/noenv-fix-candidate.md",
+      "sha256": "649412388fcef110406d4d8ebecf34903da8207d9b6681d5cd691fdd7168cda5",
+      "kind": "bad",
+      "mode": "comment",
+      "expected": "reject",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "bad/plan-due-no-date.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\bad\\plan-due-no-date.md",
+      "sourceRelativePath": "examples/bad/plan-due-no-date.md",
+      "sha256": "f82c8e4cd6014e549892ab8ac3cefcf2176a92ff090d6bb2803c84a8aa2b931f",
+      "kind": "bad",
+      "mode": "comment",
+      "expected": "reject",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/ask-ack-report.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\ask-ack-report.md",
+      "sourceRelativePath": "examples/flows/ask-ack-report.md",
+      "sha256": "50e9f18e3dc49d1d15d3cb2da0cbcb4316846a1ebbf47887a44b7e4f1bfbf049",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/board.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\board.md",
+      "sourceRelativePath": "examples/flows/board.md",
+      "sha256": "930ddf8cb5b1d907b698c51f032f6648c29686c7a3022aaaceb2cff1267660e5",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/claim-contention.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\claim-contention.md",
+      "sourceRelativePath": "examples/flows/claim-contention.md",
+      "sha256": "046e7e8190489f39ef3190e1cdc398fabe8542754be516610d3f40809b2ec746",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/compact.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\compact.md",
+      "sourceRelativePath": "examples/flows/compact.md",
+      "sha256": "a1af68b1f1a72575dcbf831e37e64fe9bda6bb2fd90816b91556b001b5b2125d",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/criteria-verify-close.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\criteria-verify-close.md",
+      "sourceRelativePath": "examples/flows/criteria-verify-close.md",
+      "sha256": "59d82a8ff93b0c6d6712a0976638caff84a3846b2312b2a3ae9fcf1ac839788f",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/handoff-merge.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\handoff-merge.md",
+      "sourceRelativePath": "examples/flows/handoff-merge.md",
+      "sha256": "ff187f1221735e4630fe63a0a8fa8d59095e3378a60f25ede9146a284b405532",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/hold-unhold.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\hold-unhold.md",
+      "sourceRelativePath": "examples/flows/hold-unhold.md",
+      "sha256": "c7fbd89c7eb94920a2a24c308cf4c983b7dfb22741f73f8294ab8538cb6ec1a4",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/noenv.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\noenv.md",
+      "sourceRelativePath": "examples/flows/noenv.md",
+      "sha256": "597ef0bff233f96c0af9c314ed4362c1424c6dc148190a906bb3fc5be2df09ef",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    },
+    {
+      "path": "flows/session-resume.md",
+      "sourcePath": "C:\\Users\\hika0\\.claude\\skills\\issue-board-collab\\examples\\flows\\session-resume.md",
+      "sourceRelativePath": "examples/flows/session-resume.md",
+      "sha256": "f42a1d64a267053cbd9f43f3d5285675d6496eb7e8b8be893cb1eae01a4150ef",
+      "kind": "flows",
+      "mode": "comment",
+      "expected": "reference",
+      "copiedAt": "2026-10-21T05:42:18.415470+00:00"
+    }
+  ]
+}

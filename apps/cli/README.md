@@ -1,4 +1,4 @@
-cli 서비스 골격.
+@issus/cli: `issus` bin을 제공하는 CLI 골격(`dist/index.js`).
 
 | 목적 | 파일 |
 | --- | --- |

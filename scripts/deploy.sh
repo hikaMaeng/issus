@@ -179,6 +179,14 @@ for service in "${services[@]}"; do
   fi
 done
 
+# Freeze one deployment plan before local build, including transitive
+# dependencies and every sibling that runs an image rebuilt by this plan.
+deploy_plan="$(compose_json | node scripts/deploy-targets.mjs "${services[@]}")"
+services=()
+while IFS= read -r service; do
+  services+=("$service")
+done <<< "$(node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).services.join("\n"))' <<< "$deploy_plan")"
+
 # A fresh clone has no docker/.env: it is git-ignored on purpose. Recreate it
 # from the committed template so the checkout is deployable as-is. This runs
 # before anything else touches compose.
@@ -261,11 +269,9 @@ echo "deploy-phase phase=install status=$install_status reason=$install_reason e
 build_started_ms="$(now_ms)"
 build_args=(exec -- turbo run build)
 build_args_base=${#build_args[@]}
-for service in "${services[@]}"; do
-  if [[ -d "apps/$service" ]]; then
-    build_args+=(--filter="./apps/$service")
-  fi
-done
+while IFS= read -r build_filter; do
+  if [[ -n "$build_filter" ]]; then build_args+=(--filter="$build_filter"); fi
+done <<< "$(node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).buildFilters.join("\n"))' <<< "$deploy_plan")"
 
 # Only build when at least one filter was added; a service with no module of
 # its own has nothing to build here.
@@ -426,20 +432,9 @@ if [[ ${#services_to_refresh[@]} -gt 0 ]]; then
   # Preflight refuses foreign containers; never remove a container by name.
   node scripts/deploy-preflight.mjs "${services[@]}"
 
-  dependency_services=()
-  for service in "${services_to_refresh[@]}"; do
-    while IFS= read -r dependency; do
-      if [[ -n "$dependency" ]] &&
-        ! contains_service "$dependency" "${services_to_refresh[@]}" &&
-        ! contains_service "$dependency" ${dependency_services[@]+"${dependency_services[@]}"}; then
-        dependency_services+=("$dependency")
-      fi
-    done < <(compose_query "$service" 'Object.keys(svc?.depends_on ?? {}).join("\n")')
-  done
-
   # Compose owns dependency order and waits on service_healthy edges.
-  docker compose build "${services_to_refresh[@]}" ${dependency_services[@]+"${dependency_services[@]}"}
-  docker compose up -d --wait --wait-timeout 180 "${services_to_refresh[@]}"
+  docker compose build "${services[@]}"
+  docker compose up -d --wait --wait-timeout 180 "${services[@]}"
   mkdir -p .docker
   compose_status="refreshed"
 else

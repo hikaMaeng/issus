@@ -3,4 +3,4 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --chown=node:node apps/cli/dist/ ./dist/
 USER node
-CMD ["node", "dist/entry/index.js"]
+CMD ["node", "dist/index.js"]

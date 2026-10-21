@@ -33,7 +33,7 @@
     "docs"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node copy-assets.mjs",
     "test": "node ../../scripts/run-tests.mjs src --allow-empty",
     "lint": "tsc --noEmit -p tsconfig.json"
   },
@@ -42,7 +42,8 @@
   },
   "devDependencies": {
     "@types/node": "24.19.2",
-    "typescript": "7.0.2",
-    "tsx": "4.23.15"
+    "pg": "8.23.1",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
   }
 }

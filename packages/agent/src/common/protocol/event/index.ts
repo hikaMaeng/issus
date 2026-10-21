@@ -1,0 +1,122 @@
+export type EventKind = "command" | "fact" | "result" | "progress" | "failure" | "control";
+
+/**
+ * Who an event is for.
+ *
+ * `client` is the default: the broker tails it and delivers it to whoever
+ * subscribes. `worker` means the event exists only so another worker can react
+ * to it, and the broker never picks it up at all — not filtered late at the
+ * socket, but never read.
+ *
+ * The mark belongs in the envelope rather than in a list of action names,
+ * because the broker must not have a list of action names. It reads one field
+ * and still knows nothing about the domain.
+ */
+export type EventAudience = "client" | "worker";
+
+/** Server-only provenance; all three fields are present together. */
+export interface EventProvenance {
+  sourceEventId?: string;
+  sourceStreamId?: string;
+  sourceSequence?: string;
+}
+
+/** Validates queued/stored provenance without substituting reaction identity. */
+export function eventProvenance(value: EventProvenance, required = false): EventProvenance {
+  const fields = [value.sourceEventId, value.sourceStreamId, value.sourceSequence];
+  if (!required && fields.every((field) => field === undefined)) return {};
+  if (fields.some((field) => typeof field !== "string" || field.length === 0) || !/^[1-9][0-9]*$/.test(value.sourceSequence ?? "")) throw new Error("invalid reaction source metadata");
+  return { sourceEventId: value.sourceEventId, sourceStreamId: value.sourceStreamId, sourceSequence: value.sourceSequence };
+}
+
+export interface IngressCommand {
+  action: string;
+  transactionKey: string;
+  channel: string;
+  /** Defaults to `client`. `worker` keeps the record out of every client-facing read. */
+  audience?: EventAudience;
+  replyChannel?: string;
+  sessionId?: string;
+  runId?: string;
+  turnId?: string;
+  correlationId?: string;
+  payload: Record<string, unknown>;
+}
+
+/** Server-issued queue record. It is deliberately not a canonical envelope: append assigns its stream position. */
+export interface IngressEvent extends IngressCommand, EventProvenance {
+  eventId: string;
+  createdAt: string;
+}
+
+export interface EventEnvelope<TPayload extends Record<string, unknown> = Record<string, unknown>> extends IngressCommand, EventProvenance {
+  eventId: string;
+  eventVersion: 1;
+  kind: EventKind;
+  streamId: string;
+  /** Decimal PostgreSQL bigint. Keep it textual so a cursor never loses precision in JSON. */
+  sequence: string;
+  causationEventId?: string;
+  correlationId: string;
+  source: "client" | "server" | "worker" | "scheduler";
+  /** Defaults to `client`. `worker` keeps the event out of every client-facing read. */
+  audience?: EventAudience;
+  createdAt: string;
+  payload: TPayload;
+}
+
+export type EventDraft<TPayload extends Record<string, unknown> = Record<string, unknown>> = Omit<EventEnvelope<TPayload>, "sequence">;
+
+/** Derives the canonical stream identity of an event from its session or channel scope. */
+export function streamIdOf(input: { sessionId?: string; channel: string }): string {
+  return input.sessionId ? `session:${input.sessionId}` : `channel:${input.channel}`;
+}
+
+/**
+ * Produces a stable UUID-shaped identifier for a logical event that may be derived more than once.
+ * Redelivery of the same logical outcome converges on one stored row and one client-visible event id.
+ */
+export function createEventDraft(input: IngressCommand, now = new Date().toISOString()): EventDraft {
+  return { ...input, eventId: globalThis.crypto.randomUUID(), eventVersion: 1, kind: "command", streamId: streamIdOf(input), correlationId: input.correlationId ?? input.transactionKey, source: "client", createdAt: now };
+}
+
+export function createIngressEvent(input: Omit<IngressCommand, "transactionKey"> & { transactionKey?: string }, now = new Date().toISOString()): IngressEvent {
+  return { ...input, eventId: globalThis.crypto.randomUUID(), transactionKey: input.transactionKey ?? globalThis.crypto.randomUUID(), createdAt: now };
+}
+
+/**
+ * Derives a follow-up event that stays inside the causing event's stream.
+ * Session, run, turn, stream, and correlation identity are inherited so per-stream ordering and
+ * session projections cover results as well as commands.
+ */
+export function createDerivedDraft(cause: EventEnvelope, input: {
+  eventId: string;
+  action: string;
+  kind: EventKind;
+  payload: Record<string, unknown>;
+  source?: EventEnvelope["source"];
+  channel?: string;
+  createdAt?: string;
+  audience?: EventAudience;
+}): EventDraft {
+  return {
+    eventId: input.eventId,
+    eventVersion: 1,
+    kind: input.kind,
+    streamId: cause.streamId,
+    action: input.action,
+    transactionKey: cause.transactionKey,
+    channel: input.channel ?? cause.replyChannel ?? cause.channel,
+    ...(cause.replyChannel === undefined ? {} : { replyChannel: cause.replyChannel }),
+    ...(cause.sessionId === undefined ? {} : { sessionId: cause.sessionId }),
+    ...(cause.runId === undefined ? {} : { runId: cause.runId }),
+    ...(cause.turnId === undefined ? {} : { turnId: cause.turnId }),
+    ...eventProvenance(cause),
+    causationEventId: cause.eventId,
+    correlationId: cause.correlationId,
+    source: input.source ?? "server",
+    ...(input.audience === undefined ? {} : { audience: input.audience }),
+    createdAt: input.createdAt ?? new Date().toISOString(),
+    payload: input.payload,
+  };
+}

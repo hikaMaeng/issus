@@ -103,7 +103,8 @@ services:
 networks:
   issus_internal:
     name: issus_internal
-    internal: true
+    # Docker는 internal 네트워크에 포트를 공개하지 못한다(ndx_business와 같은 이유). 프로젝트 범위 네트워크라 격리는 유지된다.
+    internal: false
 
 volumes:
   issus_pgdata:

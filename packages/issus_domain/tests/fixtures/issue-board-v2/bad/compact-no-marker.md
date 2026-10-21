@@ -1,0 +1,4 @@
+FROM:p4-24-orch/s2 TO:ALL TYPE:COMPACT RE:6270700000 SEEN:6272100600
+구간 요약 6270700001–6272100600(38댓글). 현행 DECISION: 6272300100. 열린 ASK/HOLD: 없음. 점유 CLAIM: 없음. 다음 행동: close.
+---
+compacted-by:p4-24-compact
