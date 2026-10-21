@@ -51,6 +51,7 @@ export function toResultDraft(request: EventEnvelope, input: { eventId: string; 
     action: input.action,
     kind: "result",
     channel: input.channel,
+    audience: request.audience ?? "client",
     source: input.source,
     createdAt: input.createdAt,
     payload: input.payload,

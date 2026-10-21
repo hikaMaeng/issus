@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {COMMAND_ACTIONS,FACT_ACTIONS,parseCommandPayload,parseFactPayload,parseDomainClientFrame,parseDomainServerFrame,parseReactionInput,type CommandPayloadMap,type FactPayloadMap} from './index.js';
+import {COMMAND_ACTIONS,FACT_ACTIONS,parseCommandPayload,parseFactPayload,parseDomainFact,parseDomainClientFrame,parseDomainServerFrame,parseReactionInput,QUEUES,type CommandPayloadMap,type FactPayloadMap,type FactAction,type ReactionInput} from './index.js';
+import {createReactionWork,toEventDraft} from 'agent/broker';
 import {parseCommentRequest} from '../../validation/comment/request.js';
 import {aliasChannel,canonicalStream,issueChannel,repoChannel,sessionChannel,supervisorChannel,internalChannel} from '../envelope/index.js';
 const ownerId='10000000-0000-4000-8000-000000000001',aliasId='10000000-0000-4000-8000-000000000002',sessionId='10000000-0000-4000-8000-000000000003',repoId='10000000-0000-4000-8000-000000000004',eventId='10000000-0000-4000-8000-000000000005';
@@ -101,11 +102,77 @@ test('domain stream frames keep immutable cursor/provenance and forbid WS mutati
  const event={eventId,eventVersion:1,kind:'fact',streamId:canonicalStream(aliasChannel(ownerId,aliasId)),sequence:'9007199254740994',action:'issus.delivery.queued',transactionKey:eventId,channel:aliasChannel(ownerId,aliasId),correlationId:eventId,source:'worker',audience:'client',payload:facts['issus.delivery.queued'],createdAt:'2026-10-21T05:00:00Z',...source};
  const frame={type:'event',event,cursor};
  assert.deepEqual(parseDomainServerFrame(frame),frame);
- assert.deepEqual(parseReactionInput(event),event);
+ assert.deepEqual(parseDomainFact(event),event);
+ assert.equal(parseReactionInput(event),undefined);
  const {sourceSequence:_,...missing}=event;
  assert.equal(parseReactionInput(missing),undefined);
  assert.equal(parseReactionInput({...source,action:event.action,payload:event.payload}),undefined);
  assert.equal(parseDomainServerFrame({...frame,event:{...event,payload:[]}}),undefined);
+});
+function originalFact<A extends FactAction>(action:A) {
+ return {eventId,eventVersion:1 as const,kind:action==='issus.comment.rejected'||action==='issus.application.rejected'?'failure' as const:'fact' as const,streamId:source.sourceStreamId,sequence:source.sourceSequence,action,transactionKey:eventId,channel:issueChannel(repoId,1),correlationId:eventId,source:'worker' as const,audience:'client' as const,payload:facts[action],createdAt:'2026-10-21T05:00:00Z'};
+}
+function reactionCommand(action:FactAction,queue:string=QUEUES.route) {
+ const fact=originalFact(action);
+ const work=createReactionWork(fact,queue);
+ const draft=toEventDraft(work);
+ // EventStore.append assigns only the consumed command's sequence before worker dispatch.
+ return {fact,work,draft,command:{...draft,sequence:'9007199254740995'}};
+}
+for(const action of FACT_ACTIONS) test(`P2 reaction path ${action}: original fact → work → draft → persisted command`,()=>{
+ const {fact,work,draft,command}=reactionCommand(action);
+ assert.deepEqual(parseDomainFact(fact),fact);
+ const input=parseReactionInput(command);
+ assert.ok(input);
+ assert.deepEqual(input,command);
+ assert.equal(input.kind,'command');
+ assert.equal(input.source,'worker');
+ assert.equal(input.audience,'worker');
+ assert.equal(input.sourceEventId,fact.eventId);
+ assert.equal(input.sourceStreamId,fact.streamId);
+ assert.equal(input.sourceSequence,'9007199254740993');
+ assert.notEqual(input.sourceSequence,input.sequence);
+ assert.notEqual(input.eventId,fact.eventId);
+ assert.equal(input.eventId,work.eventId);
+ assert.equal(draft.payload,fact.payload);
+ assert.equal(input.payload,fact.payload);
+ assert.equal(parseDomainFact(command),undefined);
+ assert.equal(parseReactionInput(fact),undefined);
+ assert.equal(parseDomainFact({...fact,kind:fact.kind==='fact'?'failure':'fact'}),undefined);
+ const typed:ReactionInput=input;
+ const commandKind:'command'=typed.kind;
+ assert.equal(commandKind,'command');
+});
+test('P2 reaction provenance is stable per queue and preserves nested delivery origins',()=>{
+ const first=reactionCommand('issus.comment.posted',QUEUES.route);
+ const repeat=reactionCommand('issus.comment.posted',QUEUES.route);
+ const other=reactionCommand('issus.comment.posted',QUEUES.compact);
+ assert.equal(first.command.eventId,repeat.command.eventId);
+ assert.notEqual(first.command.eventId,other.command.eventId);
+ for(const command of [first.command,other.command])assert.equal(parseReactionInput(command)?.sourceEventId,eventId);
+ const queued=originalFact('issus.delivery.queued');
+ queued.eventId='10000000-0000-4000-8000-000000000006';
+ queued.streamId=canonicalStream(aliasChannel(ownerId,aliasId));
+ queued.sequence='9007199254740994';
+ const command={...toEventDraft(createReactionWork(queued,QUEUES.schedule)),sequence:'9007199254740996'};
+ const input=parseReactionInput(command);
+ assert.ok(input);
+ assert.equal(input.sourceEventId,queued.eventId);
+ assert.equal(input.sourceStreamId,queued.streamId);
+ assert.equal(input.sourceSequence,queued.sequence);
+ assert.equal(input.payload,queued.payload);
+ assert.deepEqual({sourceEventId:queued.payload.sourceEventId,sourceStreamId:queued.payload.sourceStreamId,sourceSequence:queued.payload.sourceSequence},source);
+});
+test('reaction command decoder rejects missing provenance, external commands and malformed wire/payload',()=>{
+ const {command}=reactionCommand('issus.comment.posted');
+ for(const key of ['sourceEventId','sourceStreamId','sourceSequence','sequence']) {
+  const missing={...command};
+  delete missing[key as keyof typeof missing];
+  assert.equal(parseReactionInput(missing),undefined,key);
+ }
+ for(const change of [{kind:'fact'},{kind:'failure'},{kind:'result'},{source:'client'},{audience:'client'},{sourceEventId:''},{sourceStreamId:''},{sourceSequence:9007199254740993},{sourceSequence:'-1'},{sourceSequence:'1.5'},{action:'issus.comment.post'},{action:'unknown'},{payload:{...command.payload,token:'opaque'}},{payload:[]},{eventId:'invalid'},{unknown:true}])assert.equal(parseReactionInput({...command,...change}),undefined,JSON.stringify(change));
+ assert.equal(parseReactionInput({action:command.action,payload:command.payload,...source}),undefined);
+ assert.equal(parseDomainFact({...originalFact('issus.comment.posted'),payload:{}}),undefined);
 });
 test('channel factories never include a session in a canonical issue/repo stream',()=>{
  assert.equal(repoChannel(repoId),`repo:${repoId}:all`);

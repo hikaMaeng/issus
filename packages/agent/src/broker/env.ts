@@ -58,8 +58,11 @@ function positive(source: NodeJS.ProcessEnv, name: string, fallback: number, all
 }
 
 export function readEnv(source = process.env): AgentEnv {
-  const parsed = envSchema<{ DATABASE_URL: string }>({
-    schema: { type: "object", required: ["DATABASE_URL"], properties: { DATABASE_URL: { type: "string", minLength: 1 } } },
+  const parsed = envSchema<{ DATABASE_URL: string; PORT: number }>({
+    schema: { type: "object", required: ["DATABASE_URL"], properties: {
+      DATABASE_URL: { type: "string", minLength: 1 },
+      PORT: { type: "integer", minimum: 10000, maximum: 59999, default: 18081 },
+    } },
     data: source, env: false, dotenv: false,
   });
   const retention = source.ISSUS_EVENT_RETENTION_DAYS ?? source.AGENT_RETENTION_DAYS ?? "null";
@@ -75,19 +78,20 @@ export function readEnv(source = process.env): AgentEnv {
   const minWorkerThreads = positive(source, "AGENT_MIN_THREADS", maxWorkerThreads);
   if (minWorkerThreads > maxWorkerThreads) throw new Error("AGENT_MIN_THREADS must not exceed AGENT_MAX_THREADS");
   const visibilityTimeoutSeconds = positive(source, "QUEUE_VISIBILITY_TIMEOUT_SECONDS", 60);
+  // The execution fence must outlive a single PGMQ visibility lease.
+  const executionLeaseSeconds = positive(source, "AGENT_EXECUTION_LEASE_SECONDS", visibilityTimeoutSeconds * 2);
+  if (executionLeaseSeconds <= visibilityTimeoutSeconds) throw new Error("AGENT_EXECUTION_LEASE_SECONDS must exceed QUEUE_VISIBILITY_TIMEOUT_SECONDS");
   const databasePoolMax = positive(source, "AGENT_DATABASE_POOL_MAX", 4);
   return {
     role,
-    port: positive(source, "PORT", 18081),
+    port: parsed.PORT,
     databaseUrl: parsed.DATABASE_URL,
     queue: source.AGENT_QUEUE ?? "agent_requests",
     queues: (source.AGENT_QUEUES ?? source.AGENT_QUEUE ?? "agent_requests")
       .split(",").map((name) => name.trim()).filter((name) => name.length > 0),
     gatewayId: source.AGENT_GATEWAY_ID ?? source.HOSTNAME ?? globalThis.crypto.randomUUID(),
     visibilityTimeoutSeconds,
-    // The execution fence must outlive a single PGMQ visibility lease so a visibility probe
-    // can distinguish queue redelivery from a database ownership reclaim.
-    executionLeaseSeconds: positive(source, "AGENT_EXECUTION_LEASE_SECONDS", visibilityTimeoutSeconds * 2),
+    executionLeaseSeconds,
     /**
      * How long a reaction is given before its absence counts as a failure.
      *

@@ -72,6 +72,46 @@ test("P2 actual PostgreSQL + PGMQ contracts", { skip: databaseUrl ? false : "미
     assert.notEqual(identities[0], identities[1]);
   });
 
+  await t.test("a comment reaction without replyChannel stores a worker-only terminal result excluded from client reads", async () => {
+    const channel = "issue:r:1";
+    const original = await store.append(draft("issus.comment.posted", channel));
+    assert.equal(original.replyChannel, undefined);
+    const q = await createQueue("audience");
+    const work = createReactionWork(original, q);
+    await queue.send(q, work);
+    const received: EventEnvelope[] = [];
+    const worker = createInlinePool(async (event) => { received.push(event); return "routed"; }, 1);
+    const loop = startWorkerConsumer({ queue, commandQueues: [q], reactionQueues: [q], eventStore: store, executions,
+      pool: worker, metrics: new MetricsRegistry(), visibilitySeconds: 1, pollSeconds: 1, batchSize: 1, maxInFlight: 1, maxExecutionAttempts: 1 });
+    try {
+      let rows: { audience: string; channel: string; payload: unknown; sequence: string }[] = [];
+      for (let i = 0; i < 500; i++) {
+        rows = (await pool.query("SELECT audience,channel,payload,sequence::text FROM event_store WHERE transaction_key=$1 AND kind='result'", [work.transactionKey])).rows;
+        if (rows.length) break;
+        await delay(10);
+      }
+      assert.equal(received.length, 1);
+      assert.equal(received[0]!.kind, "command");
+      assert.equal(received[0]!.audience, "worker");
+      assert.equal(received[0]!.replyChannel, undefined);
+      assert.equal(received[0]!.sourceEventId, original.eventId);
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0]!.audience, "worker");
+      assert.equal(rows[0]!.channel, channel);
+      assert.deepEqual(rows[0]!.payload, { ok: true, value: "routed" });
+      for (let i = 0; i < 100 && (await admin.query(`SELECT count(*)::int AS n FROM pgmq."q_${q}"`)).rows[0].n; i++) await delay(5);
+      assert.equal((await admin.query(`SELECT count(*)::int AS n FROM pgmq."q_${q}"`)).rows[0].n, 0);
+      assert.deepEqual(await store.channelHighWater([channel]), { [original.streamId]: original.sequence });
+      assert.deepEqual(await store.channelHighWaterByChannel([channel]), { [channel]: { [original.streamId]: original.sequence } });
+      // Include the terminal row in the bounds so replay's own audience predicate is exercised.
+      const replay = await store.replayChannels([channel], {}, { [original.streamId]: rows[0]!.sequence }, 256);
+      assert.deepEqual(replay.events.map((event) => event.eventId), [original.eventId]);
+      const visible = await store.append(draft("issus.visible.after.reaction", channel));
+      const after = await store.replayChannels([channel], {}, await store.channelHighWater([channel]), 256);
+      assert.deepEqual(after.events.map((event) => event.eventId), [original.eventId, visible.eventId]);
+    } finally { loop.stop(); await loop.done; await worker.destroy(); }
+  });
+
   await t.test("immutable UUIDs replay the same old range and enforce principal/channel/TTL scope", async () => {
     const scope = { principalId: "p", owner: "owner", sessionId: "s1" }; const channels = ["issue:repo:1"];
     const initial = await store.openChannelCursorAtStart(channels, scope);

@@ -1,4 +1,4 @@
-import type {CommandContext,DomainEvent,OwnerPayload} from '../envelope/index.js';
+import type {CommandContext,DomainEvent,OwnerPayload,SourceCoordinates} from '../envelope/index.js';
 import type * as Repo from '../repo/index.js';
 import type * as Issue from '../issue/index.js';
 import type * as Comment from '../comment/index.js';
@@ -68,8 +68,8 @@ export type FactAction=keyof FactPayloadMap;
 export type DomainAction=CommandAction|FactAction;
 export type DomainCommand<A extends CommandAction=CommandAction>={ [K in A]:{action:K;payload:CommandWirePayload<K>}}[A];
 export type DomainFact<A extends FactAction=FactAction>={ [K in A]:Omit<DomainEvent<K,FactPayloadMap[K]>,'kind'> & {kind:K extends 'issus.comment.rejected'|'issus.application.rejected' ? 'failure' : 'fact'}}[A];
-/** Top-level broker provenance belongs to the consumed fact, not to the unchanged domain payload. */
-export type ReactionInput<A extends FactAction=FactAction>=DomainFact<A> & {sourceEventId:string;sourceStreamId:string;sourceSequence:string};
+/** Persisted worker command carrying a fact action/payload and the original fact coordinates. */
+export type ReactionInput<A extends FactAction=FactAction>={ [K in A]:Omit<DomainFact<K>,'kind'|'source'|'audience'> & SourceCoordinates & {kind:'command';source:'worker';audience:'worker'}}[A];
 /** Shape only. The single concrete reaction table is owned by apps/issus, per design §4.3. */
 export interface DomainReaction {action:FactAction;queue:QueueName;handler:string}
 export interface DomainReactionTable {reactionsName:typeof REACTIONS_NAME;reactions:readonly DomainReaction[]}
@@ -77,4 +77,4 @@ export type CommandWirePayload<A extends CommandAction> = CommandPayloadMap[A] &
 export const COMMAND_ACTIONS=['issus.repo.create','issus.issue.open','issus.issue.body.edit','issus.issue.close','issus.issue.reopen','issus.comment.post','issus.alias.register','issus.alias.rename','issus.board.ensure','issus.handoff.accept','issus.handoff.complete','issus.delivery.receive','issus.delivery.apply','issus.inbox.process','issus.clock.tick'] as const satisfies readonly CommandAction[];
 export const FACT_ACTIONS=['issus.repo.created','issus.issue.opened','issus.issue.body.edited','issus.comment.posted','issus.comment.rejected','issus.delivery.queued','issus.delivery.delivered','issus.delivery.acked','issus.delivery.applied','issus.delivery.overdue','issus.delivery.redelivered','issus.delivery.escalated','issus.delivery.superseded','issus.compact.due','issus.compact.posted','issus.issue.closed','issus.issue.reopened','issus.handoff.accepted','issus.issue.handed-off','issus.alias.registered','issus.alias.renamed','issus.board.created','issus.subscription.opened','issus.subscription.closed','issus.session.opened','issus.session.revoked','issus.inbox.processed','issus.application.rejected'] as const satisfies readonly FactAction[];
 export {parseCommandPayload,parseDomainClientFrame,parseDomainServerFrame} from './parser.js';
-export {parseFactPayload,parseReactionInput} from './fact-parser.js';
+export {parseFactPayload,parseDomainFact,parseReactionInput} from './fact-parser.js';

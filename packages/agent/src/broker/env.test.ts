@@ -3,6 +3,24 @@ import test from "node:test";
 import { readEnv as parseEnv } from "./env.js";
 const readEnv = (source: NodeJS.ProcessEnv) => parseEnv({ DATABASE_URL: "postgresql://issus@127.0.0.1:15440/issus", ...source });
 
+test("PORT is an integer within the design's 10000–59999 range", () => {
+  for (const port of ["9999", "60000", "65536", "10000.5", "NaN", "0"]) {
+    assert.throws(() => readEnv({ PORT: port }), /PORT/, port);
+  }
+  for (const port of ["10000", "59999"]) assert.equal(readEnv({ PORT: port }).port, Number(port));
+  assert.equal(readEnv({}).port, 18081);
+});
+
+test("the execution lease must strictly outlive queue visibility", () => {
+  for (const lease of ["1", "59", "60"]) {
+    assert.throws(() => readEnv({ QUEUE_VISIBILITY_TIMEOUT_SECONDS: "60", AGENT_EXECUTION_LEASE_SECONDS: lease }),
+      /AGENT_EXECUTION_LEASE_SECONDS must exceed QUEUE_VISIBILITY_TIMEOUT_SECONDS/, lease);
+  }
+  assert.equal(readEnv({ QUEUE_VISIBILITY_TIMEOUT_SECONDS: "60", AGENT_EXECUTION_LEASE_SECONDS: "61" }).executionLeaseSeconds, 61);
+  assert.equal(readEnv({}).executionLeaseSeconds, 120);
+  assert.equal(readEnv({ QUEUE_VISIBILITY_TIMEOUT_SECONDS: "90" }).executionLeaseSeconds, 180);
+});
+
 test("the default worker pool reserves the configured CPU concurrency at startup", () => {
   const env = readEnv({ PORT: "18081", AGENT_MAX_THREADS: "6" });
   assert.equal(env.maxWorkerThreads, 6);

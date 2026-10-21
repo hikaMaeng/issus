@@ -1,4 +1,4 @@
-import type {FactAction,FactPayloadMap,ReactionInput} from './index.js';
+import type {DomainFact,FactAction,FactPayloadMap,ReactionInput} from './index.js';
 import type {ParseResult} from './parser.js';
 import {object,text,nonempty,number,natural,decimal,bool,texts,issue,state,shape,type Shape,type Test} from './guards.js';
 import {parseDomainServerFrame} from './parser.js';
@@ -51,11 +51,19 @@ export function parseFactPayload<A extends FactAction>(action:A,value:unknown):P
  if (!shape(value,SHAPES[action])) return {ok:false,code:'INVALID_PAYLOAD'};
  return {ok:true,value:value as unknown as FactPayloadMap[A]};
 }
-/** Requires all three original source coordinates; never falls back to the reaction event's own identity. */
+function factEvent(value:unknown):value is Record<string,unknown> & {action:FactAction} {
+ if (!object(value)||typeof value.action!=='string'||!Object.hasOwn(SHAPES,value.action)) return false;
+ return !!parseDomainServerFrame({type:'event',event:value,cursor:'00000000-0000-4000-8000-000000000000'})&&parseFactPayload(value.action as FactAction,value.payload).ok;
+}
+/** Decodes the original catalogued fact/failure, before the broker creates a reaction command. */
+export function parseDomainFact(value:unknown):DomainFact|undefined {
+ if (!factEvent(value)) return undefined;
+ const kind=value.action==='issus.comment.rejected'||value.action==='issus.application.rejected'?'failure':'fact';
+ return value.kind===kind ? value as unknown as DomainFact : undefined;
+}
+/** Decodes the persisted P2 worker command; source coordinates never fall back to its own identity. */
 export function parseReactionInput(value:unknown):ReactionInput|undefined {
- if (!object(value)||typeof value.action!=='string'||!Object.hasOwn(SHAPES,value.action)||!nonempty(value.sourceEventId)||!nonempty(value.sourceStreamId)||!decimal(value.sourceSequence)) return undefined;
- if (value.kind!=='fact'&&value.kind!=='failure') return undefined;
- if (!parseDomainServerFrame({type:'event',event:value,cursor:'00000000-0000-4000-8000-000000000000'})) return undefined;
- if (!parseFactPayload(value.action as FactAction,value.payload).ok) return undefined;
+ if (!factEvent(value)||value.kind!=='command'||value.source!=='worker'||value.audience!=='worker') return undefined;
+ if (!nonempty(value.sourceEventId)||!nonempty(value.sourceStreamId)||!decimal(value.sourceSequence)) return undefined;
  return value as unknown as ReactionInput;
 }

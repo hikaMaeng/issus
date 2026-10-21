@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { IngressEvent } from "../../common/index.js";
 import { toEventDraft, toResultDraft } from "./event-draft.js";
+import { createReactionWork } from "../loops/reaction-enqueue/index.js";
 
 const request: IngressEvent = {
   eventId: "request-1", transactionKey: "tx-1", channel: "agent.requests",
@@ -27,4 +28,18 @@ test("a result draft stays in the request stream and records causation", () => {
   assert.equal(draft.kind, "result");
   assert.equal(draft.channel, "agent.results");
   assert.equal(draft.source, "worker");
+});
+
+test("a comment reaction without replyChannel keeps terminal results worker-only", () => {
+  const fact = { ...toEventDraft({ ...request, channel: "issue:r:1", replyChannel: undefined, payload: {} }),
+    kind: "fact" as const, action: "issus.comment.posted", source: "server" as const, audience: "client" as const, sequence: "1" };
+  const reaction = { ...toEventDraft(createReactionWork(fact, "issus_route")), sequence: "2" };
+  assert.equal(reaction.replyChannel, undefined);
+  for (const action of ["issus.comment.posted.result", "issus.comment.posted.conflict"]) {
+    const result = toResultDraft(reaction, { eventId: action, action, channel: reaction.channel, createdAt: fact.createdAt, payload: { ok: false } });
+    assert.equal(result.audience, "worker");
+    assert.equal(result.channel, "issue:r:1");
+  }
+  const clientResult = toResultDraft({ ...fact, audience: undefined }, { eventId: "client-result", action: "client.result", channel: "session:s1", createdAt: fact.createdAt, payload: { ok: true } });
+  assert.notEqual(clientResult.audience, "worker");
 });

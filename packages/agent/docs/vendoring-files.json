@@ -132,14 +132,14 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\env.test.ts",
       "relative": "src/broker/env.test.ts",
       "sourceSha256": "91e678df5d2a396a7cde1e825dd5b59c66d1229e9d59a040f82714ba39ea325f",
-      "destinationSha256": "469f8fd450a9728ca371c70dff3a1153b217a295780261c266d4db84de32822e"
+      "destinationSha256": "205fa6f21f49e7a7f370685c7f92bdc73dfe2eba1d02b4ead73909e8a969a768"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\env.ts",
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\env.ts",
       "relative": "src/broker/env.ts",
       "sourceSha256": "a09290d469310ac6fb4043a2d2244a3236c8170c1e7aeb9286cbdd8f7838cf4a",
-      "destinationSha256": "f3805e4024e8621107a8d3fda70750289df212b97c474b55d07ffd83fcf1f5aa"
+      "destinationSha256": "41a6cbaba6159968b92bd091c04ed96844e69160126b1d703c182beb309350a5"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\event-store\\notify.ts",
@@ -223,14 +223,14 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\ingress\\event-draft.test.ts",
       "relative": "src/broker/ingress/event-draft.test.ts",
       "sourceSha256": "2e2add52ce92f7cc076aac5da79548850685c7942b8b7b4c38ca48e2b678ae77",
-      "destinationSha256": "fbc1c012cfebbf4171d5e71616e0723c5830ee7c9ece45064ad8b40d9308e080"
+      "destinationSha256": "07f1b9b384f53e016c3c840053007a562af96e81fccc0ecc9425e29184bb59fe"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\ingress\\event-draft.ts",
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\ingress\\event-draft.ts",
       "relative": "src/broker/ingress/event-draft.ts",
       "sourceSha256": "eec1cee3daf0743dbeac73c71e505b317c9cb4adbec8e61a7555c086cb079ed2",
-      "destinationSha256": "a150c023fc565c8d158056c3284d28a5112dc955679684623103ea8bf51a6b3c"
+      "destinationSha256": "2adf1c91f3b97c683a4da19da4ad8524848314dfe9ba84453c1b542e89aabf18"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\loops\\backoff.ts",
@@ -454,7 +454,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\constraints.md",
       "relative": "docs/constraints.md",
       "sourceSha256": "e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490",
-      "destinationSha256": "598508eb813c397d071f77b63ada62de83b93408a4e3d43a82297fd27f7f668a"
+      "destinationSha256": "53e7115bd481f538357e572688c7a95157c1a63e857e7bb5449a99e92595df0e"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\internals.md",
@@ -475,7 +475,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\testing.md",
       "relative": "docs/testing.md",
       "sourceSha256": "f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87",
-      "destinationSha256": "34464d7bcd3f5db8e52eb08269093ab68af771d1feaeebe32261d0afec6c8a4d"
+      "destinationSha256": "1ec5e919f96bb79302e891b9ad0dc9bea4113311441c390451fc3dd73bd875ab"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\usage.md",
@@ -489,7 +489,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\README.md",
       "relative": "README.md",
       "sourceSha256": "7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c",
-      "destinationSha256": "3d276a5109b5712a44da854e05e332035eb7746c603625950da20012274a7bc2"
+      "destinationSha256": "d2742614be9de441f49ece3320aa40bdcee626d6fcb23a6f5ba447380dbfca08"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\tsconfig.json",

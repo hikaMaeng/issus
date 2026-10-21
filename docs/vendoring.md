@@ -49,13 +49,13 @@
 | `broker/auth` | 계정 결합 제거 · Principal/SessionVerifier 주입·오류 비노출 · policy/index.test.ts, HTTP/WS 401 |
 | `package.json` | 독립 workspace · admin_domain 제거·exact pg/ws/env-schema·express peer+dev·scripts/exports 유지 · lint/build/runtime export |
 | `policy·service·http/app` | 앱 인가/라우터 소유 · verifier/socket policy·authorizeChannel 주입·account proxy/URL 제거·extendHttp를 static 전 등록 · http/app.test.ts·WS 거부 |
-| `database.ts·env.ts` | 기본 계정/다른 schema 차단 · public search_path·필수 DATABASE_URL·env-schema 후 설정 주입 · database.test.ts·policy/index.test.ts |
+| `database.ts·env.ts` | 기본 계정/다른 schema 차단 · public search_path·필수 DATABASE_URL·env-schema 후 설정 주입. DECISION 6309173472 후속: PORT 정수10000–59999·execution lease>visibility 기동 검사 · database.test.ts·policy/index.test.ts·env.test.ts(PORT65536/경계/lease≤visibility 거부) |
 | `event-store/store append` | 도메인 UoW 원자성 · appendManyOn·wrapper·동일 tx sequence/notify·legacy UPDATE 제거 · event-store/patch.test.ts·실DB rollback/notify 시험 |
 | `store 보존+service` | 이력 유실 방지 · retentionDays:null·기동/주기 history prune 제거·cursor TTL30 별도 · null 회귀·실DB old fact 보존 |
 | `cursor store+WS` | 미수신 건 건너뜀 방지 · scoped immutable UUID·send마다 새 INSERT·모든 구독 인가 · cursor 회귀·WS 재접속/범위 거부 |
 | `transport/websocket+channel` | 전송/도메인 경계 · subscription/receipt callback·shape≤100·ready 하드코딩 제거·error frame·seed barrier · WS 401/1008/1013·257건 재생·프레임 parser |
 | `loops/reaction-enqueue` | 오래된 미처리 fact 회수 · 최초{}·reader exists 구분·페이지별 저장·command 제외 유지 · reaction-enqueue/index.test.ts |
-| `reaction work+event/ingress/channel/store` | U-E1 출처 보존 · top-level source3개를 queue/draft/store/parser/worker로 전달·payload 불변·누락 보존/경보 · U-E1 두 큐 회귀·실DB 왕복 |
+| `reaction work+event/ingress/channel/store` | U-E1 출처 보존 · top-level source3개를 queue/draft/store/parser/worker로 전달·payload 불변·누락 보존/경보. DECISION 6309173472 후속: toResultDraft가 요청 audience 상속 · draft result/conflict 회귀·실DB replyChannel 없는 댓글 반응 소비→worker result 저장→client high-water/replay 제외 |
 | `loops/worker-consumer` | 일시 장애의 영구 실패 방지 · 모든 미분류/DB 오류 release·재시도·명시 도메인만 종결·fact emit 금지 · transient6종/DomainError/emit 회귀·실DB40001 |
 | `worker·mailbox·replay-buffer·notify·pgmq·metrics` | at-least-once 유지 · sendOn·fact/control 드롭 금지·느린 연결1013·thread DomainError 보존 · pgmq/client.test.ts·mailbox/replay·실제 WS 회복 |
 | `README/docs/tsconfig/test runner` | 출처 잔재 제거 · README+docs7종 issus 기준·원본 tsconfig/루트 runner 연결·계획/보고 추가 · 링크/UTF-8 LF·lint/build·전체 시험 |
@@ -85,8 +85,8 @@
 | `src/front/index.ts` | `949e551245d355a24acd476a3259b5fd8e090024b7a9736de898b1fed1941235` | `9612f31079f8b0b4dcf65edc59fce2a8100c8d1905f2e454b54516f4c6d6a250` |
 | `src/broker/auth/index.ts` | `1d3b312ac4022ebf3b9b685e1e424a716e8225e69c7d003fa5baea3393c7a0f4` | `f4298438ec9d094a2d23b71b9ebf421ab8fc9da0d66a3bfee40a23ff35bc0009` |
 | `src/broker/database.ts` | `d686fffbb3555ca282099945ebcbd59203a20fb09679f32197becd5ae47e85a8` | `018440a9366d95bc6dec9660813dfaab324799c03462066cc8437c9beed29410` |
-| `src/broker/env.test.ts` | `91e678df5d2a396a7cde1e825dd5b59c66d1229e9d59a040f82714ba39ea325f` | `469f8fd450a9728ca371c70dff3a1153b217a295780261c266d4db84de32822e` |
-| `src/broker/env.ts` | `a09290d469310ac6fb4043a2d2244a3236c8170c1e7aeb9286cbdd8f7838cf4a` | `f3805e4024e8621107a8d3fda70750289df212b97c474b55d07ffd83fcf1f5aa` |
+| `src/broker/env.test.ts` | `91e678df5d2a396a7cde1e825dd5b59c66d1229e9d59a040f82714ba39ea325f` | `205fa6f21f49e7a7f370685c7f92bdc73dfe2eba1d02b4ead73909e8a969a768` |
+| `src/broker/env.ts` | `a09290d469310ac6fb4043a2d2244a3236c8170c1e7aeb9286cbdd8f7838cf4a` | `41a6cbaba6159968b92bd091c04ed96844e69160126b1d703c182beb309350a5` |
 | `src/broker/event-store/notify.ts` | `898d4a53f9db734d7958625e331478ae9077b4e205475731b02c231e28d25844` | `90fcf584133eb2c7a1cec52b9b95d5be467b6e8e7fee9e029e1c515cb912643c` |
 | `src/broker/event-store/store.test.ts` | `f809a2f93e0969ca693f37221fc48cbe635565b34ebcb03523d22b9c3515898b` | `ffc162c4d1be670adf72c574eaa76a203df3be41c210e67acd5488e6788c3090` |
 | `src/broker/event-store/store.ts` | `5d802eb340cb4fa52d713ab5c1622f871922fc065ac599352992a74b13042d10` | `06bf0c61568a11935f8e87ad44dbe92a0de344225b0b65c597ddc2f4f1d2c549` |
@@ -98,8 +98,8 @@
 | `src/broker/idempotency/store.test.ts` | `d5cdeff883e95e75538295df32f5bd3fa177a3b3468d194311c681f167ffcd1c` | `00608aa65122a4548b50d35628640be4e10a4ad67f104be2b9748cf23fa0c6b3` |
 | `src/broker/idempotency/store.ts` | `e352cfffab48f4cafee3acc4c1175baf131f7d26d67f5664fc30b6e6d5e17a0e` | `36652cf346b85e870396942bef868d20010266804dba711bd507faf899ad68ea` |
 | `src/broker/index.ts` | `a097ab9c24ce532a6adde36eda1740c41b56dde98f9e689b5d685ac658f41ed2` | `85651180bcc30226ab0e263a18e374427e1aab2d71fdbb563fe62347b6c8d20d` |
-| `src/broker/ingress/event-draft.test.ts` | `2e2add52ce92f7cc076aac5da79548850685c7942b8b7b4c38ca48e2b678ae77` | `fbc1c012cfebbf4171d5e71616e0723c5830ee7c9ece45064ad8b40d9308e080` |
-| `src/broker/ingress/event-draft.ts` | `eec1cee3daf0743dbeac73c71e505b317c9cb4adbec8e61a7555c086cb079ed2` | `a150c023fc565c8d158056c3284d28a5112dc955679684623103ea8bf51a6b3c` |
+| `src/broker/ingress/event-draft.test.ts` | `2e2add52ce92f7cc076aac5da79548850685c7942b8b7b4c38ca48e2b678ae77` | `07f1b9b384f53e016c3c840053007a562af96e81fccc0ecc9425e29184bb59fe` |
+| `src/broker/ingress/event-draft.ts` | `eec1cee3daf0743dbeac73c71e505b317c9cb4adbec8e61a7555c086cb079ed2` | `2adf1c91f3b97c683a4da19da4ad8524848314dfe9ba84453c1b542e89aabf18` |
 | `src/broker/loops/backoff.ts` | `0443fdc0ddf8e47b676a7d8a62775eebf0c8c187b5907ad9de883d229733fb24` | `0f52d828be001413825fa9c1cc271cdc71a4a9830c3828708fa2a33124f9de98` |
 | `src/broker/loops/log-tail/index.test.ts` | `ead40d1d0b33548589a05f0e91ee10853e8005e65266b309dac932293e1b8ca5` | `d75ca6f43d089df3622f5feb0d16f71ce68dc26394704560ef6c47256fd34c01` |
 | `src/broker/loops/log-tail/index.ts` | `02e1fa5d491c1ce0338848a9fbed96b8ea8db1ee535489e94ade2982bc4358fe` | `2fbc20365203a989fddbf8f5e59f8e255d5966a51ea24f1c3d5510b70eb66002` |
@@ -131,12 +131,12 @@
 | `src/broker/worker/worker-hang.fixture.mjs` | `70cf0a48e3df082801faf0c49641a4bd84917c065a4372f5300fd2c61c7034ed` | `d654d4d413b5228dc8e42e6ab41fc1703de1ab0bb36c3ee012805b6d1da9a441` |
 | `docs/api.md` | `fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2` | `a30885ebcc80bf8f51d7344cdc03bfc9e7ba9e7ea5f290dbfcf028f4f73a0a58` |
 | `docs/architecture.md` | `d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d` | `e1a1a727ff0d18f4fbd0f53c2b2bca7cd1074bf684ba0a0d73cab20f2d3fb23e` |
-| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `598508eb813c397d071f77b63ada62de83b93408a4e3d43a82297fd27f7f668a` |
+| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `53e7115bd481f538357e572688c7a95157c1a63e857e7bb5449a99e92595df0e` |
 | `docs/internals.md` | `6b432d625800cb5c2629bf865e74f87bedda26246c97459c40f7cb365214b5af` | `67dee2412cbaf718a8cf4b726838393a0d12fc8f50a4881a5d1ac88935cf8940` |
 | `docs/overview.md` | `e41bc39247ecb1377ae946496a8b4bef3fba7ae509e7b4d91581a116b9bc4330` | `a1baf8e39e3ecd35f2c70a6b7e002ead6c6554daf58a60e0b12a74261ebbcbd3` |
-| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `34464d7bcd3f5db8e52eb08269093ab68af771d1feaeebe32261d0afec6c8a4d` |
+| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `1ec5e919f96bb79302e891b9ad0dc9bea4113311441c390451fc3dd73bd875ab` |
 | `docs/usage.md` | `5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989` | `7343326d099d33f91ffa2dd1cee2fddb8dbaf5a423ce78124890bf7fab7cc1e0` |
-| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `3d276a5109b5712a44da854e05e332035eb7746c603625950da20012274a7bc2` |
+| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `d2742614be9de441f49ece3320aa40bdcee626d6fcb23a6f5ba447380dbfca08` |
 | `tsconfig.json` | `91e1f7b5bbc091598ce4105676cad7096d69b75024deaec3085067475adf52dc` | `af39a06c246fc12775594c90b51ec8f1a15d88af85a972a6f7a8eee91fda8dfe` |
 | `package.json` | `223f963b06f2f3c9f944539cb07bba19c2b1617e783bcac26f62715dac576424` | `06870904e7a1588573ecba218595d6f3c001e43890e558e2ea54d1de36909a1c` |
 
