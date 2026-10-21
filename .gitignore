@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.turbo/
+.cache/
+.deploy/
+.releases/
+*.log
+.env
+apps/*/docker/.env
+issue_watch.state.json
+compact_packet_*.md
