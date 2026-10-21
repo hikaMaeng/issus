@@ -36,7 +36,7 @@ export type { EventQueueMessage, EventQueueTransport } from "./queue/transport.j
 export { EventStreamHub } from "./stream/hub.js";
 export { ConnectionMailbox } from "./stream/mailbox/index.js";
 export { ReplayBuffer, type ReplayBufferOutcome } from "./stream/replay-buffer/index.js";
-export { attachWebSocketTransport, type GatewayWebSocketTransport, type GatewaySocketPolicy, type GatewaySocketContext } from "./transport/websocket.js";
+export { attachWebSocketTransport, type GatewayWebSocketTransport, type GatewaySocketPolicy, type GatewaySocketContext, type GatewaySocketHooks, type GatewayBootstrapFrame, type GatewaySubscribeResult } from "./transport/websocket.js";
 
 export { createInlinePool } from "./worker/inline.js";
 export { createWorkerPool, runWorker, WorkerLostError, type WorkerPool, type WorkerResult, type WorkerProgress } from "./worker/pool.js";

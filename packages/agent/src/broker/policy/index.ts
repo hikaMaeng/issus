@@ -1,9 +1,8 @@
 import type { IncomingMessage } from "node:http";
-import type { ChannelReceiptFrame, ChannelSubscribeFrame } from "../../common/index.js";
-import type { GatewaySocketPolicy } from "../transport/websocket.js";
+import type { GatewaySocketHooks, GatewaySocketPolicy } from "../transport/websocket.js";
 import type { Principal, SessionVerifier } from "../auth/index.js";
 
-export interface SocketPolicyInput {
+export interface SocketPolicyInput extends GatewaySocketHooks {
   verifier: SessionVerifier;
   allowedActions: readonly string[];
   authorizeChannel(channel: string, principal: Principal): boolean | Promise<boolean>;
@@ -11,8 +10,6 @@ export interface SocketPolicyInput {
   /** Cookie extraction is app-owned. Query bearer tokens are never read. */
   readToken?(request: IncomingMessage): string | undefined;
   readyChannels?(principal: Principal): readonly string[];
-  onSubscribe?(frame: ChannelSubscribeFrame, principal: Principal): void | Promise<void>;
-  onReceipt?(frame: ChannelReceiptFrame, principal: Principal): void | Promise<void>;
 }
 /** Applies injected identity, scope and deployment action policy to all frames. */
 export function createSocketPolicy(input: SocketPolicyInput): GatewaySocketPolicy {
@@ -35,6 +32,11 @@ export function createSocketPolicy(input: SocketPolicyInput): GatewaySocketPolic
     readyChannels: input.readyChannels,
     onSubscribe: input.onSubscribe,
     onReceipt: input.onReceipt,
+    onDisconnect: input.onDisconnect,
+    onSendSuccess: input.onSendSuccess,
+    watchRevocation: input.watchRevocation,
+    selectProtocol: input.selectProtocol,
+    initialSubscribe: input.initialSubscribe,
     guardIngress(frame, context) {
       const principal = context.principal;
       if (!allowed.has(frame.action) || !frame.transactionKey || frame.sessionId !== principal.sessionId) return null;

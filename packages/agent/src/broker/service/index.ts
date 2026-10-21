@@ -104,6 +104,11 @@ export interface EventBrokerOptions {
   readyChannels?: SocketPolicyInput["readyChannels"];
   onSubscribe?: SocketPolicyInput["onSubscribe"];
   onReceipt?: SocketPolicyInput["onReceipt"];
+  onDisconnect?: SocketPolicyInput["onDisconnect"];
+  onSendSuccess?: SocketPolicyInput["onSendSuccess"];
+  watchRevocation?: SocketPolicyInput["watchRevocation"];
+  selectProtocol?: SocketPolicyInput["selectProtocol"];
+  initialSubscribe?: SocketPolicyInput["initialSubscribe"];
   /** Reply channel for a session. Defaults to `<sessionId>` on the session prefix. */
   replyChannelFor?(sessionId: string): string;
   /** Client bundle served at `/`. Omit to serve no client. */
@@ -216,6 +221,13 @@ export function createEventBroker(options: EventBrokerOptions): Service {
         standby.server, env, queue, hub, eventStore, metrics,
         options.socketPolicy ? {
           ...options.socketPolicy,
+          onSubscribe: options.socketPolicy.onSubscribe ?? options.onSubscribe,
+          onReceipt: options.socketPolicy.onReceipt ?? options.onReceipt,
+          onDisconnect: options.socketPolicy.onDisconnect ?? options.onDisconnect,
+          onSendSuccess: options.socketPolicy.onSendSuccess ?? options.onSendSuccess,
+          watchRevocation: options.socketPolicy.watchRevocation ?? options.watchRevocation,
+          selectProtocol: options.socketPolicy.selectProtocol ?? options.selectProtocol,
+          initialSubscribe: options.socketPolicy.initialSubscribe ?? options.initialSubscribe,
           authorizeChannel: options.authorizeChannel,
           guardIngress: (frame, context) => {
             if (!options.allowedActions.includes(frame.action)) return null;
@@ -226,6 +238,9 @@ export function createEventBroker(options: EventBrokerOptions): Service {
           verifier, allowedActions: options.allowedActions, authorizeChannel: options.authorizeChannel,
           replyChannelFor: options.replyChannelFor, readToken: options.readSocketToken,
           readyChannels: options.readyChannels, onSubscribe: options.onSubscribe, onReceipt: options.onReceipt,
+          onDisconnect: options.onDisconnect, onSendSuccess: options.onSendSuccess,
+          watchRevocation: options.watchRevocation,
+          selectProtocol: options.selectProtocol, initialSubscribe: options.initialSubscribe,
         }),
         options.ingressQueueFor,
       );

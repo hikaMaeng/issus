@@ -20,4 +20,32 @@
 
 `EventBrokerOptions.ready?: () => Promise<void>`는 `createWebBackend`의 같은 옵션으로 전달된다. `/ready` 요청마다 `queue.check()`·`checkDatabase()`·선택 hook을 함께 await한다. 전부 성공하면 HTTP200 `{status:"ready"}`, 하나라도 throw/거부하면 HTTP503 `{status:"unavailable"}`이며 내부 오류는 노출하지 않는다. hook을 생략하면 기존 queue·DB 검사만 수행한다. `/health`는 별도 liveness 응답이다.
 
-`ChannelClientFrame`: `subscribe{subscriptionId,channels,cursor?}`, `receipt{subscriptionId,deliveryIds,attempts,cursor}`, `event+IngressCommand`. subscriptionId/cursor/deliveryId는 UUID, receipt는 동일 길이의 deliveryIds/attempts와 최대100건을 요구한다. 외부 event의 서버 발급 필드·source3개는 거부한다. server frame은 `ready`, `subscribed`, `event`, `replay`, `error{code,message,retryable}`다. scope 오류의 message는 설계 §5.4와 동일하다.
+`ChannelClientFrame`: `subscribe{subscriptionId,channels,cursor?}`, `receipt{subscriptionId,deliveryIds,attempts,cursor}`, `event+IngressCommand`. subscriptionId/cursor/deliveryId는 UUID, receipt는 동일 길이의 deliveryIds/attempts와 최대100건을 요구한다. 외부 event의 서버 발급 필드·source3개는 거부한다. server frame은 기존 `ready`, `subscribed`, `event`, `replay`, `error{code,message,retryable}` 5종이다. `ChannelEventFrame`은 기존 event wire의 이름 있는 타입이며 새 frame type을 추가하지 않는다. scope 오류의 message는 설계 §5.4와 동일하다.
+
+`agent/broker`는 `GatewaySocketHooks`를 공개한다. `SocketPolicyInput`·`GatewaySocketPolicy`가 같은 계약을 상속하며 `EventBrokerOptions`의 동명 옵션도 socket policy로 전달한다. 별도 `socketPolicy`를 주입하면 그 객체에 있는 hook을 우선하고 누락된 hook은 `EventBrokerOptions`에서 보완한다.
+
+```ts
+interface GatewaySocketHooks {
+  onSubscribe?(frame: ChannelSubscribeFrame, principal: Principal): GatewaySubscribeResult | Promise<GatewaySubscribeResult>;
+  onReceipt?(frame: ChannelReceiptFrame, principal: Principal): void | Promise<void>;
+  onDisconnect?(subscriptionId: string, principal: Principal, reason: string): void | Promise<void>;
+  onSendSuccess?(subscriptionId: string, principal: Principal, frame: ChannelServerFrame): void | Promise<void>;
+  watchRevocation?(principal: Principal, revoke: () => void): () => void;
+  selectProtocol?(protocols: ReadonlySet<string>, request: IncomingMessage): string | false;
+  initialSubscribe?(request: IncomingMessage, principal: Principal): ChannelSubscribeFrame | undefined | Promise<ChannelSubscribeFrame | undefined>;
+}
+type GatewayBootstrapFrame = Omit<ChannelEventFrame, "cursor"> & {cursor?: string};
+type GatewaySubscribeResult = void | readonly GatewayBootstrapFrame[];
+```
+
+`GatewayBootstrapFrame`·`GatewaySubscribeResult`도 `agent/broker`에서 공개한다. `onSubscribe`는 기존처럼 void를 반환하거나 권한 검사한 canonical event frame 배열을 반환한다. 순서는 subscribed → 반환 bootstrap event들 → replay event들 → replay 완료 → live다. 구독 채널 밖 history는 앱이 repo/scope 권한을 검사하며 canonical envelope를 그대로 반환한다. worker audience·잘못된 event·control frame은 bootstrap으로 보낼 수 없다. 각 bootstrap event는 **현재 구독 positions 그대로** 새 scoped cursor를 발급한다. 앱이 준 cursor는 사용하지 않고 history stream의 sequence로 구독 위치를 전진시키지 않는다. §5.5 metadata/items는 앱의 기존 subscription HTTP 응답/builder가 제공한다. 새 type:bootstrap은 미승인 제안이며 제공하지 않는다.
+
+`onSendSuccess`는 bootstrap/replay/live event 프레임의 실제 `socket.send` callback 성공 뒤 await한다. 해당 연결의 다음 event는 hook 완료 뒤 보낸다. 실패한 write·control frame·client receipt는 호출하지 않는다. 앱이 deliveryId/attempt를 해석하고 자신의 tx에 전송 증거만 기록한다. deliveryId 없는 순수 history로 receipt를 만들지 않는다. hook 실패는 `SEND_SUCCESS_HOOK_FAILED`/1011, 기존 cursor는 불변이다.
+
+`onDisconnect`는 `onSubscribe`가 수용한 현재 구독에 한 번 호출한다. peer 종료 reason(없으면 `websocket close <code>`), policy 오류, 1013, shutdown1001을 포함한다. 새 id로 구독을 바꾸면 이전 id에 `subscription replaced`를 전달하고 같은 id의 재생 페이지는 닫지 않는다. 진행 중 subscribe·send-success가 완료된 뒤 종료 hook을 실행하고 transport shutdown도 이를 기다린다. hook 거부는 `websocketHookFailures`로 관측하며 전송기가 자동 재시도하지 않는다. 앱은 종료 기록을 멱등 처리한다.
+
+`watchRevocation`은 연결마다 동기적으로 로컬 세션 철회 신호를 등록한다. 앱이 `revoke()`를 부르면 즉시 UNAUTHENTICATED error 뒤1008로 종료한다. 반환한 unsubscribe는 종료/shutdown에서 한 번 실행하고 등록 중 동기 revoke도 정리한다. 등록·해제 오류는 `websocketHookFailures`에 기록하며 종료 fact callback을 생략하지 않는다. 다른 broker의 철회는 기존15초 revalidate가 확인한다. RuntimeAuth/onRevoked의 세션 필터·구독은 앱 소유다.
+
+`selectProtocol`은 offered protocol의 복사본과 HTTP request를 받아 그 offered 집합 안의 공개 protocol만 선택한다. 생략/false/예외/미제공 값은 protocol을 응답하지 않는다. 이전의 첫 protocol 자동 반사를 사용하지 않아 credential이 응답에 섞이지 않게 한다. 앱은 승인된 `issus.v1`만 선택하고 bearer protocol 추출·검증과 query token 금지를 맡는다. transport는 protocol/token을 로그나 fact에 기록하지 않는다.
+
+`initialSubscribe`는 인증·ready 송신 완료 뒤 한 번 호출한다. 반환된 subscribe는 client frame과 같은 parser·세션/채널 인가·cursor scope·onSubscribe 경로를 통과하며 event mutation은 반환할 수 없다. undefined는 수동 subscribe를 기다린다. request의 subscription/cursor query와 별칭 채널 선택·소유권 검사는 앱 소유다. 초기 구독과 이후 수동 frame은 같은 연결 chain에 직렬화된다.

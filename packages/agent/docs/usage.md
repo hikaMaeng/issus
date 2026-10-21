@@ -32,3 +32,11 @@ ready: async () => {
 ```
 
 브라우저는 앱이 교환한 HttpOnly cookie로 WS를 연다. `BrokerClient`에 subscriptionId·channels·initialCursor·onEvent를 주입하며 URL에 bearer를 붙이지 않는다. CLI bearer는 WS Authorization header로 전한다. 처리 ACK는 receipt와 별개의 앱 HTTP API다.
+
+WS lifecycle hook은 `createSocketPolicy` 또는 `createEventBroker`의 동명 옵션에 주입한다. `onDisconnect(subscriptionId,principal,reason)`에서 앱의 `subscription.closed` 기록을 멱등 저장한다. `onSendSuccess(subscriptionId,principal,frame)`에서는 event의 deliveryId/attempt를 검사해 전송 증거를 저장하고, 실제 client receipt는 별도 `onReceipt`로 받는다. custom `socketPolicy`의 hook을 우선하고 누락된 hook은 broker 옵션에서 보완한다.
+
+`onSubscribe`에서 subscriptionId/채널/시작 cursor와 canonical repo 접근을 검사한 뒤 `[{type:"event",event:canonicalFact}]`를 반환할 수 있다. void는 기존 동작을 유지한다. metadata/items·pending/COMPACT 경계는 기존 subscription HTTP 응답의 공통 builder를 사용한다. 반환 frame의 cursor는 broker가 현재 구독 위치의 새 UUID로 발급하므로 직접 만들 필요가 없다.
+
+`watchRevocation(principal,revoke)`에서 앱의 `RuntimeAuth.onRevoked`를 구독하고 세션이 일치하면 `revoke()`를 호출한다. 반환 unsubscribe를 transport가 종료 때 한 번 실행하므로 앱에서 private socket에 접근할 필요가 없다. 다른 인스턴스의 철회는 기존15초 재검증으로 회수한다.
+
+송신 메시지를 보낼 수 없는 Monitor에는 `selectProtocol`로 공개 protocol만 선택하고 `initialSubscribe(request,principal)`로 검증된 alias 채널 subscribe를 반환한다. 앱이 protocol bearer를 `readToken`에서 검증한다. subscription/cursor는 query로 받을 수 있지만 query token은 금지한다. hook 생략 시 기존 수동 subscribe 경로다.

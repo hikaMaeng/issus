@@ -14,11 +14,13 @@ export interface ChannelReceiptFrame {
   cursor: string;
 }
 export type ChannelClientFrame = ChannelSubscribeFrame | ChannelReceiptFrame | ({ type: "event" } & IngressCommand);
+/** Existing event wire frame; bootstrap and replay share the same envelope shape. */
+export interface ChannelEventFrame { type: "event"; event: EventEnvelope; cursor: string }
 export type ChannelServerFrame =
   | { type: "ready"; channels: string[] }
   | { type: "subscribed"; subscriptionId: string; channels: string[]; cursor: string; replayComplete: boolean }
   | { type: "replay"; cursor: string; replayComplete: boolean }
-  | { type: "event"; event: EventEnvelope; cursor: string }
+  | ChannelEventFrame
   | { type: "error"; code: string; message: string; retryable: boolean };
 
 /** Cursor and subscription identifiers are opaque UUID references. */

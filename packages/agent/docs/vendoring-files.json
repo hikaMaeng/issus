@@ -41,7 +41,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\common\\protocol\\channel\\index.ts",
       "relative": "src/common/protocol/channel/index.ts",
       "sourceSha256": "dd4fe39753cd2110689f73e3eb00df86be5f5b51d709ecbe66f846606ef4f273",
-      "destinationSha256": "4efe71c8b1c8b793c097d6db0df39dca988ab1d9d0fcb12b36aaf93a4bbc4389"
+      "destinationSha256": "61add397465c4a06e7bb309a67b932b4bd15449990f5dcb486630d8a4f1b09ce"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\common\\protocol\\event\\index.test.ts",
@@ -62,7 +62,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\common\\protocol\\metrics\\index.ts",
       "relative": "src/common/protocol/metrics/index.ts",
       "sourceSha256": "8a0fc81ab340ad4ff652ff3be52e65580565731d2b6acdf93a8b2f62d6e09ab2",
-      "destinationSha256": "e1e624cbdf5a2f65ae5090f68ea2cb18d698c10329897192d85d6cdbae7da961"
+      "destinationSha256": "46e30180b16395b09017023160bef695890ac8e4d764dc8cd519ea311517accc"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\common\\protocol\\result\\index.ts",
@@ -216,7 +216,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\index.ts",
       "relative": "src/broker/index.ts",
       "sourceSha256": "a097ab9c24ce532a6adde36eda1740c41b56dde98f9e689b5d685ac658f41ed2",
-      "destinationSha256": "85651180bcc30226ab0e263a18e374427e1aab2d71fdbb563fe62347b6c8d20d"
+      "destinationSha256": "212dd7cdd6c2d9adbe4047f4adbf9012ec85ac71270296ce18d20f2afd0c1b44"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\ingress\\event-draft.test.ts",
@@ -307,7 +307,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\metrics\\registry.ts",
       "relative": "src/broker/metrics/registry.ts",
       "sourceSha256": "3e35eff2531c9e2ce23b264d7e965663b8fb1af7c85df36858e3025c2e7bd94e",
-      "destinationSha256": "6aa2be6a0ffa1e1d1a9090c8d7ad5b9d3ec7db4f2a84913a3f59975d5296c1fc"
+      "destinationSha256": "5fd2ac7e67a2a6387069eb653fde61f47b908ee32c2d65f4f02e745e8ca22b25"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\pgmq\\client.ts",
@@ -321,7 +321,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\policy\\index.ts",
       "relative": "src/broker/policy/index.ts",
       "sourceSha256": "601624d0dbd2a39719fbd25a771092133f6d648ac1761496dcefc2394dc1ac33",
-      "destinationSha256": "6d4c75083fc944d0feb92987a8701239e768979a0a778ef366d55d68ed0f2a62"
+      "destinationSha256": "63f60751fd8a5b620ad6f7fb3a1f38347cc18b403dcb48909665b06c6ffe3b52"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\queue\\transport.ts",
@@ -335,7 +335,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\service\\index.ts",
       "relative": "src/broker/service/index.ts",
       "sourceSha256": "92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0",
-      "destinationSha256": "804f6b9504f9497253ff9108be932debd38dd6289535e1d1621f4844ab519561"
+      "destinationSha256": "9d21150da1f58a6d376f2b69f6957506e5408adca79a792bca0279fe82533cc9"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\stream\\hub.test.ts",
@@ -384,7 +384,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\transport\\websocket.ts",
       "relative": "src/broker/transport/websocket.ts",
       "sourceSha256": "416589e7950911c8be30b3353e22a644c470023fcc90eea767b1c6a13d1d35e4",
-      "destinationSha256": "6ff14ae8bdb00838562b8dacaa2c5dc3daf844db76af363da069b6bf939c0178"
+      "destinationSha256": "87bf3334c5eba358c4baf2a8bab69589f85d1263900428d1c07848018874ec87"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\worker\\entry.ts",
@@ -440,56 +440,56 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\api.md",
       "relative": "docs/api.md",
       "sourceSha256": "fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2",
-      "destinationSha256": "298c2e85edec5a4186f779be4a8cb88c631921d554110cf68753a1ba3bf2876e"
+      "destinationSha256": "d3e1c6beb1af855c17c0501b798e686d3e15eb536a2d4c3d8c81555b06a0a70b"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\architecture.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\architecture.md",
       "relative": "docs/architecture.md",
       "sourceSha256": "d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d",
-      "destinationSha256": "dd2d949e4986d4dc2f21305808108f95e839123222218358267f459461d1ddb9"
+      "destinationSha256": "3ae0d1ff85ad3f89ab44a143411a912790ff4f4626f0169ff13704844c0a710d"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\constraints.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\constraints.md",
       "relative": "docs/constraints.md",
       "sourceSha256": "e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490",
-      "destinationSha256": "300cab890532271d493ccf3e2e41814af71f58713d55f87f6da5c9aa5617f516"
+      "destinationSha256": "b5b8b1523534db547d1611ad87cdf57a35415d6eaefbeed4152b358ea9319437"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\internals.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\internals.md",
       "relative": "docs/internals.md",
       "sourceSha256": "6b432d625800cb5c2629bf865e74f87bedda26246c97459c40f7cb365214b5af",
-      "destinationSha256": "67dee2412cbaf718a8cf4b726838393a0d12fc8f50a4881a5d1ac88935cf8940"
+      "destinationSha256": "f22afd0066720a5c754638941f29729f8dd861d34a5d7e33ac21a9ac8d149969"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\overview.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\overview.md",
       "relative": "docs/overview.md",
       "sourceSha256": "e41bc39247ecb1377ae946496a8b4bef3fba7ae509e7b4d91581a116b9bc4330",
-      "destinationSha256": "a1baf8e39e3ecd35f2c70a6b7e002ead6c6554daf58a60e0b12a74261ebbcbd3"
+      "destinationSha256": "1860674d33c1f01e052cadedfff7f432686ec8da3e0082c3fb2ef6a832f3078e"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\testing.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\testing.md",
       "relative": "docs/testing.md",
       "sourceSha256": "f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87",
-      "destinationSha256": "7bd502262784da76c20d5f2a6e5b84a7bc83a33e6ac159376700936a54d360f9"
+      "destinationSha256": "4f076f3c148e6ecce7e6cb992fcb661ee9c499aebf6a33631999725900c43bde"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\usage.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\usage.md",
       "relative": "docs/usage.md",
       "sourceSha256": "5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989",
-      "destinationSha256": "341803cd7d35f800a1dbf22e2a0a4b912c6f5c8f2f7b319f1f67ecbf86e0bc82"
+      "destinationSha256": "4c0a6211602f45d806a0ffd9cca978eb23a325b6ebfbf606f055d1bbf144e730"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\README.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\README.md",
       "relative": "README.md",
       "sourceSha256": "7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c",
-      "destinationSha256": "278008e94bc61ad3c9d741568f3ec014726629000658f4d0a82e3a1064be69ee"
+      "destinationSha256": "61435590be90007293d9a3d28312f10e7996980ecc59be9dba6466b7aaa4b54f"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\tsconfig.json",
@@ -506,7 +506,7 @@
       "destinationSha256": "06870904e7a1588573ecba218595d6f3c001e43890e558e2ea54d1de36909a1c"
     }
   ],
-  "sourceRecheckedAt": "2026-10-21T06:42:48.883869+00:00",
+  "sourceRecheckedAt": "2026-10-21T08:04:06.751408+00:00",
   "licenseResult": "없음, 소유자 동일",
   "publicDistribution": "미확인",
   "derivedVersion": "0.1.0-issus.1",

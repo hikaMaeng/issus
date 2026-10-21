@@ -41,6 +41,7 @@ export interface MetricsSnapshot {
   websocketSlowConsumerClosed: number;
   websocketReplayOverflow: number;
   websocketSendFailures: number;
+  websocketHookFailures: number;
   databasePoolTotal: number;
   databasePoolIdle: number;
   databasePoolWaiting: number;

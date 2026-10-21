@@ -6,6 +6,12 @@ DECISION 6309173472 후속은 [계획](../tests/plans/agent-p2-followup-20261021
 
 DECISION 6309746634 (2)의 readiness는 [계획](../tests/plans/agent-readiness-20261021.md)과 `tests/reports/agent-readiness/`를 따른다. `http/app.test.ts`는 실제 loopback HTTP로 hook 생략·성공200, 동기 throw·Promise 거부503, queue/DB 실패503, 지연 완료 전 무응답·요청마다 재실행을 확인한다. queue/database는 가짜이며 실제 앱 조립·migration 준비 검증은 P1/P4 통합 증거가 필요하다.
 
+ASK 6309915639 lifecycle은 [계획](../tests/plans/agent-socket-hooks-20261021.md)과 `tests/reports/agent-socket-hooks/`를 따른다. 실제 loopback WS에서 기존 event wire의 구독 밖 canonical bootstrap → replay → live·bootstrap cursor 불변·인가 거부·worker/malformed 거부·snapshot/send 실패, send callback 성공/실패·client receipt 분리·비동기 hook 순서·종료/구독 교체/동일 id 페이지·진행 중 구독 종료·shutdown 기록 대기·callback 예외를 확인한다. replay 완료 frame이 buffered live보다 앞선다. 앱 canonical 권한·metadata/items builder·영속 fact/receipt 의미는 P5 통합 시험에서 검사한다.
+
+추가 ASK6310847713은 로컬 revoke 신호 즉시1008·타 연결 격리·unsubscribe 1회·등록 중 동기 revoke/ready 억제·등록/정리 예외에도 종료 callback 보존을 확인한다. RuntimeAuth 다중 broker 실기 결합은 P5 조립 증거다.
+
+ASK6310979640·DECISION6310757267의 Monitor 훅은 실제 TCP에서 header 없는 앱 protocol 인증→공개 protocol 선택→ready→자동 subscribe→replay, 기본/false/예외/미제공 선택의 credential 비반사, 초기 frame·채널·cursor scope 거부·인증 실패 시 callback0·mutation 차단을 확인한다. 실제 Claude Code Monitor 깨우기는 배포 뒤 오케스트레이터 수용 대상이다.
+
 | 검증 | 명령/조건 |
 | --- | --- |
 | 표준 단위·실제 TCP WS | `npm test -w agent` |

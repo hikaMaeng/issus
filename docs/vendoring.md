@@ -11,7 +11,7 @@
 | 관측 dirty 목록 | 아래 source dirty 전문; agent 경로 dirty 없음 |
 | 복사 시각 | `2026-10-21T05:04:42.946102+00:00` (UTC) |
 | 원본→목적 경로 | 아래 69행 및 [byte manifest](../packages/agent/docs/vendoring-files.json); server 공개 barrel도 포함 |
-| 파일별 SHA-256 | 아래 원본/최종 목적 hash; 원본 재검사 `2026-10-21T06:42:48.883869+00:00` 일치69/69 |
+| 파일별 SHA-256 | 아래 원본/최종 목적 hash; 원본 재검사 `2026-10-21T08:04:06.751408+00:00` 일치69/69 |
 | 라이선스 확인 결과 | **없음, 소유자 동일**. root/packages/agent 경로 LICENSE·COPYING 미발견, source package/root manifest license 미설정, 복사 대상 SPDX 미발견 |
 | 제외 목록 | `node_modules`, `dist`, `.env*`, `.git`, 원본 `.cache`·캐시·런타임 데이터; admin/vibeagent 구현. agent 직하 실제 제외 이름은 `dist`; 내용을 열거나 복사하지 않음 |
 | 패치별 이유·시험 | 아래 §1.1 행별 추적. 원본 56개 시험 유지, 설계 변경 기대값3건 갱신. 새 회귀·실제 TCP WS/별도 실DB 시험 추가 |
@@ -54,6 +54,7 @@
 | `store 보존+service` | 이력 유실 방지 · retentionDays:null·기동/주기 history prune 제거·cursor TTL30 별도 · null 회귀·실DB old fact 보존 |
 | `cursor store+WS` | 미수신 건 건너뜀 방지 · scoped immutable UUID·send마다 새 INSERT·모든 구독 인가 · cursor 회귀·WS 재접속/범위 거부 |
 | `transport/websocket+channel` | 전송/도메인 경계 · subscription/receipt callback·shape≤100·ready 하드코딩 제거·error frame·seed barrier · WS 401/1008/1013·257건 재생·프레임 parser |
+| `transport/websocket·channel·policy·service·broker/index·metrics` (s4, ASK6309915639·6310847713·6310979640) | P5 앱 lifecycle 재사용 · 공개 GatewaySocketHooks/GatewaySubscribeResult/GatewayBootstrapFrame·기존 event wire bootstrap(positions 보존)·onDisconnect/onSendSuccess·local watchRevocation·protocol 선택/초기 subscribe·비동기 기록 await·동일 id 페이지 유지/새 id 교체·replay 완료 뒤 live·callback 실패 지표 · 실제 WS bootstrap/인가/송신/receipt·종료1001·local revoke1008/cleanup1회·연결 격리·불변 cursor·credential 비반사/자동 구독 검증. metadata/items는 P5 HTTP builder, 새 wire 제안은 P5 철회·NOTE6310909946으로 해소 |
 | `loops/reaction-enqueue` | 오래된 미처리 fact 회수 · 최초{}·reader exists 구분·페이지별 저장·command 제외 유지 · reaction-enqueue/index.test.ts |
 | `reaction work+event/ingress/channel/store` | U-E1 출처 보존 · top-level source3개를 queue/draft/store/parser/worker로 전달·payload 불변·누락 보존/경보. DECISION 6309173472 후속: toResultDraft가 요청 audience 상속 · draft result/conflict 회귀·실DB replyChannel 없는 댓글 반응 소비→worker result 저장→client high-water/replay 제외 |
 | `loops/worker-consumer` | 일시 장애의 영구 실패 방지 · 모든 미분류/DB 오류 release·재시도·명시 도메인만 종결·fact emit 금지 · transient6종/DomainError/emit 회귀·실DB40001 |
@@ -72,10 +73,10 @@
 | --- | --- | --- |
 | `src/common/index.ts` | `801567895cf5a47b463852b77eb9ebc72b4d72bafb3911cde8c3605bac694221` | `5f205608a4c46c036c94c9dd6aa0387b61b80ba4548726fb192f8846ad331c6a` |
 | `src/common/protocol/channel/index.test.ts` | `a976fef3e121799e7c8d82360a7c0b85dc03cd8305b112c7590dfcbb3a10ece7` | `d4e81a604a1ee88165b877141feb3d26cc8139b26d6780ffae4cada77d2aedcc` |
-| `src/common/protocol/channel/index.ts` | `dd4fe39753cd2110689f73e3eb00df86be5f5b51d709ecbe66f846606ef4f273` | `4efe71c8b1c8b793c097d6db0df39dca988ab1d9d0fcb12b36aaf93a4bbc4389` |
+| `src/common/protocol/channel/index.ts` | `dd4fe39753cd2110689f73e3eb00df86be5f5b51d709ecbe66f846606ef4f273` | `61add397465c4a06e7bb309a67b932b4bd15449990f5dcb486630d8a4f1b09ce` |
 | `src/common/protocol/event/index.test.ts` | `2b0e7f09603c4d31d342c1170c60d7a6f508c0dcdcc595bec0dee0bc431a59ba` | `fbe909983331113a776eb836b0b0b836650df96ccea8127dd48298b3bb54bf6a` |
 | `src/common/protocol/event/index.ts` | `6a5873a18a0b5b122ef90bdcd6624a83c71bcd13b0cf30ed1876cf8e7430b9d6` | `18dfb27270bea1bf744253e34e4bd0aec3a301161fa837bf7e80bc7777582bc0` |
-| `src/common/protocol/metrics/index.ts` | `8a0fc81ab340ad4ff652ff3be52e65580565731d2b6acdf93a8b2f62d6e09ab2` | `e1e624cbdf5a2f65ae5090f68ea2cb18d698c10329897192d85d6cdbae7da961` |
+| `src/common/protocol/metrics/index.ts` | `8a0fc81ab340ad4ff652ff3be52e65580565731d2b6acdf93a8b2f62d6e09ab2` | `46e30180b16395b09017023160bef695890ac8e4d764dc8cd519ea311517accc` |
 | `src/common/protocol/result/index.ts` | `e26f5db55a7f2005071f502714d8769ce64a6cacf5c71eb90e3203845ee689a4` | `e55a1628678889c54f1d83f8ab64738fe92d7659f67d08c20629166bc80453d9` |
 | `src/common/protocol/stream/index.ts` | `4b7a03acf96437563003c5424bd3ed63d6e95d8c1c36afc430cce1bc23f93705` | `c019474b0d4d1089da6c129f8e5fc8bff0b9b9b53f895372f071fadeaf2da36a` |
 | `src/server/id/index.test.ts` | `64e13875e8f1cc104057f3f98481bd20acecbc7711ccc8fc8feba7f380abc119` | `11b44d6b0dfd7d4e07738dfb85ab42aac0769dac62960b4e413fad8002976ac2` |
@@ -97,7 +98,7 @@
 | `src/broker/http/app.ts` | `f94261047fb6bbf956a19d601b8f1d303a8bf5719af454f9ff10ba645d30c0f7` | `42080082d75b0033a095befe008bc38625aa2de003a42d7da2a2d62f2415275f` |
 | `src/broker/idempotency/store.test.ts` | `d5cdeff883e95e75538295df32f5bd3fa177a3b3468d194311c681f167ffcd1c` | `00608aa65122a4548b50d35628640be4e10a4ad67f104be2b9748cf23fa0c6b3` |
 | `src/broker/idempotency/store.ts` | `e352cfffab48f4cafee3acc4c1175baf131f7d26d67f5664fc30b6e6d5e17a0e` | `36652cf346b85e870396942bef868d20010266804dba711bd507faf899ad68ea` |
-| `src/broker/index.ts` | `a097ab9c24ce532a6adde36eda1740c41b56dde98f9e689b5d685ac658f41ed2` | `85651180bcc30226ab0e263a18e374427e1aab2d71fdbb563fe62347b6c8d20d` |
+| `src/broker/index.ts` | `a097ab9c24ce532a6adde36eda1740c41b56dde98f9e689b5d685ac658f41ed2` | `212dd7cdd6c2d9adbe4047f4adbf9012ec85ac71270296ce18d20f2afd0c1b44` |
 | `src/broker/ingress/event-draft.test.ts` | `2e2add52ce92f7cc076aac5da79548850685c7942b8b7b4c38ca48e2b678ae77` | `07f1b9b384f53e016c3c840053007a562af96e81fccc0ecc9425e29184bb59fe` |
 | `src/broker/ingress/event-draft.ts` | `eec1cee3daf0743dbeac73c71e505b317c9cb4adbec8e61a7555c086cb079ed2` | `2adf1c91f3b97c683a4da19da4ad8524848314dfe9ba84453c1b542e89aabf18` |
 | `src/broker/loops/backoff.ts` | `0443fdc0ddf8e47b676a7d8a62775eebf0c8c187b5907ad9de883d229733fb24` | `0f52d828be001413825fa9c1cc271cdc71a4a9830c3828708fa2a33124f9de98` |
@@ -110,18 +111,18 @@
 | `src/broker/loops/worker-consumer/index.test.ts` | `5b55cd1abea092d5bd4e8fcefea1aad73944f577e1669ba7c89770d74d8aadcf` | `bccab5e306e7f7aa57d38756e3964bc92ed4bab72c946f9fc2d6781992868977` |
 | `src/broker/loops/worker-consumer/index.ts` | `fdf1d8202eef94444b8f7785f066335a8ec450d2be8367e5a3aed0339d350448` | `8c9ea7816c97434e27200d7255ce7d18e2a430e2d4b6992766e50fff839349b9` |
 | `src/broker/metrics/endpoint.ts` | `8f90132a136665605641eaee5cfbf6bce5c25d0a9521d3560356bdc1f93d35de` | `4b16d4128e950fe40bccf381264388a95e7c9be8c4fcff15765c8824c2877c51` |
-| `src/broker/metrics/registry.ts` | `3e35eff2531c9e2ce23b264d7e965663b8fb1af7c85df36858e3025c2e7bd94e` | `6aa2be6a0ffa1e1d1a9090c8d7ad5b9d3ec7db4f2a84913a3f59975d5296c1fc` |
+| `src/broker/metrics/registry.ts` | `3e35eff2531c9e2ce23b264d7e965663b8fb1af7c85df36858e3025c2e7bd94e` | `5fd2ac7e67a2a6387069eb653fde61f47b908ee32c2d65f4f02e745e8ca22b25` |
 | `src/broker/pgmq/client.ts` | `50c30e05d43c96e49e445e43e6f1c7f229e89ea44cad7f5661bb714c409959b9` | `5d166d8f962cf9cbdc785eb95b688054f170074f1ea3b1788d674d8131dbb602` |
-| `src/broker/policy/index.ts` | `601624d0dbd2a39719fbd25a771092133f6d648ac1761496dcefc2394dc1ac33` | `6d4c75083fc944d0feb92987a8701239e768979a0a778ef366d55d68ed0f2a62` |
+| `src/broker/policy/index.ts` | `601624d0dbd2a39719fbd25a771092133f6d648ac1761496dcefc2394dc1ac33` | `63f60751fd8a5b620ad6f7fb3a1f38347cc18b403dcb48909665b06c6ffe3b52` |
 | `src/broker/queue/transport.ts` | `283760e9f8212f94db7cf8ff92bbcd96e3099e53f06558ddf96f7018b3da006d` | `701a01aee2562b914022a65eeda16593f02c10f640443e1e413fe29e8876320d` |
-| `src/broker/service/index.ts` | `92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0` | `804f6b9504f9497253ff9108be932debd38dd6289535e1d1621f4844ab519561` |
+| `src/broker/service/index.ts` | `92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0` | `9d21150da1f58a6d376f2b69f6957506e5408adca79a792bca0279fe82533cc9` |
 | `src/broker/stream/hub.test.ts` | `88c427bb553268266d49905631b4b42bf0b48dd193ea16481838fc39984c5eff` | `45b02631e8e5ef9b8c2d0020c1c5923efe326c654ee84d5bf056944e3baabd42` |
 | `src/broker/stream/hub.ts` | `238eef34d4cd71cf76a5b8429531a711d8f04e2e17623de3ac2da440669b3b0a` | `6efec0dd8f123cccd8060ecd0173d0b7ef0b8e501721b103cc00127ca240eb8e` |
 | `src/broker/stream/mailbox/index.test.ts` | `ce98ddb37b0e2026f080ed9718c0e76644719387198fb4ead88e29596ec84ec1` | `850c72acff26dace61ec00e5c68815c612417cd589bdcfab7fefc141419e785d` |
 | `src/broker/stream/mailbox/index.ts` | `fbb646efbc979e7a11ce6dcb738752a7cb155457e6443382b514d82720bfe2ad` | `baf544272d68abffd33f863ac5429cd6094e8225ae52d09abd80e5773c70371d` |
 | `src/broker/stream/replay-buffer/index.test.ts` | `1ccadadebb45d6682405d775e7714c06339827984bae175d1920f92e77dadb6f` | `0394c0e15864d2e0b316eb96a42c50a687c86837eb3d34bf05a6e788603a5630` |
 | `src/broker/stream/replay-buffer/index.ts` | `4eb044f2a782ff886228d99c7fa69234f14a12eec0c01dd33ceda009a2cf83ee` | `417b0e4270af60741aae59cb41f97e0938013925db3bea1dbe118eaed19b61ed` |
-| `src/broker/transport/websocket.ts` | `416589e7950911c8be30b3353e22a644c470023fcc90eea767b1c6a13d1d35e4` | `6ff14ae8bdb00838562b8dacaa2c5dc3daf844db76af363da069b6bf939c0178` |
+| `src/broker/transport/websocket.ts` | `416589e7950911c8be30b3353e22a644c470023fcc90eea767b1c6a13d1d35e4` | `87bf3334c5eba358c4baf2a8bab69589f85d1263900428d1c07848018874ec87` |
 | `src/broker/worker/entry.ts` | `b0402cf57b172ef76eab8cd12eff2151e2954fa60d6cbc839a5e1de724ac51ba` | `8acf7106526831e9710e055f51ff4e402d1504de7a6170728916c9943d884f36` |
 | `src/broker/worker/index.ts` | `7d15a9c5b65a1ba40e24fbfe3faba652966a0a2c0c7662b5c4c70eae2cda1cfc` | `49191da16e22981777416a67d989790d0566bd1e2479e70da83a9d68b2791c0c` |
 | `src/broker/worker/inline.ts` | `50c4674fae3d87f08792cc0465bea42554948efdfa5a5f644dd8e4097854792f` | `a0925b0afa0b11d0e1087a1d53fb25fe01e32f28515ae118af36990f10af03a6` |
@@ -129,14 +130,14 @@
 | `src/broker/worker/pool.ts` | `ab8ddf7172993d32edbd3dd13940c2279080193fed367a3df58f0485189e5e73` | `ecdfd199f919881f30244a053a72fcc43b8ee9d8e40f2f0c98a61783f7a014de` |
 | `src/broker/worker/worker-exit-zero.fixture.mjs` | `22ecfd1f0976ec486cfba7d0f57a3752d62dca4c43835511fd4d600787478774` | `5551c1ea6e1aa6d5bfb5dc3d3e76f1d11a3b9691697804c7938c9a97402a5123` |
 | `src/broker/worker/worker-hang.fixture.mjs` | `70cf0a48e3df082801faf0c49641a4bd84917c065a4372f5300fd2c61c7034ed` | `d654d4d413b5228dc8e42e6ab41fc1703de1ab0bb36c3ee012805b6d1da9a441` |
-| `docs/api.md` | `fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2` | `298c2e85edec5a4186f779be4a8cb88c631921d554110cf68753a1ba3bf2876e` |
-| `docs/architecture.md` | `d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d` | `dd2d949e4986d4dc2f21305808108f95e839123222218358267f459461d1ddb9` |
-| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `300cab890532271d493ccf3e2e41814af71f58713d55f87f6da5c9aa5617f516` |
-| `docs/internals.md` | `6b432d625800cb5c2629bf865e74f87bedda26246c97459c40f7cb365214b5af` | `67dee2412cbaf718a8cf4b726838393a0d12fc8f50a4881a5d1ac88935cf8940` |
-| `docs/overview.md` | `e41bc39247ecb1377ae946496a8b4bef3fba7ae509e7b4d91581a116b9bc4330` | `a1baf8e39e3ecd35f2c70a6b7e002ead6c6554daf58a60e0b12a74261ebbcbd3` |
-| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `7bd502262784da76c20d5f2a6e5b84a7bc83a33e6ac159376700936a54d360f9` |
-| `docs/usage.md` | `5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989` | `341803cd7d35f800a1dbf22e2a0a4b912c6f5c8f2f7b319f1f67ecbf86e0bc82` |
-| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `278008e94bc61ad3c9d741568f3ec014726629000658f4d0a82e3a1064be69ee` |
+| `docs/api.md` | `fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2` | `d3e1c6beb1af855c17c0501b798e686d3e15eb536a2d4c3d8c81555b06a0a70b` |
+| `docs/architecture.md` | `d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d` | `3ae0d1ff85ad3f89ab44a143411a912790ff4f4626f0169ff13704844c0a710d` |
+| `docs/constraints.md` | `e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490` | `b5b8b1523534db547d1611ad87cdf57a35415d6eaefbeed4152b358ea9319437` |
+| `docs/internals.md` | `6b432d625800cb5c2629bf865e74f87bedda26246c97459c40f7cb365214b5af` | `f22afd0066720a5c754638941f29729f8dd861d34a5d7e33ac21a9ac8d149969` |
+| `docs/overview.md` | `e41bc39247ecb1377ae946496a8b4bef3fba7ae509e7b4d91581a116b9bc4330` | `1860674d33c1f01e052cadedfff7f432686ec8da3e0082c3fb2ef6a832f3078e` |
+| `docs/testing.md` | `f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87` | `4f076f3c148e6ecce7e6cb992fcb661ee9c499aebf6a33631999725900c43bde` |
+| `docs/usage.md` | `5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989` | `4c0a6211602f45d806a0ffd9cca978eb23a325b6ebfbf606f055d1bbf144e730` |
+| `README.md` | `7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c` | `61435590be90007293d9a3d28312f10e7996980ecc59be9dba6466b7aaa4b54f` |
 | `tsconfig.json` | `91e1f7b5bbc091598ce4105676cad7096d69b75024deaec3085067475adf52dc` | `af39a06c246fc12775594c90b51ec8f1a15d88af85a972a6f7a8eee91fda8dfe` |
 | `package.json` | `223f963b06f2f3c9f944539cb07bba19c2b1617e783bcac26f62715dac576424` | `06870904e7a1588573ecba218595d6f3c001e43890e558e2ea54d1de36909a1c` |
 

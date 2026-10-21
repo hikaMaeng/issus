@@ -1,6 +1,6 @@
 import type { IncomingMessage, Server } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
-import { createIngressEvent, parseChannelClientFrame, type ChannelReceiptFrame, type ChannelSubscribeFrame, type ChannelServerFrame, type IngressCommand, type EventEnvelope } from "../../common/index.js";
+import { createIngressEvent, parseChannelClientFrame, parseChannelServerFrame, type ChannelEventFrame, type ChannelReceiptFrame, type ChannelSubscribeFrame, type ChannelServerFrame, type IngressCommand, type EventEnvelope } from "../../common/index.js";
 import type { Principal } from "../auth/index.js";
 import type { AgentEnv } from "../env.js";
 import type { EventQueueTransport } from "../queue/transport.js";
@@ -12,22 +12,48 @@ import { ReplayBuffer } from "../stream/replay-buffer/index.js";
 import type { MetricsRegistry } from "../metrics/registry.js";
 
 export interface GatewaySocketContext { principal: Principal; token?: string }
+/** App-authorized canonical history. A supplied cursor is replaced by a scoped snapshot. */
+export type GatewayBootstrapFrame = Omit<ChannelEventFrame, "cursor"> & { cursor?: string };
+/** No return preserves existing subscription callbacks and the five existing wire types. */
+export type GatewaySubscribeResult = void | readonly GatewayBootstrapFrame[];
+/** App lifecycle hooks. A successful write is transport evidence, never TYPE:ACK. */
+export interface GatewaySocketHooks {
+  /** Validates the subscription and optionally returns authorized history before replay. */
+  onSubscribe?(frame: ChannelSubscribeFrame, principal: Principal): GatewaySubscribeResult | Promise<GatewaySubscribeResult>;
+  /** Handles authenticated client receipts independently of send-success. */
+  onReceipt?(frame: ChannelReceiptFrame, principal: Principal): void | Promise<void>;
+  /** Persists an accepted subscription's close; shutdown awaits completion. */
+  onDisconnect?(subscriptionId: string, principal: Principal, reason: string): void | Promise<void>;
+  /** Observes successful event writes; the app validates delivery identities. */
+  onSendSuccess?(subscriptionId: string, principal: Principal, frame: ChannelServerFrame): void | Promise<void>;
+  /** Watches app-local session revocation; transport invokes the returned cleanup once. */
+  watchRevocation?(principal: Principal, revoke: () => void): () => void;
+  /** Selects an offered public protocol. Missing policy never reflects an offered credential. */
+  selectProtocol?(protocols: ReadonlySet<string>, request: IncomingMessage): string | false;
+  /** Supplies an app-authorized initial subscribe frame for receive-only clients. */
+  initialSubscribe?(request: IncomingMessage, principal: Principal): ChannelSubscribeFrame | undefined | Promise<ChannelSubscribeFrame | undefined>;
+}
 /** App-owned session, subscription and receipt policy. Missing ingress policy denies writes. */
-export interface GatewaySocketPolicy {
+export interface GatewaySocketPolicy extends GatewaySocketHooks {
   verifyUpgrade(request: IncomingMessage): Promise<GatewaySocketContext | null>;
   authorizeChannel(channel: string, principal: Principal): boolean | Promise<boolean>;
   revalidate?(context: GatewaySocketContext): Promise<boolean>;
   guardIngress?(frame: IngressCommand, context: GatewaySocketContext): IngressCommand | null;
   readyChannels?(principal: Principal): readonly string[];
-  onSubscribe?(frame: ChannelSubscribeFrame, principal: Principal): void | Promise<void>;
-  onReceipt?(frame: ChannelReceiptFrame, principal: Principal): void | Promise<void>;
 }
 export interface GatewayWebSocketTransport { closeClientsAndRemoveSubscriptions(): Promise<void> }
 
 /** Authenticated replay-buffer-live handoff; each outgoing event gets a new snapshot. */
 export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: EventQueueTransport, hub: EventStreamHub, eventStore: EventStore, metrics: MetricsRegistry, policy: GatewaySocketPolicy, ingressQueueFor?: (action: string) => string): GatewayWebSocketTransport {
   const contexts = new WeakMap<IncomingMessage, GatewaySocketContext>();
+  const disconnects = new Set<Promise<void>>();
   const websocket = new WebSocketServer({ server, path: "/ws", maxPayload: 65_536,
+    handleProtocols: (protocols, request) => {
+      try {
+        const selected = policy.selectProtocol?.(new Set(protocols), request);
+        return typeof selected === "string" && protocols.has(selected) ? selected : false;
+      } catch { metrics.increment("websocketHookFailures"); return false; }
+    },
     verifyClient: (info: { req: IncomingMessage }, done: (ok: boolean, code?: number, message?: string) => void) => {
       policy.verifyUpgrade(info.req).then((context) => {
         if (!context) { done(false, 401, "unauthorized"); return; }
@@ -46,6 +72,15 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
     let closing = false;
     let unsubscribe: () => void = () => undefined;
     let mailboxDepth = 0;
+    let pendingSend: Promise<void> = Promise.resolve();
+    let stopRevocation: () => void = () => undefined;
+    const removeRevocation = (): void => {
+      const stop = stopRevocation; stopRevocation = () => undefined;
+      try { stop(); } catch { metrics.increment("websocketHookFailures"); }
+    };
+    const disconnect = async (id: string | undefined, reason: string): Promise<void> => {
+      if (id) await policy.onDisconnect?.(id, context.principal, reason);
+    };
     metrics.increment("websocketConnections");
     const sendFrame = (frame: ChannelServerFrame, callback?: (error?: Error) => void): void => {
       if (socket.readyState !== WebSocket.OPEN) { callback?.(new Error("socket closed")); return; }
@@ -63,6 +98,10 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
       if (replay) metrics.increment("websocketReplayOverflow");
       socket.close(1013, "slow consumer");
     };
+    const recordSendSuccess = async (id: string, packet: ChannelServerFrame): Promise<void> => {
+      try { await policy.onSendSuccess?.(id, context.principal, packet); }
+      catch { metrics.increment("websocketHookFailures"); fail("SEND_SUCCESS_HOOK_FAILED", "송신 결과를 기록하지 못했습니다", 1011, true); }
+    };
     const authorized = async (selected: readonly string[]): Promise<boolean> => {
       const decisions = await Promise.all(selected.map((channel) => policy.authorizeChannel(channel, context.principal)));
       return decisions.every(Boolean);
@@ -77,9 +116,15 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
         if (closed || closing) { done(); return; }
         // This only changes connection memory. A previous UUID is never updated.
         positions = nextPositions; cursorToken = snapshot.token;
-        sendFrame({ type: "event", event, cursor: snapshot.token }, (error) => {
+        const packet = { type: "event", event, cursor: snapshot.token } as const;
+        const recipient = subscriptionId!;
+        sendFrame(packet, (error) => {
           if (error) { metrics.increment("websocketSendFailures"); socket.close(1011, "websocket send failed"); }
-          else metrics.increment("websocketDelivered");
+          else {
+            metrics.increment("websocketDelivered");
+            pendingSend = recordSendSuccess(recipient, packet).finally(done);
+            return;
+          }
           done();
         });
       }).catch(() => { fail("CURSOR_PERSISTENCE_FAILED", "커서를 저장하지 못했습니다", 1011, true); done(); });
@@ -90,7 +135,8 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
     let chain = (async () => {
       const ready = [...new Set(policy.readyChannels?.(context.principal) ?? [])];
       if (!await authorized(ready)) { fail("CHANNEL_FORBIDDEN", "채널을 구독할 권한이 없습니다"); return; }
-      sendFrame({ type: "ready", channels: ready });
+      if (closed || closing) return;
+      await new Promise<void>((resolve, reject) => sendFrame({ type: "ready", channels: ready }, (error) => error ? reject(error) : resolve()));
     })().catch(() => fail("UNAUTHENTICATED", "인증이 필요합니다"));
 
     const handle = async (raw: unknown): Promise<void> => {
@@ -101,11 +147,18 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
       if (!frame) { fail("INVALID_FRAME", "프레임 형식이 올바르지 않습니다"); return; }
       if (frame.type === "subscribe") {
         if (!mailbox.isIdle()) { fail("SUBSCRIPTION_BUSY", "전달 중에는 구독을 변경할 수 없습니다"); return; }
+        // Quiesce the previous subscription before asynchronous app validation.
+        unsubscribe(); unsubscribe = () => undefined;
         const selected = [...new Set(frame.channels)].sort();
         if (!await authorized(selected)) { fail("CHANNEL_FORBIDDEN", "채널을 구독할 권한이 없습니다"); return; }
-        await policy.onSubscribe?.(frame, context.principal);
-        unsubscribe(); unsubscribe = () => undefined;
+        const bootstrap = await policy.onSubscribe?.(frame, context.principal);
+        if (subscriptionId && subscriptionId !== frame.subscriptionId) {
+          const previous = subscriptionId; subscriptionId = frame.subscriptionId;
+          try { await disconnect(previous, "subscription replaced"); }
+          catch { metrics.increment("websocketHookFailures"); throw new Error("disconnect hook failed"); }
+        }
         channels = selected; subscriptionId = frame.subscriptionId;
+        if (closed || closing) return;
         const live = new ReplayBuffer(env.websocketMailboxMax);
         let replaying = true;
         // Install the buffer before either the tail seed or replay high-water query.
@@ -125,19 +178,45 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
         const replay = await eventStore.replayChannels(channels, positions, highWater, env.websocketReplayMax);
         if (closed || closing) return;
         if (!replay.complete) { stopLive(); unsubscribe = () => undefined; }
-        sendFrame({ type: "subscribed", subscriptionId, channels, cursor: cursorToken, replayComplete: replay.complete }, (error) => {
-          if (error || closed || closing) { stopLive(); return; }
-          replay.events.forEach((event) => mailbox.enqueue(event));
-          if (replay.complete) {
-            live.drain().filter((event) => BigInt(event.sequence) > BigInt(highWater[event.streamId] ?? "0"))
-              .sort((a, b) => a.streamId.localeCompare(b.streamId) || (BigInt(a.sequence) < BigInt(b.sequence) ? -1 : BigInt(a.sequence) > BigInt(b.sequence) ? 1 : 0))
-              .forEach((event) => mailbox.enqueue(event));
-            replaying = false;
-          }
-          mailbox.onIdle(() => {
-            if (!closed && !closing && cursorToken) sendFrame({ type: "replay", cursor: cursorToken, replayComplete: replay.complete });
+        const write = (packet: ChannelServerFrame): Promise<void> => new Promise((resolve, reject) => {
+          sendFrame(packet, (error) => {
+            if (!error) { resolve(); return; }
+            metrics.increment("websocketSendFailures"); closing = true; unsubscribe();
+            socket.close(1011, "websocket send failed"); reject(error);
           });
         });
+        await write({ type: "subscribed", subscriptionId, channels, cursor: cursorToken, replayComplete: replay.complete });
+        if (closed || closing) return;
+        if (bootstrap !== undefined && !Array.isArray(bootstrap)) throw new Error("invalid bootstrap frames");
+        for (const proposed of bootstrap ?? []) {
+          if (closed || closing) return;
+          if (socket.bufferedAmount >= env.websocketBufferedBytes) { slow(); return; }
+          let snapshot;
+          try { snapshot = await eventStore.snapshotChannelCursor(channels, positions, scope); }
+          catch { fail("CURSOR_PERSISTENCE_FAILED", "커서를 저장하지 못했습니다", 1011, true); return; }
+          if (closed || closing) return;
+          const packet = parseChannelServerFrame({ ...proposed, cursor: snapshot.token });
+          if (!packet || packet.type !== "event" || packet.event.audience === "worker") throw new Error("invalid bootstrap event");
+          cursorToken = snapshot.token;
+          await write(packet);
+          metrics.increment("websocketDelivered");
+          await recordSendSuccess(subscriptionId, packet);
+          if (closed || closing) return;
+        }
+        replay.events.forEach((event) => mailbox.enqueue(event));
+        await new Promise<void>((resolve) => {
+          const finish = (): void => { socket.off("close", finish); resolve(); };
+          socket.once("close", finish); mailbox.onIdle(finish);
+        });
+        if (closed || closing) return;
+        await write({ type: "replay", cursor: cursorToken, replayComplete: replay.complete });
+        if (closed || closing) return;
+        if (replay.complete) {
+          live.drain().filter((event) => BigInt(event.sequence) > BigInt(highWater[event.streamId] ?? "0"))
+            .sort((a, b) => a.streamId.localeCompare(b.streamId) || (BigInt(a.sequence) < BigInt(b.sequence) ? -1 : BigInt(a.sequence) > BigInt(b.sequence) ? 1 : 0))
+            .forEach((event) => mailbox.enqueue(event));
+          replaying = false;
+        }
         return;
       }
       if (frame.type === "receipt") {
@@ -152,23 +231,40 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
       const event = createIngressEvent(allowed);
       await queue.send(ingressQueueFor?.(event.action) ?? env.queue, event);
     };
+    const rejectFrame = (error: unknown): void => {
+      if (error instanceof CursorError) fail(error.code, error.message);
+      else fail("FRAME_REJECTED", "프레임을 처리하지 못했습니다");
+    };
+    chain = chain.then(async () => {
+      if (closed || closing) return;
+      const initial = await policy.initialSubscribe?.(request, context.principal);
+      if (initial === undefined || closed || closing) return;
+      if (!initial || initial.type !== "subscribe") throw new Error("invalid initial subscription");
+      await handle(JSON.stringify(initial));
+    }).catch(rejectFrame);
     socket.on("message", (raw) => {
-      chain = chain.then(() => handle(raw)).catch((error) => {
-        if (error instanceof CursorError) fail(error.code, error.message);
-        else fail("FRAME_REJECTED", "프레임을 처리하지 못했습니다");
-      });
+      chain = chain.then(() => handle(raw)).catch(rejectFrame);
     });
     const revalidation = setInterval(() => {
       void (async () => {
         if (!await validSession() || !await authorized(channels)) fail("UNAUTHENTICATED", "세션이 만료되었거나 철회되었습니다");
       })().catch(() => fail("UNAUTHENTICATED", "세션이 만료되었거나 철회되었습니다"));
     }, 15_000);
-    socket.on("close", () => {
+    socket.on("close", (code, reason) => {
       if (closed) return;
       closed = true; closing = true; clearInterval(revalidation); unsubscribe(); mailbox.dispose();
+      removeRevocation();
       metrics.increment("websocketConnections", -1);
+      const pending = chain.then(() => pendingSend).then(() => disconnect(subscriptionId, reason.toString() || `websocket close ${code}`))
+        .catch(() => { metrics.increment("websocketHookFailures"); });
+      disconnects.add(pending);
+      void pending.finally(() => disconnects.delete(pending));
     });
     socket.on("error", () => socket.close(1011, "websocket error"));
+    try {
+      const stop = policy.watchRevocation?.(context.principal, () => fail("UNAUTHENTICATED", "세션이 만료되었거나 철회되었습니다"));
+      if (stop) { stopRevocation = stop; if (closed || closing) removeRevocation(); }
+    } catch { metrics.increment("websocketHookFailures"); fail("UNAUTHENTICATED", "세션이 만료되었거나 철회되었습니다"); }
   });
   return {
     async closeClientsAndRemoveSubscriptions(): Promise<void> {
@@ -178,6 +274,7 @@ export function attachWebSocketTransport(server: Server, env: AgentEnv, queue: E
         client.once("close", () => resolve()); client.close(1001, "gateway shutdown");
       })));
       await serverClosed;
+      await Promise.all([...disconnects]);
     },
   };
 }

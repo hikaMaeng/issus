@@ -7,6 +7,10 @@
 - 반응 terminal result/conflict는 요청의 `worker` audience를 유지하며 replyChannel이 없어도 client high-water·replay에서 제외된다. 원 client 요청의 결과는 client audience다.
 - `readEnv`는 `PORT` 정수 10000–59999와 `AGENT_EXECUTION_LEASE_SECONDS > QUEUE_VISIBILITY_TIMEOUT_SECONDS`를 기동 전에 검사한다. 생략 시 port18081, visibility60/lease120이며 visibility만 바꾸면 lease 기본값은 그 2배다.
 - 모든 WS 구독에 `authorizeChannel`; `onSubscribe`가 앱의 subscriptionId와 채널 결합을 검증한다. `onReceipt`가 delivery/attempt 내용을 해석한다. token 철회는 새 frame 및 최대15초 주기로 재검증한다.
+- `onSubscribe`의 bootstrap event 배열은 기존 event wire만 사용한다. 구독 밖 canonical history의 repo/scope 권한은 앱이 별도 검사한다. worker audience·control/malformed frame은 거부하고 canonical envelope를 다시 저장하지 않는다. bootstrap cursor는 구독의 기존 positions를 유지한다. metadata/items는 §5.5 앱 HTTP builder 응답이며 신규 bootstrap wire는 제공하지 않는다.
+- send-success는 전송 증거이며 client receipt·TYPE:ACK·processed가 아니다. hook은 이벤트로부터 deliveryId/attempt를 직접 검사한다. 비동기 hook은 유한 시간 내 완료해야 하며 transport가 임의 timeout/성공 판정을 만들지 않는다. 종료 hook 실패는 `websocketHookFailures`로 관측하고 앱에서 복구한다.
+- 로컬 철회 감시는 동기 등록/해제 계약이다. `watchRevocation`이 받은 revoke 함수만 즉시1008을 일으키고, 등록·해제는 연결마다 한 번이다. 앱은 RuntimeAuth 신호의 세션 필터를 수행한다. 다른 broker 감시 주기는15초로 유지한다.
+- subprotocol은 명시된 `selectProtocol`만 선택하며 기본 echo가 없다. 인증 토큰 추출·query token 거부·공개 protocol allowlist는 앱이 제공한다. `initialSubscribe`도 기존 frame·세션·채널·cursor 검증을 우회하지 않는다. Monitor의 도메인 채널/metadata 계산은 앱 소유다.
 - mailbox/replay 기본256, buffered bytes1MiB. progress만 생략 가능. fact·HOLD·DECISION/control 초과는 느린 연결만1013 종료한다. client는 마지막 수신 token으로 재생하고 eventId로 중복 제거한다.
 - generic `emit`은 progress만 허용한다. fact/control을 emit하면 성공 종결을 막고 원 큐를 남긴다. 미분류 예외도 보수적으로 재시도하며 운영 경보로 해결한다.
 - 쿠키 추출·origin allowlist·CSRF·subscription 등록·처리 cursor는 앱 소유다. query bearer·계정 proxy·로그인/signup은 제공하지 않는다.
