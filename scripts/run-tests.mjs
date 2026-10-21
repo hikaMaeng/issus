@@ -28,5 +28,7 @@ if (files.length === 0) {
   console.log(`scaffold tests=0 root=${root}`);
   process.exit(0);
 }
-const result = spawnSync(process.execPath, ["--import", "tsx", "--test", ...files], { stdio: "inherit" });
+// 브라우저 시험은 공유 Clock·세션을 바꾸므로 파일 병렬 실행 금지(P9 VERIFY P1-4): tests/browser 아래는 직렬.
+const serial = /(^|[\/])tests[\/]browser$/.test(root.replace(/[\/]+$/, ""));
+const result = spawnSync(process.execPath, ["--import", "tsx", "--test", ...(serial ? ["--test-concurrency=1"] : []), ...files], { stdio: "inherit" });
 process.exit(result.status ?? 1);

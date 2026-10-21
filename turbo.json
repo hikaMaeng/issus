@@ -54,7 +54,8 @@
         "ISSUS_TEST_BOOTSTRAP_TOKEN",
         "ISSUS_TEST_OWNER",
         "HEADLESS_BROWSER_PLAYWRIGHT_ROOT",
-        "ISSUS_TEST_CLI_RUN_MODULE"
+        "ISSUS_TEST_CLI_RUN_MODULE",
+        "ISSUS_TEST_CLOCK_FILE"
       ]
     },
     "test:integration": {
@@ -80,7 +81,8 @@
         "ISSUS_TEST_BOOTSTRAP_TOKEN",
         "ISSUS_TEST_OWNER",
         "HEADLESS_BROWSER_PLAYWRIGHT_ROOT",
-        "ISSUS_TEST_CLI_RUN_MODULE"
+        "ISSUS_TEST_CLI_RUN_MODULE",
+        "ISSUS_TEST_CLOCK_FILE"
       ]
     },
     "test:browser": {
@@ -106,7 +108,8 @@
         "ISSUS_TEST_BOOTSTRAP_TOKEN",
         "ISSUS_TEST_OWNER",
         "HEADLESS_BROWSER_PLAYWRIGHT_ROOT",
-        "ISSUS_TEST_CLI_RUN_MODULE"
+        "ISSUS_TEST_CLI_RUN_MODULE",
+        "ISSUS_TEST_CLOCK_FILE"
       ]
     }
   }
