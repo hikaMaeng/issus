@@ -2,10 +2,11 @@ import {useEffect, useState} from 'react';
 import {subscribe, type IssusClient} from 'issus_domain/front';
 import type {InboxItem, InboxResponse} from 'issus_domain/common';
 import {errorLines, readInbox, type Principal} from '../../entry/client/index.js';
+import {browserSocket} from '../../entry/socket/index.js';
 import {Delivery} from '../../features/delivery/index.js';
 import {ko} from '../../resources/index.js';
 
-/** Alias-owned inbox uses P7 merge/order semantics and a live SSE wakeup with pull refresh. */
+/** Alias-owned inbox uses P7 merge/order semantics and a live WS wakeup with pull refresh. */
 export function Inbox({client, principal}: {client: IssusClient; principal: Principal}) {
   const query = new URLSearchParams(location.search);
   const [repo, setRepo] = useState(query.get('repo') ?? ''), [numbers, setNumbers] = useState(query.get('issues') ?? '');
@@ -24,8 +25,8 @@ export function Inbox({client, principal}: {client: IssusClient; principal: Prin
     if (!scope.repo) return;
     const abort = new AbortController(); let timer: ReturnType<typeof setTimeout>|undefined;
     setStream(ko.streamConnecting);
-    void subscribe(client, {transport: 'sse', signal: abort.signal, request: {channels: [], repo: scope.repo, issues: scope.numbers.split(',').filter(Boolean).map(Number), from: 'since-compact'},
-      key: () => crypto.randomUUID(), save: () => {}, onFrame: frame => {
+    void subscribe(client, {transport: 'ws', socket: browserSocket, signal: abort.signal, request: {channels: [], repo: scope.repo, issues: scope.numbers.split(',').filter(Boolean).map(Number), from: 'since-compact'},
+      key: () => crypto.randomUUID(), save: checkpoint => {if (checkpoint.closed && !abort.signal.aborted) setStream(ko.streamRetry);}, onFrame: frame => {
         if (frame.type === 'subscribed') setStream(ko.streamConnected);
         if (frame.type === 'event') {clearTimeout(timer); timer = setTimeout(refresh, 150);}
         if (frame.type === 'error') setStream(ko.streamRetry);
@@ -41,7 +42,7 @@ export function Inbox({client, principal}: {client: IssusClient; principal: Prin
       <label htmlFor="inbox-issues">{ko.issueNumbers}</label><input id="inbox-issues" value={numbers} onChange={event => setNumbers(event.target.value)} pattern="[0-9]+(,[0-9]+)*"/>
       <button type="submit">{ko.applyFilter}</button><button type="button" onClick={refresh}>{ko.refresh}</button>
     </form>
-    {stream && <p role="status">{stream}</p>}
+    {stream && <p role={stream === ko.streamFailed ? 'alert' : 'status'} aria-label={ko.streamStatus}>{stream}</p>}
     <section aria-label={ko.inbox}>
       {errors.length > 0 && <div role="alert">{errors.join('\n')}</div>}
       {scope.repo && items === null && errors.length === 0 && <p role="status" aria-busy="true">{ko.loading}</p>}

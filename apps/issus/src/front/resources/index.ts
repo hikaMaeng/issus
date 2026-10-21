@@ -20,7 +20,7 @@ export const ko = {
   closeExecute: '닫기 실행', closeReason: '닫기 사유', finalReport: '최종 REPORT id', closedSuccess: '이슈가 닫혔습니다',
   notFound: '페이지를 찾을 수 없습니다', failure: '요청을 처리하지 못했습니다', cycle: '페이지 커서가 반복되었습니다',
   sessionWrite: '댓글 작성에는 별칭 세션 연결이 필요합니다', streamConnecting: '실시간 연결 중',
-  streamConnected: '실시간 연결됨', streamRetry: '실시간 재연결 대기 중', streamFailed: '실시간 연결 오류',
+  streamStatus: '실시간 연결', streamConnected: '실시간 연결됨', streamRetry: '실시간 재연결 대기 중', streamFailed: '실시간 연결 오류',
   csrfMissing: '쓰기 전에 세션 토큰을 다시 연결해 주세요', statusFilter: {open: '열림', closed: '닫힘', all: '전체'},
   operationPending: (id: string) => `처리 대기 중: ${id}. 같은 본문으로 재시도하면 기존 요청을 확인합니다.`,
   comment: (id: string) => `댓글 ${id}`, posted: (id: string) => `댓글 ${id} 게시됨`,

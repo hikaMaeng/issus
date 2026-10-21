@@ -78,7 +78,9 @@ export async function readHistory(client: IssusClient, repo: string, number: num
     const page = (await client.request<History>(`${path}&cursor=${encodeURIComponent(cursor)}`, {signal})).data;
     items.push(...page.items); cursor = page.nextCursor;
   }
-  const ids = [...new Set([...(first.compact ? [first.compact.id] : []), ...items.map(item => item.id)])];
+  // The canonical/inbox union can retain older unread deliveries; this toggle folds only the issue view.
+  const visible = all || !first.compact ? items : items.filter(item => BigInt(item.id) > BigInt(first.compact!.id));
+  const ids = [...new Set([...(first.compact ? [first.compact.id] : []), ...visible.map(item => item.id)])];
   const hydrated = new Map<string,CommentView>();
   // Limit concurrent hydration to avoid exhausting the operator's DB pool.
   for (let index = 0; index < ids.length; index += 4) {
@@ -87,5 +89,5 @@ export async function readHistory(client: IssusClient, repo: string, number: num
       hydrated.set(id, data);
     }));
   }
-  return {items: [...new Map(items.map(item => [item.id, hydrated.get(item.id)!])).values()], compact: first.compact ? hydrated.get(first.compact.id)! : null, nextCursor: null};
+  return {items: [...new Map(visible.map(item => [item.id, hydrated.get(item.id)!])).values()], compact: first.compact ? hydrated.get(first.compact.id)! : null, nextCursor: null};
 }

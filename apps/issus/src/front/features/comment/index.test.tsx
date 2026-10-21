@@ -41,3 +41,15 @@ test('immutable pagination consumes every page exactly once', async () => {
   const client = new IssusClient({server: 'http://test.invalid', fetch: async input => Response.json(new URL(input).searchParams.has('cursor') ? {items: [2], nextCursor: null} : {items: [1], nextCursor: 'next'})});
   assert.deepEqual(await allPages<number>(client, '/v1/repos', new AbortController().signal), [1, 2]);
 });
+
+test('issue view folds old inbox-union deliveries at COMPACT and full toggle restores them', async () => {
+  const comments = ['1000001', '1000002', '1000003'].map(id => ({id, body: `FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\ncomment ${id}`, envelope: {TYPE: id === '1000002' ? 'COMPACT' : 'NOTE'}}));
+  const client = new IssusClient({server: 'http://test.invalid', fetch: async input => {
+    const url = new URL(input), id = /\/comments\/(\d+)$/.exec(url.pathname)?.[1];
+    return Response.json(id ? comments.find(comment => comment.id === id) : {items: [comments[0], comments[2]], compact: comments[1], nextCursor: null});
+  }});
+  const folded = await readHistory(client, 'o/r', 1, false, new AbortController().signal);
+  assert.equal(folded.compact?.id, '1000002'); assert.deepEqual(folded.items.map(comment => comment.id), ['1000003']);
+  const full = await readHistory(client, 'o/r', 1, true, new AbortController().signal);
+  assert.equal(full.compact?.id, '1000002'); assert.deepEqual(full.items.map(comment => comment.id), ['1000001', '1000003']);
+});

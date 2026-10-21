@@ -13,6 +13,6 @@ export function Comment({comment}: {comment: CommentView}) {
     <Envelope fields={comment.envelope}/>
     {comment.createdAt ? <time dateTime={comment.createdAt}>{comment.createdAt}</time> : <p>{ko.unknownDate}</p>}
     <pre>{comment.body.split(/\r?\n/).slice(comment.envelope.TYPE === 'COMPACT' ? 2 : 1).join('\n')}</pre>
-    <details><summary>{ko.raw}</summary><pre>{comment.body}</pre></details>
+    <details><summary role="button">{ko.raw}</summary><pre>{comment.body}</pre></details>
   </article></li>;
 }

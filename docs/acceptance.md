@@ -2,6 +2,8 @@
 
 [design §14](design.md#14-수용-기준-대조표)를 구현 경로·시험 id에 대응한다. 구현됨은 배포/실기 전체 PASS를 뜻하지 않는다. 최신 실행 수치는 [P8 보고서](../apps/issus/tests/reports/p8-acceptance/20261021_190000.md)를 따른다.
 
+후속 DECISION6313571462의 구현·검증은 [P8 s2 보고서](../apps/issus/tests/reports/p8-acceptance/20261021_193700.md)가 최신이다(source77/77·실DB83검사, 배포12개는 호스트 판정).
+
 | brief | 구현 | 시험 id·근거 | 수용 잔여 |
 | --- | --- | --- | --- |
 |1 도메인 | domain common·intake, core HTTP repo/issue/comment/alias/board/handoff/closing | U-V/U-A·I-02/I-07·I-V1, P4 core/fixtures, P8 actual-entry close; source 앱72/72에 good32/bad5 포함 | DECISION6313329886 반영 source PASS, 최종 dist 호스트 재검증 |
@@ -21,8 +23,13 @@
 | B-02-2 | server422 reason 순서/문자열 동일·invalid 표시·게시0 |
 | B-02-3 | 유효ASK 검사/게시 status·자기 canonical 댓글 reload 보존 |
 | B-03-1/2 | 빈목록 status·close native dialog blocker alert |
+| B-03-3 | 실제 목록 GET 지연중 loading status+aria-busy, 완료후 table1·loading0 |
+| B-03-4 | WS 실패5회(최초+재접속4) 뒤 연결오류 alert1·거짓 연결상태0 |
+| B-03-5 | 실제 WS단절→재연결대기→새구독연결됨, 단절중게시 replay·영수, 실제프레임중복1회 뒤 전체중복행0 |
 | I-01/02/03/04/05/06/07 | actual-entry 두세션·ASK·ACK/apply·HOLD retry/escalation·COMPACT·닫기 |
 | I-P1/C-01 부분 | CLI dry-run 서버 preflight·댓글수 불변 |
 | O-01 부분 | ready 음성·복구, service.stop WS1001·30초 이내; SIGTERM/전체deploy와 구분 |
 
 P5 deliveries 전용 시험은 이 담당이 수정하지 않는다. P4/P6/P7 기존 증거를 참조할 때 최초 보고와 현재 재실행을 구분한다. 미실행·알려진 실패·호스트 통과를 같은 PASS 합계에 넣지 않는다.
+
+DECISION6313571462 후속은 design v2.3 §10 B-03 기준이다. acceptance는 WS 영수오류·세 앱 migration 누락503 실패를 필수 assert하고 HTTP 영수 fallback을 허용하지 않는다. completed=true·limitations=[]도 별도로 검사한다. 최종 호스트 명령 `ISSUS_TEST_SERVER_URL=http://127.0.0.1:18140 npm run test:browser`는12/12·fail/skip/cancelled0·pageerror0·재연결중복행0, integration은issus54/54를 기대한다. Monitor 실기는 오케스트레이터의 별도 증거다.

@@ -89,11 +89,8 @@ try {
  const received=await until(()=>w.frames.find(f=>f.type==='event'&&f.event.payload.deliveryId===delivery.id),'WS delivery');pass('WS live routed delivery',true,true);
  w.socket.send(JSON.stringify({type:'receipt',subscriptionId:sub.subscriptionId,deliveryIds:[delivery.id],attempts:[0],cursor:received.cursor}));
  await until(async()=>w.frames.some(f=>f.type==='error')||(await pool.query(`SELECT state FROM "${schema}".delivery WHERE id=$1`,[delivery.id])).rows[0].state==='delivered','WS receipt response');
- if(w.frames.some(f=>f.type==='error')) {
-  limitations.push('WS receipt rejects UUID v8 deliveryId as INVALID_FRAME (ASK to orch)');
-  console.log('KNOWN-FAIL WS receipt',JSON.stringify(w.frames.filter(f=>f.type==='error')));
-  pass('HTTP receipt via worker',(await http('/v1/deliveries/receipts',{deliveryIds:[delivery.id],attempts:[0]},B.token)).status,200);
- }else pass('WS receipt delivered',true,true);
+ pass('WS receipt protocol errors',w.frames.filter(f=>f.type==='error'),[]);
+ pass('WS receipt durable delivered',(await pool.query(`SELECT d.state,r.transport,r.attempt FROM "${schema}".delivery d JOIN "${schema}".delivery_receipt r ON r.delivery_id=d.id WHERE d.id=$1 AND r.session_id=$2`,[delivery.id,B.sessionId])).rows,[{state:'delivered',transport:'websocket',attempt:0}]);
  const ack=await http(I+'/comments',{body:`FROM:${B.alias}/s1 TO:${A.alias} TYPE:ACK RE:${ask.body.commentId}\n수용.\nNEXT: done.`},B.token);pass('ACK via intake',ack.status,201);
  await until(async()=> (await pool.query(`SELECT state FROM "${schema}".delivery WHERE id=$1`,[delivery.id])).rows[0].state==='acked','ACK projection');pass('ACK direct recipient',true,true);
  const report=await http(I+'/comments',{body:`FROM:${B.alias}/s1 TO:${A.alias} TYPE:REPORT STATE:done RE:${ask.body.commentId}\n실제 처리 근거.\nNEXT: complete.`},B.token);pass('REPORT processing evidence',report.status,201);
@@ -168,15 +165,16 @@ try {
  try{
   pass('broker missing migration ready503',(await fetch(origin+'/ready')).status,503);
   const negative={worker:(await fetch(`http://127.0.0.1:${wp}/ready`)).status,scheduler:(await fetch(`http://127.0.0.1:${sp}/ready`)).status};
-  for(const [name,status] of Object.entries(negative)) {if(status===503) pass(name+' missing migration ready503',status,503);else {limitations.push(name+' missing migration /ready='+status+' expected503 (ASK6311965208)');console.log('KNOWN-FAIL',name,'missing migration ready',status);}}
+  for(const [name,status] of Object.entries(negative)) pass(name+' missing migration ready503',status,503);
  }finally{await pool.query(`INSERT INTO "${schema}".schema_migration(id,sha256,applied_at) VALUES($1,$2,$3)`,[missing.id,missing.sha256,missing.applied_at]);}
- pass('broker migration restored',(await fetch(origin+'/ready')).status,200);
+ for(const [service,p] of [['broker',bp],['worker',wp],['scheduler',sp]]) pass(service+' migration restored',(await fetch(`http://127.0.0.1:${p}/ready`)).status,200);
  const closed=new Promise(ok=>monitor.socket.once('close',code=>ok(code)));
  pass('session revoke HTTP',(await http('/v1/sessions/'+B.sessionId,undefined,token,'DELETE')).status,200);
  pass('session revoke WS1008',await closed,1008);
  await until(async()=> Number((await pool.query(`SELECT count(*) FROM "${schema}".subscription WHERE session_id=$1 AND closed_at IS NULL`,[B.sessionId])).rows[0].count)===0,'revoke subscription cleanup');pass('revoke WS/SSE metadata closed',true,true);
  const authorClosed=new Promise(ok=>authorSocket.socket.once('close',code=>ok(code))),stopStarted=Date.now();
  await broker.service.stop();pass('graceful WS1001',await authorClosed,1001);pass('graceful stop under30s',Date.now()-stopStarted<30000,true);
+ pass('required acceptance limitations',limitations,[]);
  completed=true;
 } finally {
  sseController?.abort();
@@ -193,5 +191,5 @@ try {
  console.log(JSON.stringify({checks:rows.length,limitations}));
 }
 
-return {checks:rows.length,rows,limitations};
+return {completed,checks:rows.length,rows,limitations};
 }
