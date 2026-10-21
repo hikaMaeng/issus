@@ -1,25 +1,81 @@
 import {IssusClient, ClientError, OperationTimeout, issuePath, repoPath, InboxModel} from 'issus_domain/front';
 import type {InboxResponse} from 'issus_domain/common';
+import type {ClientOptions, RequestOptions, HttpResponse} from 'issus_domain/front';
 import {ko} from '../../resources/index.js';
 
 export {issuePath, repoPath, ClientError, OperationTimeout, InboxModel};
-export interface Principal {alias?: string; sid?: string; kind?: string}
+export interface Principal {alias?: string; sid?: string; kind?: string; owner?: string; ownerId?: string; sessionId?: string; expiresAt?: string}
 export interface CommentView {id: string; body: string; envelope: Record<string,string>; createdAt?: string; validity?: string}
 export interface IssueView {issue: {number: number; title: string; isOpen: boolean; state: string}; body: string; envelope: Record<string,string>; revision: number}
 export interface History {items: CommentView[]; compact: CommentView|null; nextCursor: string|null}
 export interface Page<T> {items: T[]; nextCursor: string|null}
 export interface RepoView {id: string; owner: string; slug: string}
-export interface IssueSummary {number: number; title: string; state: string; isOpen: boolean}
+export interface IssueSummary {number: number; title: string; state: string; isOpen: boolean; ownerAliasId?: string; owner?: string; ownerAlias?: string; isBoard?: boolean; compactId?: string|null; compact?: string|null; updatedAt?: string}
+export interface ValidationReason {code: string; path: string; message: string}
 const csrfKey = 'issus.csrf';
 
+/** Raw server diagnostics remain available beside the P7-compatible message array. */
+export class FrontClientError extends ClientError {
+  constructor(status: number, code: string, readonly validationReasons: readonly ValidationReason[] = [], details?: Record<string,unknown>, messages?: string[]) {
+    super(status, code, messages ?? validationReasons.map(reason => reason.message), details);
+  }
+}
+
+/** Preserve structured errors for direct responses and completed asynchronous operations. */
+export class BrowserClient extends IssusClient {
+  constructor(options: ClientOptions) {
+    const transport = options.fetch ?? globalThis.fetch.bind(globalThis);
+    super({...options, fetch: async (url, init) => {
+      const response = await transport(url, init);
+      if (!response.ok) {
+        let data: {error?: {code?: string; message?: string; reasons?: ValidationReason[]; details?: Record<string,unknown>}};
+        try {data = await response.clone().json();} catch {return response;}
+        if (data.error) throw new FrontClientError(response.status, data.error.code ?? `HTTP_${response.status}`, data.error.reasons, data.error.details, data.error.reasons?.map(r => r.message) ?? (data.error.message ? [data.error.message] : []));
+      }
+      return response;
+    }});
+  }
+  override async request<T = Record<string,unknown>>(path: string, options: RequestOptions = {}): Promise<HttpResponse<T>> {
+    try {
+      const result = await super.request<T>(path, options);
+      if (this.url(path).pathname.startsWith('/v1/operations/')) {
+        const operation = result.data as {httpStatus?: number; status?: string; error?: {code: string; reasons?: ValidationReason[]; details?: Record<string,unknown>}; response?: {error?: {code: string; reasons?: ValidationReason[]; details?: Record<string,unknown>}}};
+        const error = operation.error ?? operation.response?.error;
+        if (error && operation.httpStatus && operation.httpStatus >= 400 && !['queued', 'running'].includes(operation.status ?? '')) throw new FrontClientError(operation.httpStatus, error.code, error.reasons, error.details);
+      }
+      return result;
+    } catch (error) {
+      if (!this.headers().Authorization && error instanceof ClientError && error.status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event('issus:unauthenticated'));
+      throw error;
+    }
+  }
+}
+
+/** Only CSRF is persisted; bearer values never enter browser storage. */
+export function hasBrowserCsrf(): boolean {return typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem(csrfKey);}
+/** Clear the local proof and notify subscribers; server revocation remains an explicit API call. */
+export function clearBrowserSession(): void {sessionStorage.removeItem(csrfKey); window.dispatchEvent(new Event('issus:unauthenticated'));}
+
 /** Cookie authentication is same-origin; bearer is held only for the initial exchange. */
-export function createBrowserClient(token?: string): IssusClient {
-  return new IssusClient({server: window.location.origin, token, fetch: (url, init = {}) => {
+export function createBrowserClient(token?: string): BrowserClient {
+  return new BrowserClient({server: window.location.origin, token, fetch: (url, init = {}) => {
     const headers = new Headers(init.headers);
     const csrf = sessionStorage.getItem(csrfKey);
+    if (!token && !csrf && !['GET','HEAD','OPTIONS'].includes(init.method ?? 'GET')) throw new FrontClientError(403, 'CSRF_MISSING', [{code: 'CSRF_MISSING', path: 'session', message: ko.csrfMissing}]);
     if (csrf && !['GET', 'HEAD'].includes(init.method ?? 'GET')) headers.set('X-CSRF-Token', csrf);
     return fetch(url, {...init, headers, credentials: 'same-origin'});
   }});
+}
+
+/** Error paragraphs preserve exact server ordering; field association is auxiliary only. */
+export function errorReasons(error: unknown): readonly ValidationReason[] {return error instanceof FrontClientError ? error.validationReasons : [];}
+/** Map only exact protocol field paths or the canonical required-key diagnostic. */
+export function reasonField(reason: ValidationReason): string|undefined {
+  const field = /^envelope\.(FROM|TO|TYPE|CC|RE|STATE|DUE|ACK-BY|SEEN|SUPERSEDES|REPLY-IN|MIRROR-OF|GATE|DESTRUCTIVE)$/.exec(reason.path)?.[1];
+  if (field) return field;
+  if (['compactPacketToken','sampledIds','compactedBy','compactDeferredReason'].includes(reason.path)) return reason.path;
+  if (reason.path === 'body') return /^지시성 TYPE (?:ASK|HOLD|DECISION|HANDOFF): (ACK-BY) 필수$/.exec(reason.message)?.[1];
+  return undefined;
 }
 
 /** Exchanges the session bearer once; no bearer is persisted to browser storage. */
@@ -36,8 +92,8 @@ export function errorLines(error: unknown): string[] {
   return [ko.failure];
 }
 
-/** Consume immutable pages without inferring processed progress from what was displayed. */
-export async function allPages<T>(client: IssusClient, path: string, signal: AbortSignal): Promise<T[]> {
+/** Consume every page without inferring processed progress from what was displayed. */
+export async function allPages<T>(client: IssusClient, path: string, signal: AbortSignal, onProgress?: (count: number) => void): Promise<T[]> {
   const items: T[] = [], seen = new Set<string>();
   let cursor: string|null = null;
   do {
@@ -45,6 +101,7 @@ export async function allPages<T>(client: IssusClient, path: string, signal: Abo
     if (cursor) url.searchParams.set('cursor', cursor);
     const {data} = await client.request<Page<T>>(url.pathname + url.search, {signal});
     items.push(...data.items); cursor = data.nextCursor;
+    onProgress?.(items.length);
     if (cursor && seen.has(cursor)) throw new Error(ko.cycle);
     if (cursor) seen.add(cursor);
   } while (cursor);

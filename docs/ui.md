@@ -1,12 +1,21 @@
 # 사람용 웹 UI 명세
 
-버전: P9 v1 · 2026-10-21 · 작성: `issus-1-ui/s1` · 배정: [DECISION 6313756973](https://github.com/hikaMaeng/issus/issues/1#issuecomment-6313756973). 상태: 명세 제출용, 독립 VERIFY 전. 화면 13개(라우트 화면 11개·대화상자 2개), 컴포넌트 48개. 구현·배포·브라우저 수용 결과를 뜻하지 않는다.
+버전: P9 v1.1 · 2026-10-21 · 작성: `issus-1-ui/s2`(s1 승계). 명세 VERIFY PASS 6314230314·개정/구현 승인 DECISION 6314230980. 화면 13개(라우트 화면 11개·대화상자 2개), 컴포넌트 48개. 구현·배포·브라우저 수용 결과를 뜻하지 않는다.
+
+## v1→v1.1 변경 요약
+
+| 리뷰 항목 | 확정 계약 | 절 |
+| --- | --- | --- |
+| P1 분할 | 신규 폴더·resources 파일 소유, 교차 export 타입·조립 담당, U3의 U2 선행 의존을 고정 | §9·§10 |
+| P1 대비 | inline code 전경을 #ff7b83으로 확정, #2a2a2a 배경의 작은 글자 AA ≥4.5:1을 판정 | §4·§11 P9-24 |
+| P2 편집 | S09/S10 editable/readonly/미제공; OWNER 변경은 HANDOFF, 포인터는 COMPACT | §3 |
+| P2 시험 | HOLD/DECISION 빠른 응답·CLAIM/RELEASE 정상/422와 ACK/DUE만으로 해제하지 않음을 기존 ID에 확장 | §11 P9-10·P9-16 |
 
 ## 1. 정본·범위·승인 경계
 
 `docs/design.md` v2.3의 §5·§7·§8·§14, `apps/issus/docs/api.md`, 실제 HTTP 라우트, P8 front와 `apps/issus/tests/browser/ui.test.mjs`를 기준으로 한다. brief 요구 5의 사람 개입 UI 확대는 위 DECISION을 따른다. 서버 API·TYPE·검증·전달 상태·COMPACT 규칙을 바꾸지 않는다. 이 문서의 `/login` 등은 브라우저 경로이며 새 HTTP API를 뜻하지 않는다.
 
-이 세션의 제품 산출물은 이 파일뿐이다. `apps/issus/src/front/**`와 시험 파일은 P8 `issus-1-web/s2` 소유다. 구현은 명세 VERIFY 및 P8 RELEASE·명시적 소유권 인계 뒤 시작한다. root manifest·barrel·production route 조립은 P1 경계다. 커밋·push는 오케스트레이터 책임이다.
+P8 RELEASE6314079411과 DECISION6314230980으로 §10의 U1 소유가 인계되었다. 구현은 아래 단위 경계로 진행한다. root manifest·barrel·production route 조립은 P1 경계다. 커밋·push는 오케스트레이터 책임이다.
 
 규약 정본은 `C:/Users/hika0/.claude/skills/issue-board-collab`의 `references/{envelope,types,body,reading,delivery,compact,resources,board,join-naming}.md`와 `scripts/{issue_post,issue_watch,alias_check,compact_prepare}.py`다. 봉투·enum·오류 문자열은 기존 `issus_domain/common`의 이식본을 재사용한다. 프런트에 다른 규약 validator를 만들지 않는다. 마크업은 `headless-browser-markup`의 semantic 계약, 폴더는 `monorepo-architecture-guard`의 변경 단위 분해를 따른다. 지정 codex 경로에 없던 monorepo 스킬은 `C:/Users/hika0/.agents/skills/monorepo-architecture-guard/SKILL.md`에서 읽었다.
 
@@ -151,6 +160,17 @@ ROSTER 표 열은 `alias | role | model | scope | sid`다. 이슈 본문 원문�
 
 S09/S10은 구조화 첫 줄 + 원문 본문을 함께 제공한다. 첫 줄은 `STATE:<enum> OWNER:<alias> UPDATED:<iso> [REPLY-IN:#n] [COMPACT:<id>] [BOARD:#n]`, 앞 3키 순서 고정이다. 등록 OWNER/포인터·날짜·본문을 validate/preflight로 검사한다. S10은 현재 revision/ETag·변경 전후 원문을 보여 주고 `PATCH I/body`에 If-Match를 보낸다. 412는 최신 본문·사용자 초안을 나란히 보여 주고 사용자가 다시 병합·검사하게 한다. 자동 overwrite, 428 무시, 성공 전 revision 선행 갱신은 금지다.
 
+| 필드 | S09 개설 | S10 본문 편집 | 관리 행동 |
+| --- | --- | --- | --- |
+| 제목 | editable | readonly(본문 PATCH에 전송 안 함) | 제목 수정 API 미제공 |
+| STATE·UPDATED·GOAL/SCOPE/NON-SCOPE·일반 본문 | editable | editable | 서버 문법·권한 검사 |
+| OWNER | editable(등록 별칭) | readonly | 변경은 S12 HANDOFF |
+| COMPACT·REPLY-IN | 미제공(초기 본문에 생성 안 함) | readonly(기존 값 유지) | COMPACT/HANDOFF 전용 관리 |
+| BOARD | editable(접근 가능한 게시판 참조) | editable | 서버 참조 검사 |
+| revision·ETag | 미제공 | readonly | If-Match에 현재 revision 전달 |
+
+raw 모드는 그대로 제공한다. raw의 OWNER 변경·포인터 변경을 조용히 되돌리지 않고 서버 `HANDOFF_REQUIRED`·`POINTER_MANAGED` 등 원문 오류를 노출한다.
+
 S11은 P8 dialog·label·버튼 이름을 유지한다. terminal body STATE, 최종 REPORT done/failed/cancelled, 최종 REPORT·HANDOFF 완료를 포함한 새 COMPACT, 미답 ASK/ACK-STATE waiting·active HOLD·미RELEASE CLAIM·pending HANDOFF 0을 체크리스트로 보여 준다. 이 체크는 서버 진단 안내이며 close endpoint가 최종 판정한다. CLOSE_BLOCKED는 원 blocker id와 상세를 dialog alert로 표시하고 각 항목으로 이동한다. before-close due 기록은 닫기 실패에도 남을 수 있음을 보여 준다. 성공 후 `이슈가 닫혔습니다`, 닫힘 배지·후속 REPLY-IN 링크를 표시한다. closed 이슈에는 일반 작성기를 비활성하고 서버가 허용한 OWNER 후속 라우팅 행동만 안내한다. 재개는 별도 사유·STATE 확인 후 기존 reopen API를 사용한다.
 
 S12의 입력은 TO 한 명·ACK-BY·REPLY-IN 후속 이슈·결과/근거·남은 질문·자원/승인 경계다. 전송 원문에 `지금부터 이 이슈에 쓰지 마라`를 포함하는 정본 handoff 예시를 사용하고 COMPACT 필요 여부를 먼저 확인한다. 게시 후는 `수신 ACK 대기`다. 실제 TO가 쓴 유효 ACK id로 accept, OWNER가 최신 expectedRevision으로 complete하며 각각 서버 확인 뒤만 단계가 전진한다. HANDOFF ACK가 있다는 것과 accept·complete 완료는 다른 상태다. 완료 전 기존 책임 해제·OWNER 변경·close를 성공으로 표시하지 않는다. 타 저장소 REPLY-IN도 접근 확인하고 닫힌 대상은 이유를 표시한다.
@@ -169,7 +189,7 @@ DECISION/HANDOFF 긴급 게시에서 서버가 인정하는 요약 생략이 필
 
 ## 4. 테마 토큰
 
-기본 document root는 `data-theme="dark"`다. 아래 CSS는 구현 계약을 보여 주는 명세이며 이번 세션에 CSS 파일을 편집하지 않는다. shadow는 전부 none, radius 기본8px다. 시스템 글꼴은 Segoe UI/Inter/system-ui, 코드는 ui-monospace다. 외부 폰트 다운로드를 요구하지 않는다.
+기본 document root는 `data-theme="dark"`다. 아래 CSS는 styles/index.css의 구현 정본이다. shadow는 전부 none, radius 기본8px다. 시스템 글꼴은 Segoe UI/Inter/system-ui, 코드는 ui-monospace다. 외부 폰트 다운로드를 요구하지 않는다.
 
 ```css
 :root,
@@ -187,7 +207,7 @@ DECISION/HANDOFF 긴급 게시에서 서버가 인정하는 요약 생략이 필
   --ui-success: #3fb950;
   --ui-warning: #e3b341;
   --ui-danger: #f85149;
-  --ui-code-text: #e5484d;
+  --ui-code-text: #ff7b83;
   --ui-code-bg: #2a2a2a;
   --ui-on-accent: #161616;
   --ui-focus: #6ea8fe;
@@ -329,7 +349,7 @@ SSE는 동일 bootstrap/권한/커서의 대체 transport다. `GET /v1/stream?su
 | 저장소 생성 | POST `/v1/repos` | bootstrap owner/slug/projectCode/autoBoard/boardOwner,201/202 |
 | 이슈 목록 open/closed | GET `R/issues?state=open\|closed\|all&cursor=...&limit=...` | 번호 오름차순 요약, 전 페이지 후 지원 client 조건 |
 | STATE·제목/번호 검색·번호/제목 정렬 | 위 GET R/issues | 클라이언트 전 페이지 계산, 새 API 없음 |
-| OWNER·참여 별칭·서버 검색/정렬 | **ASK 필요 Q2** | 기존 route의 해당 query 계약 없음, 임의 query 전송 금지 |
+| OWNER·참여 별칭·서버 검색/정렬 | GET `R/issues?state&owner&alias&q&sort&order` | DECISION6314143095·core REPORT6314466185; apps/issus/docs/api.md Q2 정본 |
 | 상세·보조 진단 | GET I | issue/body/envelope/revision/stats/pendingLegacy/ackState/activeHolds/claims, ETag |
 | 댓글 since-compact·전체 | GET `I/comments?sinceCompact=true\|false&cursor=...` | compact/items/snapshot/nextCursor, 기본 true |
 | RE/SUPERSEDES·OTHER 단건 | GET `R/comments/:id` | 원문/envelope/metadata/createdAt/validity, foreign404 |
@@ -349,7 +369,7 @@ SSE는 동일 bootstrap/권한/커서의 대체 transport다. `GET /v1/stream?su
 | 게시판 발견 | GET `R/board?issue=n&userBoard=n` | number/state/via/evidence,404/409 |
 | 게시판 개설·복구 | POST `R/board/ensure`, POST `I/reopen` | bootstrap ensure; 닫힌 동일 board 재개는reason/state+If-Match |
 | ROSTER 읽기 | GET I의 body·revision | 본문 행의 출처 표시, registry 대체 아님 |
-| 별칭 registry 목록·상세·선택지 | **ASK 필요 Q1** | 현 alias 라우트에 읽기 없음 |
+| 별칭 registry 목록·상세·선택지 | GET `/v1/owners/:owner/aliases`, GET `.../aliases/:name` | DECISION6314143095·core REPORT6314466185; apps/issus/docs/api.md Q1 정본 |
 | 별칭 충돌 검사 | POST `/v1/owners/:owner/aliases/check` | name/deep?, available/collisions, 등록·예약 아님 |
 | 별칭 등록·개명 | POST `/v1/owners/:owner/aliases`, POST `/v1/aliases/:id/rename` | role/model/scope/repos/announcementIssue?/announcementBody 또는newName;201/200/202·409 |
 | HANDOFF 작성 | POST `I/comments` | TYPE HANDOFF·REPLY-IN·ACK-BY·compactDeferredReason? |
@@ -371,6 +391,8 @@ JSON metadata는 body와 같은 top level이고 `metadata:{...}` wrapper는 없�
 | Q2 | [ASK 6313841431](https://github.com/hikaMaeng/issus/issues/1#issuecomment-6313841431): 이슈 OWNER/참여 별칭 필터·확장 검색/정렬 조회 계약 없음 | 기존 state·client STATE/제목·번호·정렬은 동작, 지원 외 필터는 비활성 이유. 전체 댓글 스캔으로 우회하지 않음 | orch DECISION에 참여 의미·기간·검색 범위·정렬·완전성 확정 → 실제 라우트 매핑/시험 보완 |
 
 두 ASK가 미응답이면 이 명세는 현재 API 경계와 목표를 기록한 상태로 VERIFY에 넘긴다. Q1/Q2 영역은 제품 기능 완료·전체 UI 수용 PASS로 계산하지 않는다. 추가 API가 필요하다고 서버 경계를 몰래 넓히지 않는다.
+
+v1.1 구현 중 DECISION6314143095와 core REPORT6314466185로 두 공백의 계약·구현 인계를 확인했다. U1은 실제 라우트에 연결한다. Q1은 목록 items/nextCursor·상세 alias/recentIssues/openClaimCount, 등록/tombstone 출처를 표시한다. Q2는 state/owner/alias/q/sort/order만 전달하며 workState는 전 페이지 수집 후 적용한다. 참여는 유효 v2 댓글의 원 FROM(/sid 제외)·TO·CC exact case-insensitive이며 TO:ALL 방송·mention·OWNER만의 관계는 제외한다. q는 제목 literal 부분문자열 또는 양의 정수/#정수의 정확 번호다. sort=number/created/updated·order=asc/desc, 제목 정렬은 전 페이지 후 client 정렬이다. updated 순서는 서버 반환순을 유지한다. opaque cursor는 조회 조건/principal에 묶이고 변경 중 고정 snapshot을 보장하지 않는다. 호스트 배포·브라우저 전건 수용은 별도 증거다.
 
 ## 9. 기존 P8와의 관계·파일 경계
 
@@ -397,23 +419,54 @@ JSON metadata는 body와 같은 top level이고 `metadata:{...}` wrapper는 없�
 | `features/closing/index.tsx` | 확장 | native dialog·blocker 이유 유지, 선행 조건 링크·reopen |
 | `resources/index.ts` | 유지·확장 | 기존 ko 키/formatter·deliveryLabels 유지, namespace별 파일 export |
 | `styles/index.css` | **스타일 내용 교체** | 현 light/16px/상단 nav 스타일을 §4 dark/14px/3열 토큰으로 교체; import 경로·DOM semantic 유지 |
-| `README.md`, `docs/{overview,architecture,api,usage,constraints,internals,testing}.md` | 인계 후 필요한 부분 확장 | 이번 세션 수정 없음. 새 경로·API 공백·markup·시험만 해당 문서에 반영 |
+| `README.md`, `docs/{overview,architecture,api,usage,constraints,internals,testing}.md` | U1 확장 후 U3 인계 | 새 경로·API 계약·markup·시험을 해당 문서에 반영 |
 | `apps/issus/tests/browser/ui.test.mjs` | 유지·추가 | 기존9개+B-03추가3개 삭제/조건완화 금지, P9 케이스 추가 |
 | `packages/issus_domain/src/front/**` | 읽기·재사용만 | IssusClient/subscribe/InboxModel 공개 export 사용, P7 소유 변경 금지 |
 
 추가 경계는 `pages/{login,sessions,board,roster,issue-create,issue-edit,compact}/index.tsx`, `features/{app-shell,session,issue-filters,reference,issue-form,handoff,compact-assistant,roster,feedback}/index.ts[x]`, `resources/{session,issue,composer,inbox,board,roster,compact,feedback}.ts`다. 각 폴더는 해당 기능의 변경 단위이며 공개 `index.ts[x]`를 통해서만 소비한다. 최상위 barrel·manifest·compose·server route는 이 구현자가 소유권 없이 추가하지 않는다. 의존성을 추가하지 않고 현재 React·P7 client·native controls를 우선 사용한다. 새 라이브러리가 필요하면 exact 버전과 P1 요청으로 처리한다.
 
+### 신규 폴더·파일 소유(정본)
+
+| 단위 | 신규 features | 신규 pages | resources 파일 |
+| --- | --- | --- | --- |
+| U1 | app-shell, session, issue-filters, roster, feedback | login, sessions, roster | index.ts(공통 ko)·session.ts·roster.ts·feedback.ts |
+| U2 | reference, issue-form, handoff(기존 envelope/comment/composer/closing 포함) | board, issue-create, issue-edit(기존 issue 포함) | issue.ts·composer.ts·board.ts |
+| U3 | compact-assistant(기존 delivery/compact 포함) | compact(기존 inbox 포함) | inbox.ts·compact.ts |
+
+기존 `resources/index.ts`의 ko/deliveryLabels는 U1만 편집하고 호환 키를 유지한다. U2/U3는 각 파일에서 `issueKo/composerKo/boardKo/inboxKo/compactKo`를 직접 export/import한다. 공통 index에 재수출이 필요하면 U1/P1에 요청하며 타 담당이 편집하지 않는다. 기존 feature의 시험은 같은 단위 소유다. U1 browser는 `tests/browser/p9-u1.test.mjs`·계획/보고는 p9-u1 전용 파일; 기존 ui.test.mjs 및 통합 p9-ui 계획/보고는 U3 소유다. front README·docs 7종은 U1 수정 뒤 RELEASE 시 U3에 인계하며 동시 편집하지 않는다.
+
 ## 10. 구현 분할: 3단위
 
-이번 세션은 아래 구현을 실행하지 않는다. 단계마다 미결·실행 로그·검증 결과를 REPORT로 넘기고 독립 VERIFY를 받는다. 공유 entry/resources/styles 편집자는 단위 내 한 명으로 고정한다. 여러 담당이 같은 파일을 병렬 편집하는 배정은 하지 않는다.
+단계마다 미결·실행 로그·검증 결과를 REPORT로 넘기고 독립 VERIFY를 받는다. 공유 entry/resources/styles 편집자는 U1 한 명으로 고정한다. 여러 담당이 같은 파일을 병렬 편집하는 배정은 하지 않는다.
 
 | 단위 | 파일 경계(front 기준) | 의존 | 완료 조건 |
 | --- | --- | --- | --- |
-| U1 프레임·세션·탐색 | entry/app·entry/client·styles·resources(공통), features/app-shell/session/feedback, pages/login/sessions/repos/issues/roster | P8 s2 RELEASE·명세 VERIFY; Q1/Q2는 명확한 disabled/부분 상태로 시작 가능 | dark 토큰·3열·main/nav/h1 계약, 안전한 토큰 교환·발급/재발급, 기존 목록과 가능한 필터·ROSTER 출처, lint/test·기존 semantic 회귀 |
+| U1 프레임·세션·탐색 | entry/app·entry/client·styles·resources(공통), features/app-shell/session/feedback/issue-filters/roster, pages/login/sessions/repos/issues/roster | P8 s2 RELEASE·명세 VERIFY; Q1/Q2는 명확한 disabled/부분 상태로 시작 가능 | dark 토큰·3열·main/nav/h1 계약, 안전한 토큰 교환·발급/재발급, 기존 목록과 가능한 필터·ROSTER 출처, lint/test·기존 semantic 회귀 |
 | U2 이슈 개입 | pages/issue/issue-create/issue-edit/board, features/envelope/comment/composer/closing/issue-form/handoff/reference, 기능별 resources | U1 공개 client/error 어댑터, 기존 P4 API, Q1 선택지는 미확정이면 직접입력 | TYPE13·preflight/422/201·참조·NOENV·COMPACT 경계·게시판 제한·edit412·close blockers·handoff 단계·기존9건 유지 |
 | U3 전달·요약·통합 | pages/inbox/compact, entry/socket, features/delivery/compact/compact-assistant, 기능별 resources, P8 인계된 browser/plans/reports·해당 docs | U1/U2·P5/P6/P7 공개 계약, Q1/Q2 결정/구현은 해당 기능 전체 수용 전 필요 | WS/SSE·영수/ACK/applied·E 병합·COMPACT metadata·재접속/중복0·P9 계획 전건; host deploy/browser·사람 다크테마 확인·독립 VERIFY |
 
 U1의 공통 export가 동결된 뒤 U2/U3가 소비한다. 전역 resources index/styles/entry 조립 추가는 한 소유자가 취합한다. Q1/Q2 미해결은 해당 기능 BLOCKED로 보고하고 다른 단위는 진행한다. 전체 UI 완료 판정은 API 공백 해소와 §11 시나리오 전건을 요구한다. 루트 manifest·테스트 환경 전달·실제 deploy 변경은 P1/오케스트레이터로 요청한다.
+
+### 교차 export·입출력·조립(동결 계약)
+
+| 소유/export(public index) | 입력 | 출력·소비 |
+| --- | --- | --- |
+| U1 entry/client `createBrowserClient(token?)` | token?:string, 초기 교환/관리 호출 메모리만 | BrowserClient extends IssusClient; U2/U3 props client:IssusClient 호환 |
+| U1 `connectBrowser(token)`·`hasBrowserCsrf()`·`clearBrowserSession()` | string / 없음 | Promise<void> / boolean / void; cookie교환·CSRF만 저장 |
+| U1 `Principal` | auth/me | alias?,sid?,kind?,owner?,ownerId?,sessionId?,expiresAt? 모두 string |
+| U1 `CommentView/IssueView/History/Page<T>/RepoView/IssueSummary` | 기존 P8 필드 유지 | 추가 summary ownerAliasId?/owner?/isBoard?/compactId?; optional로 호환 |
+| U1 `errorLines(error)`·`errorReasons(error)`·`reasonField(reason)` | unknown / unknown / {code,path,message} | string[] / readonly ValidationReason[] / string\|undefined; 원문·순서 보존, code/path 보조 연결 |
+| U1 `allPages<T>/readHistory/readInbox/issuePath/repoPath/ClientError/OperationTimeout/InboxModel` | 기존 P8 호출 호환; allPages의 선택4인자 onProgress?:(count:number)→void | 기존 결과 그대로; U2/U3 소비, 진행건수만 추가 |
+| U1 resources `ko/deliveryLabels`·`sessionKo/rosterKo/feedbackKo` | 없음·formatter 인자 | 기존 P8 값 유지; 추가 파일은 §9 직접 import |
+| U1 styles/index.css | :root[data-theme=dark] | §4 --ui-* 토큰; U2/U3는 색 literal 추가 금지 |
+| U1 features/app-shell `AppShell` | {principal:Principal\|null,repo?:string,children:ReactNode,session:ReactNode,aside?:ReactNode} | main/nav/h1 프레임; 페이지는 h1만 포함, main/nav 중복 없음 |
+| U2 페이지 `Issue/IssueCreate/IssueEdit/Board` | {client:IssusClient,repo:string,number?:number}; Issue/IssueEdit는 number:number | ReactElement; U1 entry/app가 최종 경로 조립 |
+| U2 feature `Composer`·`Comment`·`Envelope`·`ReferenceLink` | 기존 props 유지; ReferenceLink:{client:IssusClient,repo:string,id:string,supersedes?:boolean} | ReactElement; U3는 공개 index만 소비 |
+| U3 페이지 `Inbox/Compact` | Inbox:{client:IssusClient,principal:Principal}; Compact:{client:IssusClient,repo:string,number:number} | ReactElement; U1 entry/app가 최종 경로 조립 |
+
+U2/U3는 U1 REPORT의 실제 시그니처 표를 확인하고 작업한다. U1 entry/app의 U2/U3 신규 경로 조립은 해당 export 완료 NOTE/REPORT 후 U1 또는 오케스트레이터가 수행한다(필요 경로·export를 requests에 기록). 기존 Issue·Inbox 경로는 U1부터 유지한다. U3의 inbox/stream/compact-assistant 모델·UI는 U1 계약만으로 U2와 병렬 착수 가능하다. U3의 통합 댓글 참조/작성기 연결 및 P9-04~16 종단 수용은 U2 공개 export 완료가 **선행 완료 조건**이다. U3가 U2 폴더를 임시 구현/편집하지 않는다.
+
+시나리오 소유: U1=P9-01/02/03/13·P9-23 프레임/세션·P9-24 테마/인증. U2=P9-04/05/06/09/10/11/12/14/15/16·P9-23 댓글/dialog. U3=P9-07/08/17/18/19/20/21/22·P9-23 통합·P9-24 최종 배포 및 기존12 전건.
 
 ## 11. 시험 시나리오·실행 증거
 
@@ -451,13 +504,13 @@ U1의 공통 export가 동결된 뒤 U2/U3가 소비한다. 전역 resources ind
 | P9-07 | S06 B inbox ASK 표시·영수→ACK→REPORT RE→반영 근거 기록 | posted/delivered/acked/applied 순서, 최초canonical/delivery 병합1행·reload 유지·외부성공 추정 문구0 |
 | P9-08 | 지시에 B REPORT RE만 게시, 별도 NOTE/CLAIM에 ACK 작성 | legacy pending 해소와 ACK-STATE waiting 분리, NOTE/CLAIM ACK 허용, 지시 acked 위조0 |
 | P9-09 | S05 COMPACT 포함 기본→전체→이후, 이전 RE/SUPERSEDES 링크 열기 | h2 정확마커·aria-expanded·단건 원문 dialog, snapshot/초안 유지·원댓글 중복0 |
-| P9-10 | 우선수신 ME/CC/ALL/OTHER fixture·타인 HOLD/DECISION, OTHER 열기 | 기본OTHER 봉투만·명시열기 전문·공유HOLD/DECISION은 어떤필터에도 전문·pending링크 |
+| P9-10 | 우선수신 ME/CC/ALL/OTHER fixture·타인 HOLD/DECISION, OTHER 열기; HOLD 작성→검사/게시→직접ACK→DECISION SUPERSEDES 명시 게시 | 기본OTHER 봉투만·명시열기 전문·공유HOLD/DECISION은 어떤필터에도 전문·pending링크. HOLD ACK-BY≤10분/SEEN 정상201; 누락/초과422 두경로·초안유지/추가0. ACK만으로 active HOLD 해제0; 유효 DECISION의 SUPERSEDES 게시 뒤만 해제. DECISION ACK-BY누락422·잘못된SUPERSEDES 서버오류원문 |
 | P9-11 | raw NOENV script/img fixture, 원문/재게시 요청 초안 | 경고 정확문구·스크립트/외부HTML 실행0·실행/자동ACK0 |
 | P9-12 | S07 board 발견→NOTE 템플릿→검사·게시, ASK/HOLD 시도 | NOTE≤1500·REPLY-IN·REPORT참조, 금지TYPE UI안내+서버422·registry 충돌409 표시 |
 | P9-13 | S08 ROSTER/registry·별칭 check exact/near conflict·등록/개명 | 출처·model/scope/sid, collisions 증거·409·tombstone; Q1 미해결이면 registry 완전 기능 BLOCKED |
 | P9-14 | S09 이슈개설→S10 두context 동시편집→구버전 저장 | 개설201·문법검사표시, 412 초안유지·최신원문비교·명시병합 후200·자동덮어쓰기0 |
 | P9-15 | S12 HANDOFF 게시→타인ACK/직접ACK→accept→complete | 타인ACK로수용안됨·유효ackCommentId·expectedRevision·단계별owner/책임·REPLY-IN |
-| P9-16 | S11 blockers 확인→ACK/RELEASE/최종REPORT/COMPACT/terminal body 준비→닫기 | blocker id링크·before-close due보존·성공200/closed상태·후속링크·closed댓글409 |
+| P9-16 | CLAIM DUE/SEEN 작성·검사/게시→DUE 경과→본인 CLAIM RE의 RELEASE→S11 blockers 확인→ACK/최종REPORT/COMPACT/terminal body 준비→닫기 | CLAIM DUE/SEEN 정상201·각누락422/초안유지/추가0, DUE만으로 CLAIM 해제0. RELEASE 본인CLAIM 연결 정상201·RE누락/타인CLAIM422 원문, 성공후만 해제. blocker id링크·before-close due보존·성공200/closed상태·후속링크·closed댓글409 |
 | P9-17 | S13 24→25댓글/39,999→40,000자, board29→30·before-* | 서버due count/chars와 UI일치·구간중복가산0·임계OR·각 purpose 표시 |
 | P9-18 | packet 준비/markdown 다운로드→원id3개표본→요약검사·게시 | maskedCount·token비노출·UTF8LF·metadata정확·footer접미사허용·포인터/revision확인 |
 | P9-19 | packet 후 새댓글/편집→게시, 별도 만료Clock→게시 | stale409/expired410·게시0·초안보존·새prepare 명시·마커수정우회0 |
@@ -465,7 +518,7 @@ U1의 공통 export가 동결된 뒤 U2/U3가 소비한다. 전역 resources ind
 | P9-21 | 별도 명시SSE transport로 동일scope·단절·cursor재생·HTTPreceipt | 동일delivery/status·SSE frame/id·transport표시·ACK자동생성0. WS 오류수용을 SSE로 대체하지 않음 |
 | P9-22 | 202응답 지연→operation조회·응답유실 후 같은key 재시도 | 대기상태와 operationId, 동일댓글1개·최종422전달·미확정성공표시0 |
 | P9-23 | 키보드만 Tab/Shift+Tab·dialog Esc·참조포커스·900px/200% | 키보드진입/탈출가능·초안보존·focus복귀·main/nav유일·필수행동가로스크롤밖 |
-| P9-24 | dark computed tokens/1440·1200·900 screenshot, 만료/revoke·CSRF없는새탭 | 지정색·14px·8px·shadownone·inlinecode·light선택기0·재인증·거짓connected0·secret trace노출0 |
+| P9-24 | dark computed tokens/1440·1200·900 screenshot, inline code 실제 computed fg/bg WCAG 상대휘도 계산, 만료/revoke·CSRF없는새탭 | 지정색·14px·8px·shadownone·inline code #ff7b83/#2a2a2a 대비≥4.5:1(작은 글자 AA)·light선택기0·재인증·거짓connected0·secret trace노출0 |
 
 Q1/Q2 미해결 시 P9-03의 해당 필터·P9-13 registry 전체 기능을 **BLOCKED**로 남긴다. disabled 상태만 통과했다고 완전한 UI 수용으로 합산하지 않는다. 시나리오 수는24, 현재 기존12와 합쳐 목표36건이며 실제 test() 분할 수가 달라지면 ID별 결과를 따로 적는다. 필수 시나리오를 skip으로 숨기지 않는다.
 
@@ -479,6 +532,6 @@ Q1/Q2 미해결 시 P9-03의 해당 필터·P9-13 registry 전체 기능을 **BL
 
 ## 12. 인계 체크
 
-명세 VERIFY는 화면13·컴포넌트48·Q1/Q2 두 공백, 실제 API 표, TYPE13/enum/마커, P8 파일 재사용 표, 기존9+B-03추가3 보존, 신규24 시나리오를 대조한다. 구현자는 P8 s2의 최종 HEAD·RELEASE·browser 시험 목록을 받은 뒤 변경을 시작한다. 인계 export는 이 파일과 실제 `issus_domain/front` 공개 API·기존 `entry/client`/socket 계약이다. 현재 별도 코드 export·API 추가·배포 변경은 없다.
+명세 VERIFY는 화면13·컴포넌트48·Q1/Q2 계약 상태, 실제 API 표, TYPE13/enum/마커, P8 파일 재사용 표, 기존9+B-03추가3 보존, 신규24 시나리오를 대조한다. 구현자는 P8 s2의 최종 HEAD·RELEASE·browser 시험 목록을 받은 뒤 변경을 시작한다. 인계 export는 §10의 U1 동결표·실제 `issus_domain/front` 공개 API·기존 socket 계약이다. API 추가는 core 소유, 배포 변경은 오케스트레이터 소유다.
 
 brief 요구1은 S03/S05/S07~12, 요구2는 S06/§7, 요구3은 S05/S13, 요구4는 §8의 CLI와 동일 HTTP/커서 의미, 요구5는 전체 semantic UI·§4, 요구6은 §11의 수용 증거와 연결된다. 서버·CLI·운영 수용은 기존 design §14를 그대로 따르며 P9 UI 문서가 대신 충족했다고 판정하지 않는다. 다음 담당은 `issus-1-review`의 독립 VERIFY다.

@@ -1,4 +1,7 @@
 /** Korean copy and accessible names shared by views and feedback. */
+export {sessionKo} from './session.js';
+export {rosterKo} from './roster.js';
+export {feedbackKo} from './feedback.js';
 export const ko = {
   app: 'issus', navigation: '주 탐색', repos: '저장소', issues: '이슈 목록', inbox: '받은편지함',
   loading: '불러오는 중', empty: '표시할 항목이 없습니다', refresh: '새로고침', more: '더 보기',
