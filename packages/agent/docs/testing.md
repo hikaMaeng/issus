@@ -4,6 +4,8 @@
 
 DECISION 6309173472 후속은 [계획](../tests/plans/agent-p2-followup-20261021.md)과 `tests/reports/agent-p2-followup/`을 따른다. env 회귀는 PORT=65536·경계·소수 및 lease≤visibility 거부를 확인한다. 실DB 회귀는 replyChannel 없는 comment fact→reaction queue→worker→result를 실행하고 저장 audience=worker·큐 삭제·client high-water/replay 제외를 확인한다. result까지 bounds를 강제로 넓힌 replay와 뒤의 client fact 재생도 대조한다.
 
+DECISION 6309746634 (2)의 readiness는 [계획](../tests/plans/agent-readiness-20261021.md)과 `tests/reports/agent-readiness/`를 따른다. `http/app.test.ts`는 실제 loopback HTTP로 hook 생략·성공200, 동기 throw·Promise 거부503, queue/DB 실패503, 지연 완료 전 무응답·요청마다 재실행을 확인한다. queue/database는 가짜이며 실제 앱 조립·migration 준비 검증은 P1/P4 통합 증거가 필요하다.
+
 | 검증 | 명령/조건 |
 | --- | --- |
 | 표준 단위·실제 TCP WS | `npm test -w agent` |

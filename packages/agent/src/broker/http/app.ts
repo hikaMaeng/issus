@@ -16,6 +16,8 @@ export interface WebBackendInput {
   queue: EventQueueTransport;
   metrics: MetricsRegistry;
   checkDatabase: () => Promise<void>;
+  /** Additional application readiness check. Throw or reject to return 503. */
+  ready?: () => Promise<void>;
   verifier: SessionVerifier;
   readToken?(request: express.Request): string | undefined;
   /** Runs before all static middleware and its catch-all. */
@@ -42,7 +44,7 @@ export function createWebBackend(input: WebBackendInput): express.Express {
 
   app.get("/health", (_request, response) => response.json({ status: "ok", service: "broker" }));
   app.get("/ready", async (_request, response) => {
-    try { await Promise.all([input.queue.check(), input.checkDatabase()]); response.json({ status: "ready" }); }
+    try { await Promise.all([input.queue.check(), input.checkDatabase(), input.ready?.()]); response.json({ status: "ready" }); }
     catch { response.status(503).json({ status: "unavailable" }); }
   });
   app.get("/metrics", (request, response) => { writeMetrics(request, response, input.env, input.metrics); });

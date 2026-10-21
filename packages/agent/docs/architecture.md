@@ -15,4 +15,6 @@
 
 `appendManyOn`과 `sendOn`은 앱이 소유한 동일 `PoolClient` tx에 참여한다. `appendMany`는 자체 tx wrapper다. 이벤트의 stream sequence와 pg_notify는 append tx에 들어간다. broker는 수신자의 처리 cursor를 소유하지 않는다.
 
+`createEventBroker`는 `options.ready`를 HTTP backend에 전달한다. 기본 `/ready`는 `extendHttp`보다 먼저 등록되며 queue·DB·앱 hook 성공을 모두 요구한다. 도메인 migration/초기화 판정은 앱의 hook이 소유한다.
+
 WS는 hub buffer 설치 → tail seed 완료 → 고정 high-water → bounded replay → high-water 초과 buffer drain → live 순서다. 새 채널 seed와 replay 경계를 `hub.prepareChannels()`로 조정한다.

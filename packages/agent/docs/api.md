@@ -18,4 +18,6 @@
 
 `createEventBroker`에는 `verifier`, `authorizeChannel`, `allowedActions`가 필수다. `socketPolicy`, `readHttpToken`, `readSocketToken`, `readyChannels`, `onSubscribe`, `onReceipt`를 주입할 수 있다. `extendHttp(expressApp,database)`는 static middleware와 fallback 전에 실행된다. HTTP command route와 구독/receipt의 도메인 검증은 앱이 등록한다. `allowedActions:[]`로 WS 게시를 차단한다.
 
+`EventBrokerOptions.ready?: () => Promise<void>`는 `createWebBackend`의 같은 옵션으로 전달된다. `/ready` 요청마다 `queue.check()`·`checkDatabase()`·선택 hook을 함께 await한다. 전부 성공하면 HTTP200 `{status:"ready"}`, 하나라도 throw/거부하면 HTTP503 `{status:"unavailable"}`이며 내부 오류는 노출하지 않는다. hook을 생략하면 기존 queue·DB 검사만 수행한다. `/health`는 별도 liveness 응답이다.
+
 `ChannelClientFrame`: `subscribe{subscriptionId,channels,cursor?}`, `receipt{subscriptionId,deliveryIds,attempts,cursor}`, `event+IngressCommand`. subscriptionId/cursor/deliveryId는 UUID, receipt는 동일 길이의 deliveryIds/attempts와 최대100건을 요구한다. 외부 event의 서버 발급 필드·source3개는 거부한다. server frame은 `ready`, `subscribed`, `event`, `replay`, `error{code,message,retryable}`다. scope 오류의 message는 설계 §5.4와 동일하다.

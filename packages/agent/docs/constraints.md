@@ -10,4 +10,5 @@
 - mailbox/replay 기본256, buffered bytes1MiB. progress만 생략 가능. fact·HOLD·DECISION/control 초과는 느린 연결만1013 종료한다. client는 마지막 수신 token으로 재생하고 eventId로 중복 제거한다.
 - generic `emit`은 progress만 허용한다. fact/control을 emit하면 성공 종결을 막고 원 큐를 남긴다. 미분류 예외도 보수적으로 재시도하며 운영 경보로 해결한다.
 - 쿠키 추출·origin allowlist·CSRF·subscription 등록·처리 cursor는 앱 소유다. query bearer·계정 proxy·로그인/signup은 제공하지 않는다.
+- `/ready`의 선택 `ready` hook은 `Promise<void>` 계약이다. 앱 검사가 `{ok:false}`를 반환하면 호출자가 throw로 변환해야 한다. hook은 요청마다 실행되며 결과를 캐시하지 않는다. hook 생략은 도메인 준비 상태를 보증하지 않는다.
 - 패키지는 DOM을 렌더링하지 않는다. semantic markup/locator 계약과 deployed browser 검증은 앱이 담당한다.

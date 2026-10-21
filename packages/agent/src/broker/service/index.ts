@@ -99,6 +99,8 @@ export interface EventBrokerOptions {
   socketPolicy?: GatewaySocketPolicy;
   readSocketToken?: SocketPolicyInput["readToken"];
   readHttpToken?(request: express.Request): string | undefined;
+  /** Additional application readiness check, awaited by /ready; throw or reject for 503. */
+  ready?: () => Promise<void>;
   readyChannels?: SocketPolicyInput["readyChannels"];
   onSubscribe?: SocketPolicyInput["onSubscribe"];
   onReceipt?: SocketPolicyInput["onReceipt"];
@@ -199,6 +201,7 @@ export function createEventBroker(options: EventBrokerOptions): Service {
       const backend = createWebBackend({
         env, queue, metrics, verifier,
         readToken: options.readHttpToken,
+        ready: options.ready,
         extendHttp: (app) => options.extendHttp?.(app, database),
         checkDatabase: async () => { await Promise.all([queue.check(), database.query("SELECT 1")]); },
         openCursor: (channels, from, principal) => (from === "start" ? eventStore.openChannelCursorAtStart(channels, cursorScope(principal)) : eventStore.openChannelCursor(channels, undefined, cursorScope(principal))),

@@ -195,7 +195,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\http\\app.ts",
       "relative": "src/broker/http/app.ts",
       "sourceSha256": "f94261047fb6bbf956a19d601b8f1d303a8bf5719af454f9ff10ba645d30c0f7",
-      "destinationSha256": "6656293eab1da52491cfdc03f6c1de8b739282d31248263b34a5b505bda5d002"
+      "destinationSha256": "42080082d75b0033a095befe008bc38625aa2de003a42d7da2a2d62f2415275f"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\idempotency\\store.test.ts",
@@ -335,7 +335,7 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\src\\broker\\service\\index.ts",
       "relative": "src/broker/service/index.ts",
       "sourceSha256": "92bf268cc007ff44de577c6aa4bbdb6e70f7246d13b55eeb245788cdc38599f0",
-      "destinationSha256": "66390a446772de13c02ce0c48915e51e853aa8b0752c642f7c3a9164dbbf47d1"
+      "destinationSha256": "804f6b9504f9497253ff9108be932debd38dd6289535e1d1621f4844ab519561"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\src\\broker\\stream\\hub.test.ts",
@@ -440,21 +440,21 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\api.md",
       "relative": "docs/api.md",
       "sourceSha256": "fe2c9aa79d45449f352a682ca7201afef672fc1b7e97fab6f41123c9dad1ddd2",
-      "destinationSha256": "a30885ebcc80bf8f51d7344cdc03bfc9e7ba9e7ea5f290dbfcf028f4f73a0a58"
+      "destinationSha256": "298c2e85edec5a4186f779be4a8cb88c631921d554110cf68753a1ba3bf2876e"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\architecture.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\architecture.md",
       "relative": "docs/architecture.md",
       "sourceSha256": "d5a8ed7dfad90b95412aa817e960accb5d77d126d9766ab80e39216a0dbf0a3d",
-      "destinationSha256": "e1a1a727ff0d18f4fbd0f53c2b2bca7cd1074bf684ba0a0d73cab20f2d3fb23e"
+      "destinationSha256": "dd2d949e4986d4dc2f21305808108f95e839123222218358267f459461d1ddb9"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\constraints.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\constraints.md",
       "relative": "docs/constraints.md",
       "sourceSha256": "e254ca9c7bdc24131c41c552ff95becd2ccab75b26e0e40717c5dd73f0a4b490",
-      "destinationSha256": "53e7115bd481f538357e572688c7a95157c1a63e857e7bb5449a99e92595df0e"
+      "destinationSha256": "300cab890532271d493ccf3e2e41814af71f58713d55f87f6da5c9aa5617f516"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\internals.md",
@@ -475,21 +475,21 @@
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\testing.md",
       "relative": "docs/testing.md",
       "sourceSha256": "f40e741a68050b0fe462f7cedaea9bc65aee9be749b361d55b78ee388908ed87",
-      "destinationSha256": "1ec5e919f96bb79302e891b9ad0dc9bea4113311441c390451fc3dd73bd875ab"
+      "destinationSha256": "7bd502262784da76c20d5f2a6e5b84a7bc83a33e6ac159376700936a54d360f9"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\docs\\usage.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\docs\\usage.md",
       "relative": "docs/usage.md",
       "sourceSha256": "5405be4ddcfec4648b354ebab27747ad8629bafdff13de011fa55ccf8094f989",
-      "destinationSha256": "7343326d099d33f91ffa2dd1cee2fddb8dbaf5a423ce78124890bf7fab7cc1e0"
+      "destinationSha256": "341803cd7d35f800a1dbf22e2a0a4b912c6f5c8f2f7b319f1f67ecbf86e0bc82"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\README.md",
       "destination": "F:\\dev\\issus\\packages\\agent\\README.md",
       "relative": "README.md",
       "sourceSha256": "7a028da5e70d1ad8ffe7b49bd0ebea10044169c24cb098c81a71f7eb66b6da0c",
-      "destinationSha256": "d2742614be9de441f49ece3320aa40bdcee626d6fcb23a6f5ba447380dbfca08"
+      "destinationSha256": "278008e94bc61ad3c9d741568f3ec014726629000658f4d0a82e3a1064be69ee"
     },
     {
       "source": "F:\\dev\\ndx_business\\packages\\agent\\tsconfig.json",
@@ -506,7 +506,7 @@
       "destinationSha256": "06870904e7a1588573ecba218595d6f3c001e43890e558e2ea54d1de36909a1c"
     }
   ],
-  "sourceRecheckedAt": "2026-10-21T05:34:10.422386+00:00",
+  "sourceRecheckedAt": "2026-10-21T06:42:48.883869+00:00",
   "licenseResult": "없음, 소유자 동일",
   "publicDistribution": "미확인",
   "derivedVersion": "0.1.0-issus.1",
