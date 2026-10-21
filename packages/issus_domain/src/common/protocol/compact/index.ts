@@ -1,6 +1,7 @@
 import type {Decimal,Id,IssuePayload,IssueRef,OwnerPayload,IsoTime} from '../envelope/index.js';
 import type {CompactCommentMetadata} from '../comment/index.js';
 import type {PendingLegacyView,AckStateView} from '../inbox/index.js';
+export type {CompactPublication,CompactPublicationInput} from '../../../server/backend/index.js';
 export const COMPACT_ACTIONS={due:'issus.compact.due',posted:'issus.compact.posted'} as const;
 export type CompactPurpose='routine'|'before-decision'|'before-handoff'|'before-close';
 export type CompactDueReason='comments'|'chars'|Exclude<CompactPurpose,'routine'>;

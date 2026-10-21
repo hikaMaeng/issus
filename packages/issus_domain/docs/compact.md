@@ -16,7 +16,7 @@ segment를 재구축하면 같은 generation의 기존 due fact에서 발행 사
 
 부록은 pendingLegacy.window/global·ackState·activeHolds·claims·handoffs를 별도로 유지하고 원 id 조회 링크를 붙인다. 본문·이관·재개 변경과 compactDeferredReason 감사 원 fact는 controlFactsSinceCompact다. 열린 의무는 COMPACT로 삭제하지 않는다.
 
-정본 MASKS의 pem→github-token→aws-key→api-key→bearer→password→email 순서를 재사용한다. markdown 전체에 1회 적용해 중복 header/봉투도 마스킹한다. maskedCount는 이 최종 패스만 세며 chars는 원문 통계다. JSON의 문자열 필드도 같은 MASKS를 적용한다. Python reference fixture는 마스킹 보강이 필요 없는 동일 입력에서 byte 동치를 검증하고 ROT13 masks 29건을 별도로 대조한다.
+정본 MASKS의 pem→github-token→aws-key→api-key→bearer→password→email 순서를 재사용한다. markdown 전체에 1회 적용해 중복 header/봉투도 마스킹한다. maskedCount는 이 최종 패스만 세며 chars는 원문 통계다. JSON의 문자열 필드도 같은 MASKS를 적용한다. 고정 hash의 compact_prepare.py를 직접 실행한 패킷 31건(기본2+ROT13 masks29)을 동일 입력·시각의 최종 bytes/치환 수와 대조한다. issue_post.py의 마커·through·TO·2000/2001자 사유 5건도 직접 생성해 글자 단위로 대조한다. 합성 비밀 입력과 반례는 ROT13으로 보관한다.
 
 `compact_packet`에는 UUID·token_hash·마스킹 snapshot·canonical SHA-256·owner/issue/prev/through/revision·24h 만료만 저장한다. raw token은 API 발급 응답에만 있다. GET token은 CSPRNG 32byte다. prepare 응답은 random operation UUID+packet UUID의 SHA-256으로 opaque token을 복원하여 원 응답을 재생하며 command_result에는 packetId/status만 저장한다. packet token은 인증을 대체하지 않는다.
 
@@ -38,4 +38,4 @@ P6 `compactPublication`은 삽입 직후 같은 tx에서 snapshot hash/OWNER/구
 | readCompactHistory | P4 historyReader 시그니처, compact 원문과 compactStatus 통계를 분리 |
 | compactPacketFilename | (owner/repo,number,throughId)→정본 기본 --out 파일명 |
 
-P4 기본 history의 sinceCompact는 true다. native pointer만 경계로 사용하고 페이지 snapshot의 이전 pointer를 유지한다. P6 wrapper는 diagnostics.compact가 원문을 덮는 P4 응답을 보완한다. P5 union reader가 연결되면 P5가 경계를 보존한다. close 요청의 before-close 접점은 ASK 6309953030으로 P4 소유자 조립을 요청했다.
+P4 기본 history의 sinceCompact는 true다. native pointer만 경계로 사용하고 페이지 snapshot의 이전 pointer를 유지한다. 페이지 사이 새 COMPACT가 생겨도 이전 원문/경계/남은 댓글을 바꾸지 않는다. P6 wrapper는 diagnostics.compact가 원문을 덮는 P4 응답을 보완한다. P5 union reader가 연결되면 P5가 경계를 보존한다. DECISION 6310243238은 close 요청 before-close를 P4 core/s3에 배정했다. close 처리 전 별도 제어 tx에서 due를 기록하며 close 실패에도 보존한다. P6의 refreshCompactSegment export와 실제 close 접점의 수용을 구분한다.

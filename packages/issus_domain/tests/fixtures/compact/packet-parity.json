@@ -1,0 +1,510 @@
+{
+  "sourceHash": "617e8c64305792cb36e08d3ef7502c282cd688b191f951971367a57d1fd246f6",
+  "postSourceHash": "67d01e961496f842f5764161c382a9c0abb291d6e62e99811e1e72e9c95b55fd",
+  "generatedAt": "2026-10-21T04:00:00Z",
+  "cases": [
+    {
+      "body": "STATE:running OWNER:tt-1-alpha UPDATED:2026-10-21T04:00+00:00\nGOAL: 패킷 정본 대조",
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "body": "FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\n한글 😀 원문."
+        },
+        {
+          "id": 1000003,
+          "created_at": "2026-10-21T04:00:01.000Z",
+          "body": "[NOENV] legacy 관찰"
+        }
+      ],
+      "markdown": "# COMPACT INPUT PACKET tester/compact#1 generated:2026-10-21T04:00+0000 prev-compact:none comments:2 last-id:1000003\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 COMPACT 본문만(≤2000자, examples/compact.md 형식).\n\n## ISSUE BODY line1: STATE:running OWNER:tt-1-alpha UPDATED:2026-10-21T04:00+00:00\nSTATE=running OWNER=tt-1-alpha REPLY-IN=- BOARD=-\n\n## PREV COMPACT none — issue body follows\nSTATE:running OWNER:tt-1-alpha UPDATED:2026-10-21T04:00+00:00\nGOAL: 패킷 정본 대조\n\n## COMMENTS AFTER (2, ascending)\n### 1000002 2026-10-21T04:00:00.000Z | FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\nFROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\n한글 😀 원문.\n\n### 1000003 2026-10-21T04:00:01.000Z [NOENV] | [NOENV] legacy 관찰\n[NOENV] legacy 관찰\n",
+      "maskedCount": 0
+    },
+    {
+      "body": "STATE:running OWNER:tt-1-alpha UPDATED:2026-10-21T04:00+00:00\nGOAL: 패킷 정본 대조",
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "body": "FROM:tt-1-alpha/s1 TO:ALL TYPE:COMPACT SEEN:1000000\n## ===== COMPACT #1 through 1000000 =====\n누적 요약\ncompacted-by:tt-1-bravo"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "body": "FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\n한글 😀 원문."
+        },
+        {
+          "id": 1000003,
+          "created_at": "2026-10-21T04:00:01.000Z",
+          "body": "[NOENV] legacy 관찰"
+        }
+      ],
+      "markdown": "# COMPACT INPUT PACKET tester/compact#1 generated:2026-10-21T04:00+0000 prev-compact:1000001 comments:2 last-id:1000003\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 COMPACT 본문만(≤2000자, examples/compact.md 형식).\n\n## ISSUE BODY line1: STATE:running OWNER:tt-1-alpha UPDATED:2026-10-21T04:00+00:00\nSTATE=running OWNER=tt-1-alpha REPLY-IN=- BOARD=-\n\n## PREV COMPACT 1000001 2026-10-21T03:00:00.000Z\nFROM:tt-1-alpha/s1 TO:ALL TYPE:COMPACT SEEN:1000000\n## ===== COMPACT #1 through 1000000 =====\n누적 요약\ncompacted-by:tt-1-bravo\n\n## COMMENTS AFTER (2, ascending)\n### 1000002 2026-10-21T04:00:00.000Z | FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\nFROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\n한글 😀 원문.\n\n### 1000003 2026-10-21T04:00:01.000Z [NOENV] | [NOENV] legacy 관찰\n[NOENV] legacy 관찰\n",
+      "maskedCount": 0
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n-----ORTVA EFN CEVINGR XRL-----\nn\no\n-----RAQ EFN CEVINGR XRL-----"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n-----ORTVA EFN CEVINGR XRL-----\nn\no\n-----RAQ EFN CEVINGR XRL-----",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:crz]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:crz]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\ntuc_nnnnnnnnnnnnnnnnnnnn"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ntuc_nnnnnnnnnnnnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ntuc_nnnnnnnnnnnnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:tvguho-gbxra]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:tvguho-gbxra]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ntvguho_cng_____________________"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ntvguho_cng_____________________",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:tvguho-gbxra]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:tvguho-gbxra]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nNXVNNNNNNNNNNNNNNNNN"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nNXVNNNNNNNNNNNNNNNNN"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nNXVNNNNNNNNNNNNNNNNN",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:njf-xrl]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:njf-xrl]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nfx-nnnnnnnnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nfx-nnnnnnnnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:ncv-xrl]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:ncv-xrl]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nkbko-nnnnnnnnnn"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nkbko-nnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nkbko-nnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:ncv-xrl]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:ncv-xrl]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nORNERE kkkkkkkkkkkkkkkk"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nORNERE kkkkkkkkkkkkkkkk",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:ornere]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:ornere]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\ncnffjbeq:rknzcyr"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ncnffjbeq:rknzcyr"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ncnffjbeq:rknzcyr",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ncnffjq=k frperg:l gbxra=m ncv-xrl=d"
+        }
+      ],
+      "maskedCount": 8,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ncnffjq=k frperg:l gbxra=m ncv-xrl=d",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq] [ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\ncrefba@rknzcyr.grfg"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ncrefba@rknzcyr.grfg"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ncrefba@rknzcyr.grfg",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:rznvy]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:rznvy]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ntuc_nnnnnnnnnnnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ntuc_nnnnnnnnnnnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ntuc_nnnnnnnnnnnnnnnnnnn\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ntuc_nnnnnnnnnnnnnnnnnnn\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nfx-nnnnnnnnnnnnnnn"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nfx-nnnnnnnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nfx-nnnnnnnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nfx-nnnnnnnnnnnnnnn\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nfx-nnnnnnnnnnnnnnn\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nornere fubeg"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nornere fubeg",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nornere fubeg\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nornere fubeg\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nk@n.p"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nk@n.p"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nk@n.p",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nk@n.p\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nk@n.p\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n한글tuc_nnnnnnnnnnnnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n한글tuc_nnnnnnnnnnnnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n한글tuc_nnnnnnnnnnnnnnnnnnnn\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n한글tuc_nnnnnnnnnnnnnnnnnnnn\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\ntuc_nnnnnnnnnnnnnnnnnnnn한글"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ntuc_nnnnnnnnnnnnnnnnnnnn한글"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ntuc_nnnnnnnnnnnnnnnnnnnn한글",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\ntuc_nnnnnnnnnnnnnnnnnnnn한글\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ntuc_nnnnnnnnnnnnnnnnnnnn한글\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ngbxra=tuc_nnnnnnnnnnnnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 4,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ngbxra=tuc_nnnnnnnnnnnnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nOrnere kkkkkkkkkkkkkkkk gbxra=fx-nnnnnnnnnnnnnnnn"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nOrnere kkkkkkkkkkkkkkkk gbxra=fx-nnnnnnnnnnnnnnnn"
+        }
+      ],
+      "maskedCount": 6,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nOrnere kkkkkkkkkkkkkkkk gbxra=fx-nnnnnnnnnnnnnnnn",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:ornere] [ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:ornere] [ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n한글cnffjbeq=k"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n한글cnffjbeq=k",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n한글cnffjbeq=k\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n한글cnffjbeq=k\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\ncnffjbeq=nop"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ncnffjbeq=nop"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ncnffjbeq=nop",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nK@rknzcyr.grfg"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nK@rknzcyr.grfg",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nK@rknzcyr.grfg\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nK@rknzcyr.grfg\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nNCV_XRL=k"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nNCV_XRL=k"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nNCV_XRL=k",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nncı_xrl=k"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nncı_xrl=k",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nOrnere ıııııııııııııııı"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nOrnere ıııııııııııııııı"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nOrnere ıııııııııııııııı",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:ornere]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:ornere]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nOrnere﻿kkkkkkkkkkkkkkkk"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nOrnere﻿kkkkkkkkkkkkkkkk",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nOrnere﻿kkkkkkkkkkkkkkkk\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nOrnere﻿kkkkkkkkkkkkkkkk\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nfx-nnnnnnnnnnnnnnnn한글"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nfx-nnnnnnnnnnnnnnnn한글"
+        }
+      ],
+      "maskedCount": 0,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nfx-nnnnnnnnnnnnnnnn한글",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\nfx-nnnnnnnnnnnnnnnn한글\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nfx-nnnnnnnnnnnnnnnn한글\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nurnqre gbxra=rknzcyr\nobql gbxra=rknzcyr"
+        }
+      ],
+      "maskedCount": 4,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nurnqre gbxra=rknzcyr\nobql gbxra=rknzcyr",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\nurnqre [ZNFXRQ:cnffjbeq]\nobql [ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nurnqre [ZNFXRQ:cnffjbeq]\nobql [ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": {
+        "id": 1000001,
+        "created_at": "2026-10-21T03:00:00.000Z",
+        "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\ncnffjbeq\u001c=\u001cnop"
+      },
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\ncnffjbeq\u001c=\u001cnop"
+        }
+      ],
+      "maskedCount": 2,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\ncnffjbeq\u001c=\u001cnop",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:1000001 pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG 1000001 2026-10-21G03:00:00.000M\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:PBZCNPG FRRA:1000000\n## ===== PBZCNPG #1 guebhtu 1000000 =====\n누적 요약\npbzcnpgrq-ol:gg-1-oenib\n[ZNFXRQ:cnffjbeq]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:cnffjbeq]\n"
+    },
+    {
+      "previous": null,
+      "tail": [
+        {
+          "id": 1000002,
+          "created_at": "2026-10-21T04:00:00.000Z",
+          "bodyRot13": "SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n-----ORTVA CEVINGR XRL-----\nk\n-----RAQ CEVINGR XRL-----\n-----ORTVA CEVINGR XRL-----\nl\n-----RAQ CEVINGR XRL-----"
+        }
+      ],
+      "maskedCount": 4,
+      "bodyRot13": "FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n-----ORTVA CEVINGR XRL-----\nk\n-----RAQ CEVINGR XRL-----\n-----ORTVA CEVINGR XRL-----\nl\n-----RAQ CEVINGR XRL-----",
+      "markdownRot13": "# PBZCNPG VACHG CNPXRG grfgre/pbzcnpg#1 trarengrq:2026-10-21G04:00+0000 ceri-pbzcnpg:abar pbzzragf:1 ynfg-vq:1000002\n규칙: 이 패킷 밖 정보를 쓰지 않는다. 패킷에 없는 것은 '미확인'. 출력은 PBZCNPG 본문만(≤2000자, rknzcyrf/pbzcnpg.zq 형식).\n\n## VFFHR OBQL yvar1: FGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nFGNGR=ehaavat BJARE=gg-1-nycun ERCYL-VA=- OBNEQ=-\n\n## CERI PBZCNPG abar — vffhr obql sbyybjf\nFGNGR:ehaavat BJARE:gg-1-nycun HCQNGRQ:2026-10-21G04:00+00:00\nTBNY: 패킷 정본 대조\n[ZNFXRQ:crz]\n[ZNFXRQ:crz]\n\n## PBZZRAGF NSGRE (1, nfpraqvat)\n### 1000002 2026-10-21G04:00:00.000M | SEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\nSEBZ:gg-1-nycun/f1 GB:NYY GLCR:ABGR\n[ZNFXRQ:crz]\n[ZNFXRQ:crz]\n"
+    }
+  ],
+  "validation": [
+    {
+      "body": "FROM:tt-1-alpha/s1 TO:tt-1-bravo TYPE:COMPACT SEEN:1000003\n## ===== COMPACT #1 through 1000003 =====\n구간 요약.\ncompacted-by:tt-1-bravo",
+      "reasons": [
+        "TYPE COMPACT: TO:ALL 필수(요약은 전원 공유)"
+      ]
+    },
+    {
+      "body": "FROM:tt-1-alpha/s1 TO:ALL TYPE:COMPACT SEEN:1000003\n## ==== COMPACT #1 through 1000003 =====\n구간 요약.\ncompacted-by:tt-1-bravo",
+      "reasons": [
+        "TYPE COMPACT: 2번째 줄은 정확히 `## ===== COMPACT #<이슈> through <SEEN id> =====` (강한 마커)"
+      ]
+    },
+    {
+      "body": "FROM:tt-1-alpha/s1 TO:ALL TYPE:COMPACT SEEN:1000003\n## ===== COMPACT #1 through 999999 =====\n구간 요약.\ncompacted-by:tt-1-bravo",
+      "reasons": [
+        "TYPE COMPACT: 마커의 through 999999 ≠ SEEN 1000003"
+      ]
+    },
+    {
+      "body": "FROM:tt-1-alpha/s1 TO:ALL TYPE:COMPACT SEEN:1000003\n## ===== COMPACT #1 through 1000003 =====\n구간 요약.\ncompacted-by:tt-1-bravoxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "reasons": [
+        "TYPE COMPACT: 본문 2001자 > 2000자 — 결정·열린 지시·CLAIM·VERDICT·다음 행동만, 상세는 원 id"
+      ]
+    },
+    {
+      "body": "FROM:tt-1-alpha/s1 TO:ALL TYPE:COMPACT SEEN:1000003\n## ===== COMPACT #1 through 1000003 =====\n구간 요약.\ncompacted-by:tt-1-bravoxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "reasons": []
+    }
+  ]
+}
