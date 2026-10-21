@@ -1,0 +1,45 @@
+PENDING-ACK (내게 온 지시, 내 ACK RE 없음):
+  hikaMaeng/issus#1 1000009 DECISION FROM:issus-1-orch/s1 ACK-BY:2026-10-21T19:00+09:00 | FROM:issus-1-orch/s1 TO:issus-1-client TYPE:DECISION ACK-BY:2026-10-21T19:00+09:00
+PENDING-ACK-GLOBAL (COMPACT 구간 밖 미해소 지시):
+  hikaMaeng/issus#1 1000001 HOLD FROM:issus-1-orch/s1 ACK-BY:2026-10-21T19:00+09:00 | FROM:issus-1-orch/s1 TO:issus-1-client TYPE:HOLD ACK-BY:2026-10-21T19:00+09:00
+=== [ME] hikaMaeng/issus#1 1000003 2026-10-21T06:00:03Z TYPE:ASK FROM:issus-1-orch/s1 TO:issus-1-client
+FROM:issus-1-orch/s1 TO:issus-1-client TYPE:ASK ACK-BY:2026-10-21T19:00+09:00
+ASK @issus-1-client: 구현 검토.
+
+=== [ME] [NOENV] hikaMaeng/issus#1 1000007 2026-10-21T06:00:07Z TYPE:REPORT FROM:issus-1-worker TO:issus-1-old
+작성: issus-1-worker / s1 | worker
+TYPE: STATUS
+TO: issus-1-old
+레거시, 관찰 별칭 수신.
+
+=== [ME] hikaMaeng/issus#1 1000009 2026-10-21T06:00:09Z TYPE:DECISION FROM:issus-1-orch/s1 TO:issus-1-client
+FROM:issus-1-orch/s1 TO:issus-1-client TYPE:DECISION ACK-BY:2026-10-21T19:00+09:00
+미해소 결정.
+
+=== [CC] hikaMaeng/issus#1 1000004 2026-10-21T06:00:04Z TYPE:NOTE FROM:issus-1-worker/s1 TO:issus-1-peer CC:issus-1-client
+FROM:issus-1-worker/s1 TO:issus-1-peer TYPE:NOTE CC:issus-1-client
+참고 공유.
+
+=== [ALL] hikaMaeng/issus#1 1000002 2026-10-21T06:00:02Z TYPE:COMPACT FROM:issus-1-orch/s1 TO:ALL
+FROM:issus-1-orch/s1 TO:ALL TYPE:COMPACT SEEN:1000001
+## ===== COMPACT #1 through 1000001 =====
+열린 HOLD:1000001.
+
+=== [ALL] hikaMaeng/issus#1 1000005 2026-10-21T06:00:05Z TYPE:NOTE FROM:issus-1-peer/s1 TO:ALL
+FROM:issus-1-peer/s1 TO:ALL TYPE:NOTE
+전체 알림 😀.
+
+=== [ALL] hikaMaeng/issus#1 1000010 2026-10-21T06:00:10Z TYPE:DECISION FROM:issus-1-peer/s1 TO:issus-1-worker
+FROM:issus-1-peer/s1 TO:issus-1-worker TYPE:DECISION ACK-BY:2026-10-21T19:00+09:00
+다른 수신자 DECISION도 ALL로 표시.
+
+=== [ALL] hikaMaeng/issus#2 1000011 2026-10-21T06:00:11Z TYPE:NOTE FROM:issus-1-peer/s1 TO:ALL
+FROM:issus-1-peer/s1 TO:ALL TYPE:NOTE
+게시판 NOTE.
+
+=== [OTHER] hikaMaeng/issus#1 1000006 2026-10-21T06:00:06Z TYPE:NOTE FROM:issus-1-peer/s1 TO:issus-1-worker
+FROM:issus-1-peer/s1 TO:issus-1-worker TYPE:NOTE
+
+--- hikaMaeng/issus#1 state=open body-STATE:running reply-in=- last-id=1000010 comments=9(since-compact) compact=1000002 since-compact=8c/644자 board=#2
+--- hikaMaeng/issus#2 state=open body-STATE:running reply-in=- last-id=1000011 comments=1(since-compact) compact=- since-compact=1c/47자 board=-
+--- unread: ME=3 CC=1 ALL=4 OTHER=1 noenv=1 pending-ack=1 (peek: state not advanced)

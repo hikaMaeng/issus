@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../../../packages/issus_domain/src",
+    "outDir": "../.cache/front-test-js",
+    "noEmit": false,
+    "types": ["node"]
+  },
+  "files": ["../../../packages/issus_domain/src/front/model/model.test.ts"],
+  "include": []
+}

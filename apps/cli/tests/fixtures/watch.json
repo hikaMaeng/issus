@@ -1,0 +1,87 @@
+{
+  "repo": "hikaMaeng/issus",
+  "issues": {
+    "1": {
+      "number": 1,
+      "state": "open",
+      "title": "주 이슈",
+      "body": "STATE:running OWNER:issus-1-orch UPDATED:2026-10-21T15:00+09:00 BOARD:#2\n과제",
+      "comments": [
+        {
+          "id": 1000001,
+          "body": "FROM:issus-1-orch/s1 TO:issus-1-client TYPE:HOLD ACK-BY:2026-10-21T19:00+09:00\n과거 HOLD, 구간 밖 pending.",
+          "created_at": "2026-10-21T06:00:01Z",
+          "updated_at": "2026-10-21T06:00:01Z"
+        },
+        {
+          "id": 1000002,
+          "body": "FROM:issus-1-orch/s1 TO:ALL TYPE:COMPACT SEEN:1000001\n## ===== COMPACT #1 through 1000001 =====\n열린 HOLD:1000001.",
+          "created_at": "2026-10-21T06:00:02Z",
+          "updated_at": "2026-10-21T06:00:02Z"
+        },
+        {
+          "id": 1000003,
+          "body": "FROM:issus-1-orch/s1 TO:issus-1-client TYPE:ASK ACK-BY:2026-10-21T19:00+09:00\nASK @issus-1-client: 구현 검토.",
+          "created_at": "2026-10-21T06:00:03Z",
+          "updated_at": "2026-10-21T06:00:03Z"
+        },
+        {
+          "id": 1000004,
+          "body": "FROM:issus-1-worker/s1 TO:issus-1-peer TYPE:NOTE CC:issus-1-client\n참고 공유.",
+          "created_at": "2026-10-21T06:00:04Z",
+          "updated_at": "2026-10-21T06:00:04Z"
+        },
+        {
+          "id": 1000005,
+          "body": "FROM:issus-1-peer/s1 TO:ALL TYPE:NOTE\n전체 알림 😀.",
+          "created_at": "2026-10-21T06:00:05Z",
+          "updated_at": "2026-10-21T06:00:05Z"
+        },
+        {
+          "id": 1000006,
+          "body": "FROM:issus-1-peer/s1 TO:issus-1-worker TYPE:NOTE\n다른 사람 사이 전문.",
+          "created_at": "2026-10-21T06:00:06Z",
+          "updated_at": "2026-10-21T06:00:06Z"
+        },
+        {
+          "id": 1000007,
+          "body": "작성: issus-1-worker / s1 | worker\nTYPE: STATUS\nTO: issus-1-old\n레거시, 관찰 별칭 수신.",
+          "created_at": "2026-10-21T06:00:07Z",
+          "updated_at": "2026-10-21T06:00:07Z"
+        },
+        {
+          "id": 1000008,
+          "body": "FROM:issus-1-client/s1 TO:issus-1-orch TYPE:NOTE RE:1000003\n내 NOTE도 호환 pending을 해소한다.",
+          "created_at": "2026-10-21T06:00:08Z",
+          "updated_at": "2026-10-21T06:00:08Z"
+        },
+        {
+          "id": 1000009,
+          "body": "FROM:issus-1-orch/s1 TO:issus-1-client TYPE:DECISION ACK-BY:2026-10-21T19:00+09:00\n미해소 결정.",
+          "created_at": "2026-10-21T06:00:09Z",
+          "updated_at": "2026-10-21T06:00:09Z"
+        },
+        {
+          "id": 1000010,
+          "body": "FROM:issus-1-peer/s1 TO:issus-1-worker TYPE:DECISION ACK-BY:2026-10-21T19:00+09:00\n다른 수신자 DECISION도 ALL로 표시.",
+          "created_at": "2026-10-21T06:00:10Z",
+          "updated_at": "2026-10-21T06:00:10Z"
+        }
+      ]
+    },
+    "2": {
+      "number": 2,
+      "state": "open",
+      "title": "[공통 게시판]",
+      "body": "STATE:running OWNER:issus-board UPDATED:2026-10-21T15:00+09:00\n게시판",
+      "comments": [
+        {
+          "id": 1000011,
+          "body": "FROM:issus-1-peer/s1 TO:ALL TYPE:NOTE\n게시판 NOTE.",
+          "created_at": "2026-10-21T06:00:11Z",
+          "updated_at": "2026-10-21T06:00:11Z"
+        }
+      ]
+    }
+  }
+}
