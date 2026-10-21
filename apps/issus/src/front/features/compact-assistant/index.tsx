@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
+import {useSessionDraft} from '../session/index.js';
 import type {CompactPacket, CompactPurpose, CompactStatus} from 'issus_domain/common';
 import type {IssusClient} from 'issus_domain/front';
 import {ClientError, errorLines, errorReasons, issuePath, repoPath, type CommentView, type IssueView, type Principal} from '../../entry/client/index.js';
@@ -12,18 +13,19 @@ export {compactDraft, compactPreview, compactRequest, packetDownload, packetSamp
 /** Human-authored summaries bind raw body and sample evidence to one in-memory packet. */
 export function CompactAssistant({client,repo,number}: {client:IssusClient;repo:string;number:number}) {
   const path=issuePath(repo,number);
-  const [status,setStatus]=useState<CompactStatus|null>(null), [packet,setPacket]=useState<CompactPacket|null>(null), [purpose,setPurpose]=useState<CompactPurpose>('routine');
-  const [principal,setPrincipal]=useState<Principal|null>(null), [body,setBody]=useState(''), [author,setAuthor]=useState(''), [samples,setSamples]=useState<string[]>([]), [opened,setOpened]=useState<string[]>([]);
+  const [status,setStatus]=useState<CompactStatus|null>(null), [packet,setPacket]=useState<CompactPacket|null>(null), [purpose,setPurpose]=useSessionDraft<CompactPurpose>('compact.purpose','routine');
+  const [principal,setPrincipal]=useState<Principal|null>(null), [body,setBody]=useSessionDraft('compact.body',''), [author,setAuthor]=useSessionDraft('compact.author',''), [samples,setSamples]=useState<string[]>([]), [opened,setOpened]=useState<string[]>([]);
   const [errors,setErrors]=useState<string[]>([]), [message,setMessage]=useState(''), [busy,setBusy]=useState(false), [empty,setEmpty]=useState(false), [stale,setStale]=useState(false), [changed,setChanged]=useState(false);
   const [invalid,setInvalid]=useState<string[]>([]);
   const [operation,setOperation]=useState<string|null>(null), [source,setSource]=useState<CommentView|null>(null), [sourceErrors,setSourceErrors]=useState<string[]>([]), [sourceLoading,setSourceLoading]=useState(false);
-  const [previousReview,setPreviousReview]=useState<string[]>([]), [checked,setChecked]=useState(false);
+  const [previousReview,setPreviousReview]=useSessionDraft<string[]>('compact.previousReview',[]), [checked,setChecked]=useState(false);
   const rawDialog=useRef<HTMLDialogElement>(null),writer=useRef(new DeliveryWrite()),currentPacket=useRef<CompactPacket|null>(null), sourceSequence=useRef(0);
   const [uncertain,setUncertain]=useState(false);
   const statusSequence=useRef(0);
   const pendingRetry=useRef<(()=>Promise<void>)|null>(null), published=useRef<{signature:string;commentId:string}|null>(null);
   const fingerprint=JSON.stringify([body,packet?.packetHash,samples,author]);
   useEffect(()=>setChecked(false),[fingerprint]);
+  useEffect(()=>{if(samples.length)setPreviousReview(previous=>[...new Set([...previous,...samples])]);},[samples,setPreviousReview]);
   useEffect(()=>{
     const abort=new AbortController();
     void client.request<Principal>('/v1/auth/me',{signal:abort.signal}).then(({data})=>{if(!abort.signal.aborted){setPrincipal(data);setAuthor(current=>current||data.alias||'');}}).catch(()=>{});

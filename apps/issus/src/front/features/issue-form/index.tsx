@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {useSessionDraft} from '../session/index.js';
 import type {IssusClient} from 'issus_domain/front';
 import {errorLines, errorReasons, ClientError, allPages, issuePath, repoPath, type IssueView, type Principal} from '../../entry/client/index.js';
 import {Envelope} from '../envelope/index.js';
@@ -12,8 +13,8 @@ export {bodyKeys, parseBodyDraft, bodyFromFields, initialBody, bodyEnvelope, Edi
 /** Create uses syntax validation; edit submits exact raw text with its acknowledged If-Match revision. */
 export function IssueForm({client, repo, initial, principal}: {client: IssusClient; repo: string; initial?: IssueView; principal?: Principal|null}) {
   const editing = !!initial, number = initial?.issue.number;
-  const [title, setTitle] = useState(initial?.issue.title ?? ''), [body, setBody] = useState(initial?.body ?? initialBody(principal?.alias ?? ''));
-  const [fields, setFields] = useState<BodyDraft>(() => parseBodyDraft(body)), [base, setBase] = useState<EditBase|undefined>(initial ? {body: initial.body, revision: initial.revision, etag: `"${initial.revision}"`} : undefined), [latest, setLatest] = useState<EditBase|null>(null);
+  const [title, setTitle] = useSessionDraft('issue-form.title', initial?.issue.title ?? ''), [body, setBody] = useSessionDraft('issue-form.body', () => initial?.body ?? initialBody(principal?.alias ?? ''));
+  const [fields, setFields] = useSessionDraft<BodyDraft>('issue-form.fields', () => parseBodyDraft(body)), [base, setBase] = useSessionDraft<EditBase|undefined>('issue-form.base', () => initial ? {body: initial.body, revision: initial.revision, etag: `"${initial.revision}"`} : undefined), [latest, setLatest] = useState<EditBase|null>(null);
   const [errors, setErrors] = useState<string[]>([]), [invalidFields, setInvalidFields] = useState<string[]>([]), [status, setStatus] = useState(''), [checking, setChecking] = useState(false), [needsCheck, setNeedsCheck] = useState(false), [created, setCreated] = useState<number|null>(null), [check, setCheck] = useState<unknown>(null), [aliases, setAliases] = useState<string[]>([]), [registryFailed, setRegistryFailed] = useState(false);
   const operation = useWriteOperation(), path = number ? issuePath(repo, number) : `${repoPath(repo)}/issues`;
   useEffect(() => {if (!initial && principal?.alias) setBody(current => {const parsed = parseBodyDraft(current); if (parsed.fields.OWNER) return current; const next = initialBody(principal.alias!); setFields(parseBodyDraft(next)); return next;});}, [initial, principal]);
