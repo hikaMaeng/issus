@@ -7,6 +7,13 @@ import {errorLines, ClientError, readHistory, allPages} from '../../entry/client
 import {IssusClient} from 'issus_domain/front';
 import {ko} from '../../resources/index.js';
 
+test('U2 OTHER starts with only its envelope while shared HOLD/DECISION remain full and focusable', () => {
+  const make = (TYPE: string) => ({id: '1000001', body: `FROM:tt-1-alpha/s1 TO:tt-1-other TYPE:${TYPE}\nprivate-full-body`, envelope: {FROM: 'tt-1-alpha/s1', TO: 'tt-1-other', TYPE}});
+  const folded = renderToStaticMarkup(<Comment comment={make('NOTE')} priority="OTHER"/>);
+  assert.ok(folded.includes('OTHER 댓글 1000001 전문 보기')); assert.ok(!folded.includes('private-full-body')); assert.ok(folded.includes('data-collapsed="true"'));
+  for (const type of ['HOLD','DECISION']) {const html = renderToStaticMarkup(<Comment comment={make(type)} priority="OTHER"/>); assert.ok(html.includes('private-full-body')); assert.ok(!html.includes('data-collapsed="true"')); assert.ok(html.includes('id="comment-1000001"')); assert.ok(html.includes('tabindex="-1"'));}
+});
+
 test('B-01 contract: legacy warning and raw HTML stay inert', () => {
   const html = renderToStaticMarkup(<Comment comment={{id: '1000001', body: '작성: legacy\n<script>alert(1)</script>', envelope: {}, validity: 'noenv', createdAt: '2026-10-21T09:00:00Z'}}/>);
   assert.ok(html.includes(ko.noenv)); assert.ok(html.includes('role="alert"')); assert.ok(html.includes('&lt;script&gt;'));

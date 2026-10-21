@@ -1,4 +1,4 @@
-issus 사람용 React UI: 다크 3열 프레임·세션 발급/연결·저장소/이슈 탐색·ROSTER와 기존 댓글/받은편지함을 제공한다.
+issus 사람용 React UI: 다크 3열 프레임·세션·이슈 개입·전달/ACK/반영·COMPACT 도우미를 제공한다.
 
 | 목적 | 파일 |
 | --- | --- |
@@ -12,3 +12,5 @@ entry/main.tsx→entry/app, pages별 화면, features별 봉투·댓글·COMPACT
 P9 정본은 [ui.md](../../../../docs/ui.md) v1.1. 공통 client/resources/styles·프레임/세션/탐색은 U1, 이슈 개입은 U2, 전달·COMPACT·통합은 U3 경계다. U2/U3 신규 화면의 최종 경로 조립은 export 완료 뒤 취합한다.
 
 inbox 실시간 연결은 entry/socket의 same-origin cookie WS와 P7 subscribe를 사용한다. B-03의 연결오류·단절/재연결·중복행0은 [시험](docs/testing.md)의 필수 수용이다.
+
+U3는 받은편지함의 세 종류 pending·영수/처리/반영과 `/repos/:o/:r/issues/:n/compact`의 패킷/표본/metadata 흐름을 구현한다. 전체36개 ID 계획은 [P9 통합 계획](../../tests/plans/p9-ui-20261021.md), 배포 호스트 runner는 `tests/browser/p9-host.mjs`다. 경로 조립·배포 DOM·사람 확인은 각 실행 보고서에서 별도 판정한다.

@@ -1,0 +1,20 @@
+/** COMPACT assistant copy; packet tokens are never presented. */
+export const compactKo = {
+  title: 'COMPACT 도우미', status: 'COMPACT 상태', previous: '이전 COMPACT', count: '구간 댓글 수', chars: '구간 자수', due: 'COMPACT 필요', notDue: '현재 COMPACT 기한 전', reasons: '사유',
+  thresholds: '일반 이슈 25댓글·게시판 30댓글 또는 40,000자 이상, DECISION·HANDOFF·닫기 직전에는 서버 due를 확인합니다.',
+  purpose: '준비 목적', purposes: {routine: '정기 요약', 'before-decision': 'DECISION 직전', 'before-handoff': 'HANDOFF 직전', 'before-close': '닫기 직전'},
+  prepare: '패킷 준비', download: '패킷 다운로드', existing: '기존 패킷 조회', packet: '준비한 패킷', empty: '요약할 새 구간이 없습니다',
+  through: '구간 마지막 ID', revision: '패킷 본문 revision', hash: '패킷 hash', masked: '마스킹 수', appendix: '창 밖 미해결 의무', controls: '구간 제어 사실',
+  packetHelp: '패킷은 마스킹된 원문입니다. 다운로드는 현재 패킷을 읽으며 새 구간을 준비하지 않습니다.',
+  body: 'COMPACT 본문', author: '요약 담당 별칭', samples: '표본 원문 대조', sample: (id: string) => `표본 대조 ${id}`, required: (count: number) => `서로 다른 원 댓글 ${count}개 이상을 열어 대조하고 선택하세요.`,
+  raw: (id: string) => `표본 원문 ${id}`, rawOpen: (id: string) => `원문 대조 ${id}`, closeRaw: '대조 원문 닫기',
+  validate: 'COMPACT 검사', post: 'COMPACT 게시', preview: 'COMPACT 게시 미리보기', checked: '검사를 통과했습니다. 게시 시 서버가 다시 검사합니다.',
+  metadata: '게시 metadata', tokenMasked: '[비공개 패킷 토큰]',
+  stale: '패킷이 오래되었거나 만료되었습니다. 초안·표본 대조 기록을 보존했습니다. 새 패킷 준비를 명시적으로 실행하세요.',
+  changed: '새 댓글 또는 본문 변경을 확인했습니다. 초안을 보존하며 게시 시 서버가 패킷을 다시 검사합니다.',
+  confirmed: (id: string, revision: number) => `COMPACT ${id} 게시 확인 · 본문 revision ${revision} · COMPACT 포인터 확인`,
+  notConfirmed: '게시 응답은 받았으나 최신 본문 COMPACT 포인터 확인이 필요합니다. 기존 요청으로 다시 확인하세요.',
+  reviewRequired: '패킷과 요약 담당 별칭, 실제 원문 대조 표본을 확인하세요.',
+  manual: '요약은 사람이 작성하거나 위임 산출물을 붙여 넣습니다. 자동 요약을 실행하지 않습니다.',
+  source: '이슈로 돌아가기', draftKept: '이전 초안·표본 기록을 보존했습니다. 새 패킷 원문과 다시 대조하세요.',
+} as const;

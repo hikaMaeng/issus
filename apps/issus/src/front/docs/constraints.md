@@ -2,7 +2,7 @@
 
 [design §7.3](../../../../../docs/design.md#73-최소-ui와-semantic-markup-계약)과 [루트 locator 표](../../../../../docs/constraints.md)가 고정 계약이다. main/h1 하나, nav 주 탐색, 이름 있는 region/form/dialog/table/ol, row/comment/delivery id를 제공한다. 검사 오류는 alert·aria-invalid/describedby, 성공·loading은 status다.
 
-사용자 카피는 resources/index.ts, API reason·본문·봉투 값은 원문이다. NOENV는 읽기 전용이며 raw HTML을 실행하지 않는다. native dialog를 사용한다. bearer 저장·자동 ACK·화면 표시만으로 process cursor 전진은 금지다.
+사용자 카피는 resources의 소유 파일, API reason·본문·봉투 값은 원문이다. NOENV는 읽기 전용이며 raw HTML을 실행하지 않는다. native dialog를 사용한다. bearer 저장·자동 ACK·화면 표시만으로 process cursor 전진은 금지다.
 
 실시간 연결은 aria-label=실시간 연결의 status(연결 중/연결됨/재연결 대기) 또는 alert(연결 오류) 하나로 노출한다. WS는 현재 origin과 동일 host·보안 수준만 허용하며 query token/별도 bearer 저장이 없다. 단절 뒤 구독id 교체·영수 커서 승계는 P7 계약이다.
 
@@ -13,3 +13,7 @@ U1은 nav `주 탐색`, form `세션 연결`/password `세션 토큰`/button `�
 14px·8px·shadow none·3열은 ui.md §4 CSS 토큰 정본이다. inline code #ff7b83/#2a2a2a의 작은 글자 AA 대비≥4.5:1. 카피는 resources 파일에 두고 서버 reason·원문·TYPE/키는 번역하지 않는다. native dialog Esc는 닫기와 트리거 focus 복귀이며 draft를 게시하지 않는다.
 
 bearer는 local/session storage·URL·로그에 기록하지 않는다. 저장은 issus.csrf만이다. 관리 입력은 성공/패널 닫기/페이지 이탈 시 제거한다. 발급 token을 캡처·trace에 기록하지 않으며 브라우저 스크린샷은 입력을 마스킹한다.
+
+U3는 region/form `받은편지함`, article `전달 <deliveryId 또는 viewKey>`·testid=delivery·실제 때만 data-delivery-id, testid=delivery-state·data-state를 쓴다. pending 상단은 링크만 두어 article을 복제하지 않는다. OTHER는 native details `OTHER 댓글 <id> 전문 보기`에서 단건 원문을 읽고 HOLD/DECISION은 접지 않는다.
+
+dialog `수신 확인 미리보기`/`무시 사유 확인`, form `반영 근거 기록`과 label `근거 댓글 ID`/`반영 결과`/`미반영 사유`, section `COMPACT 도우미`와 버튼 `패킷 준비`/`패킷 다운로드`/`COMPACT 게시`는 고정 계약이다. packetToken은 DOM·스크린샷·markdown·로그에서 제외한다. 확인 전 source 표본 checkbox는 비활성이다.

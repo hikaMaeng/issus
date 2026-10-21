@@ -1,0 +1,20 @@
+/** Inbox-only copy; protocol keys and server diagnostics retain their source spelling. */
+export const inboxKo = {
+  board: '게시판 번호(쉼표 구분)', since: '최신 COMPACT 이후', transport: '실시간 전송 방식', ws: 'WebSocket', sse: 'SSE',
+  window: 'PENDING-ACK(window)', global: 'PENDING-ACK-GLOBAL', waiting: 'ACK-STATE waiting',
+  obligations: '미해결 지시', holds: '활성 HOLD', pending: '수신 확인 대기', none: '없음',
+  legacyHelp: '본인 REPORT RE로 PENDING-ACK가 해소되어도 직접 ACK가 없으면 ACK-STATE는 waiting입니다. NOTE·CLAIM에도 ACK 답변을 작성할 수 있습니다.',
+  meaning: 'delivered는 전송 영수, acked는 실제 TO의 직접 ACK, applied는 검증된 반영 근거입니다. 외부 작업의 성공을 자동 검증하지 않습니다.',
+  states: {posted: '영속 게시', delivered: '전송 영수 확인', acked: '직접 수신 확인', applied: '반영 근거 기록', superseded: '후속 지시로 대체'},
+  elapsed: (seconds: number) => `기한 경과 예상 ${seconds}초`, countdown: (seconds: number) => `기한까지 ${seconds}초`,
+  timing: '화면 시계의 예상 경과입니다. 서버 overdue·escalated 사실과 구별합니다. 재전달은 +30초/+120초, HOLD 첫 overdue는 즉시 escalation, 일반 attempt3 뒤 escalation, digest는 15분입니다.',
+  version: '별칭 이벤트 순서(E)', source: '원 댓글', rawOther: (id: string) => `OTHER 댓글 ${id} 전문 보기`,
+  receipt: '영수 확인', receiptDone: '전송 영수를 기록했습니다',
+  process: '처리 완료 기록', disposition: '처리 구분', replied: '답변 근거', acked: 'ACK 근거', processDone: '서버가 처리 근거를 확인했습니다',
+  application: '반영 근거 기록', evidence: '근거 댓글 ID', outcome: '반영 결과', applied: '반영', notApplied: '미반영', reason: '미반영 사유', applicationDone: '서버가 반영 근거를 확인했습니다',
+  evidenceHelp: '직접 TO의 ACK 후 본인 REPORT/VERIFY RE 원 지시가 필요합니다. 미반영은 사유를 입력합니다.',
+  ackBody: 'ACK 내용', ackCheck: 'ACK 검사', ackChecked: 'ACK 검사를 통과했습니다. 게시 전에는 수신 확인 상태가 바뀌지 않습니다.',
+  operation: '요청 처리 상태', operationPending: '처리 대기 중', retry: '기존 요청 다시 확인', refreshing: '갱신 중',
+  updated: '마지막 성공 조회', scopeRequired: '저장소를 입력하고 조회하세요', noTarget: '현재 범위에서 원 댓글 위치를 확인할 수 없습니다',
+  serverFact: '서버 이벤트', fields: '전달 상태', processHelp: '조회·영수는 처리 커서를 전진시키지 않습니다. 서버가 연속 ordinal prefix를 계산합니다.',
+} as const;

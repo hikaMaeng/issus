@@ -117,3 +117,5 @@ markdown 응답은 X-Compact-Packet-Token/Hash/Through-Id/Snapshot-Revision 헤�
 production GET I/comments는 `createInboxHistoryReader(inbox)`로 canonical+inbox를 병합하며 `compact` 원문과 `compactStatus` 통계를 분리한다. 기본 sinceCompact=true이고 기존 cursor의 경계는 이후 새 COMPACT와 무관하게 유지한다. P6 단독 하네스는 `readCompactHistory`를 쓴다. close 요청 before-close는 P4 core/s3의 별도 제어 tx에 기록해 close 실패에도 보존한다(DECISION 6310243238).
 
 COMPACT 줄2는 `## ===== COMPACT #<실제이슈> through <SEEN> =====`, TO:ALL·전체≤2000codepoint·footer compacted-by:<compactedBy>. tail≥3이면 서로 다른 원 id≥3, 1–2면 전부, control-only0이면 []다. 이전 COMPACT가 있으면 RE에 포함한다. 요청 metadata wrapper/unknown key는422. raw token은 발급 응답/비공개 sidecar 외 저장/이벤트/로그에 남기지 않는다. 제어/생략사유 감사와 구간 밖 의무 부록은 [domain 계약](../../../packages/issus_domain/docs/compact.md)에 따른다.
+
+P9 U3 화면 매핑: inbox는 위 GET·HTTP receipts·process·application·직접 ACK comment 경로를 각각 사용한다. COMPACT 도우미는 prepare packet을 메모리에 묶고 마스킹 markdown만 다운로드한다. 게시 top-level은 body/compactPacketToken/sampledIds/compactedBy이며 footer의 괄호 접미사는 design v2.3대로 허용한다. source/배포 수용과 [전체 UI 계획](../tests/plans/p9-ui-20261021.md)은 별도다.
