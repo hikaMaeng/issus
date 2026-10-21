@@ -11,3 +11,6 @@
 - wire decoder는 unknown key를 버리지 않는다. `parseDomainClientFrame` 성공 뒤 채널 권한·cursor 소유 검사가 필수다. WS mutation은 제공하지 않는다.
 - alias near 검사 입력은 owner 전체 registry+tombstone이다. owner lock/동시등록·개명 tx는 서버 책임이다. 구조화 진단의 `case`는 Python 사유 문자열에서는 원본처럼 `exact`로 표기한다.
 - baseline 변경은 동결 전 P3만, 동결 뒤 순번+담당명 새 migration으로 한다. root manifest·barrel·타 담당 코드를 수정하지 않는다.
+- server 공개 경계는 backend/index.ts다. fact()는 P3 FactPayloadMap/parseFactPayload를 재사용하며 모르는 action·추가키·null 선택 필드를 영속시키지 않는다. server-only actor/provenance는 HTTP에서 거부한다.
+- 운영 schema는 issus, broker는 public이다. 테스트 namespace/queueName 주입을 운영 설정의 임의 테이블 접근으로 노출하지 않는다. owner 단위 쓰기 직렬화는 보수적 첫 구현이며 처리량 개선은 별도 검증한다.
+- COMPACT publication은 같은 DB tx의 단일 hook이다. P4가 canonical pointer·revision·fact를 소유하고 P6는 추가 projection을 연결한다. 외부 LLM/hook 성공을 DB 원자성으로 주장하지 않는다.
