@@ -12,12 +12,14 @@ import {startCoreHarness} from './testing.js';
 const enabled=!!process.env.ISSUS_TEST_DATABASE_URL;
 const stamp='2026-10-21T04:00:00+00:00';
 test('P4 real DB + listening HTTP acceptance',{skip:!enabled},async t=>{
-  const h=await startCoreHarness();
+  let beforeQueueDelete:(()=>Promise<void>)|undefined;
+  const h=await startCoreHarness({beforeQueueDelete:async()=>{await beforeQueueDelete?.();}});
   const R='/v1/repos/tester/core';
   let repoId:string,alphaToken:string,bravoToken:string,alpha:CorePrincipal,bravo:CorePrincipal,issueNumber:number,askId:string;
   const q=(name:string)=>`"${h.schema}"."${name}"`;
   const sqlCount=async(table:string)=>(await h.pool.query(`SELECT count(*)::int AS n FROM ${q(table)}`)).rows[0].n;
   async function fingerprint() {
+    await h.waitForIdle();
     const tables=(await h.pool.query('SELECT tablename FROM pg_tables WHERE schemaname=$1 ORDER BY tablename',[h.schema])).rows.map(r=>r.tablename);
     const rows:unknown[]=[];
     for(const table of tables) rows.push([table,(await h.pool.query(`SELECT to_jsonb(t) AS row FROM ${q(table)} t ORDER BY to_jsonb(t)::text`)).rows]);
@@ -134,14 +136,21 @@ test('P4 real DB + listening HTTP acceptance',{skip:!enabled},async t=>{
       const closed=await h.http(`${R}/issues/${source}/close`,{reason:'not planned',finalReportId:final.body.commentId},alphaToken!,{headers:{'if-match':String(summary.body.revision)}});assert.equal(closed.status,200,JSON.stringify(closed.body));
       assert.equal((await post('tt-1-alpha/s1','ALL','NOTE','새 작업.','',alphaToken!,source)).status,409);assert.equal((await h.pool.query(`SELECT count(*)::int n FROM ${q('comment')} WHERE repo_id=$1 AND issue_number=1 AND body LIKE $2`,[repoId,`%완료 공유 #${source}:%`])).rows[0].n,1);
     });
-    await t.test('HTTP authentication, CSRF, body cap, unknown metadata and operation scope',async()=>{
+    await t.test('HTTP authentication, CSRF, body cap, unknown metadata and operation scope',async t=>{
       assert.equal((await h.http(`${R}/issues/${issueNumber}`,undefined,'')).status,401);
       assert.equal((await h.http('/v1/repos',{owner:'tester',slug:'forbidden',projectCode:'qq'},alphaToken!)).status,403);
       const browser=await h.http('/v1/auth/browser-session',{},alphaToken!,{headers:{origin:'http://127.0.0.1:18140'}});assert.equal(browser.status,200);const cookie=browser.headers.get('set-cookie')!.split(';')[0];assert.match(browser.headers.get('set-cookie')!,/HttpOnly/);
       const noCsrf=await h.http(`${R}/issues/${issueNumber}/preflight`,{mode:'comment',request:{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\ncsrf'}},'',{headers:{cookie,origin:'http://127.0.0.1:18140'}});assert.equal(noCsrf.status,403);
       const csrf=await h.http(`${R}/issues/${issueNumber}/preflight`,{mode:'comment',request:{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\ncsrf'}},'',{headers:{cookie,origin:'http://127.0.0.1:18140','x-csrf-token':browser.body.csrfToken}});assert.equal(csrf.status,200);
       assert.equal((await h.http(`${R}/issues/${issueNumber}/comments`,{body:'x'.repeat(66000)},alphaToken!)).status,413);
-      const key=randomUUID();const first=await h.http('/v1/auth/browser-session',{},alphaToken!,{key,headers:{origin:'http://127.0.0.1:18140'}});const retry=await h.http('/v1/auth/browser-session',{},alphaToken!,{key,headers:{origin:'http://127.0.0.1:18140'}});assert.equal(retry.status,200);assert.deepEqual(retry.body,first.body);assert.equal(retry.headers.get('set-cookie'),first.headers.get('set-cookie'));
+      const cookieClock=new Date('2026-10-21T04:00:00Z');t.mock.timers.enable({apis:['Date'],now:cookieClock});
+      try {
+        const key=randomUUID();const first=await h.http('/v1/auth/browser-session',{},alphaToken!,{key,headers:{origin:'http://127.0.0.1:18140'}});assert.equal(first.status,200);
+        await new Promise(resolve=>setTimeout(resolve,1100));
+        const retry=await h.http('/v1/auth/browser-session',{},alphaToken!,{key,headers:{origin:'http://127.0.0.1:18140'}});assert.equal(retry.status,200);assert.deepEqual(retry.body,first.body);
+        const stableCookie=(header:string|null)=>{assert.ok(header);const expires=header.match(/; Expires=([^;]+)/i);assert.ok(expires);assert.equal(Date.parse(expires[1]),cookieClock.getTime()+86400000);assert.match(header,/; Max-Age=86400;/);assert.match(header,/; Path=\//);assert.match(header,/; HttpOnly/);assert.match(header,/; SameSite=Strict/);return header;};
+        assert.equal(stableCookie(retry.headers.get('set-cookie')),stableCookie(first.headers.get('set-cookie')));
+      } finally {t.mock.timers.reset();}
       assert.equal((await h.http(`${R}/issues/${issueNumber}/comments`,{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\nserver key',repoId},alphaToken!)).status,422);
       assert.equal((await h.http(`${R}/issues/not-a-number`,undefined,alphaToken!)).status,400);
     });
@@ -178,7 +187,16 @@ test('P4 real DB + listening HTTP acceptance',{skip:!enabled},async t=>{
     await t.test('I-P1 threshold/before-* due and auth/closed/unknown context remain read-only',async()=>{
       const n=await newIssue();for(let i=0;i<25;i++) assert.equal((await post('tt-1-alpha/s1','ALL','NOTE',`threshold ${i}`,'',alphaToken!,n)).status,201);
       let before=await fingerprint();const routine=await h.http(`${R}/issues/${n}/preflight`,{mode:'comment',request:{body:'FROM:tt-1-alpha/s1 TO:ALL TYPE:NOTE\nthreshold diagnostic'}},alphaToken!);assert.equal(routine.status,200);assert.equal(routine.body.compact.count,25);assert.deepEqual(routine.body.compact.reasons,['comments']);assert.equal(await fingerprint(),before);
-      const target=await newIssue('tt-1-bravo');
+      let releaseDelete!:()=>void;const deleteGate=new Promise<void>(resolve=>{releaseDelete=resolve;});beforeQueueDelete=()=>deleteGate;
+      let target:number;
+      try {
+        target=await newIssue('tt-1-bravo');
+        assert.equal((await h.pool.query(`SELECT count(*)::int n FROM pgmq."q_${h.queueName(QUEUES.intake)}"`)).rows[0].n,1,'201 can precede worker queue deletion');
+        let idle=false;const settled=h.waitForIdle().then(()=>{idle=true;});
+        await new Promise<void>(resolve=>setImmediate(resolve));assert.equal(idle,false,'idle barrier must include queue deletion');
+        releaseDelete();await settled;
+        assert.equal((await h.pool.query(`SELECT count(*)::int n FROM pgmq."q_${h.queueName(QUEUES.intake)}"`)).rows[0].n,0);
+      } finally {beforeQueueDelete=undefined;releaseDelete();}
       for(const type of ['DECISION','HANDOFF']) {before=await fingerprint();const body=`FROM:tt-1-alpha/s1 TO:tt-1-bravo TYPE:${type} ACK-BY:2026-10-21T04:05:00+00:00${type==='HANDOFF'?` REPLY-IN:#${target}`:''}\n선행 요약 진단.`;const r=await h.http(`${R}/issues/${n}/preflight`,{mode:'comment',request:{body,compactDeferredReason:'긴급 진단'}},alphaToken!);assert.equal(r.status,200,JSON.stringify(r.body));assert.ok(r.body.compact.reasons.includes(type==='DECISION'?'before-decision':'before-handoff'));assert.equal(await fingerprint(),before);}
       const cases=[{body:'FROM:tt-1-bravo/s1 TO:ALL TYPE:NOTE\nmismatch',status:403},{body:'FROM:tt-1-alpha/s1 TO:tt-1-nobody TYPE:NOTE\nunknown alias',status:422}];
       for(const c of cases){before=await fingerprint();const r=await h.http(`${R}/issues/${n}/preflight`,{mode:'comment',request:{body:c.body}},alphaToken!);assert.equal(r.status,c.status);assert.equal(await fingerprint(),before);}
