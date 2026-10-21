@@ -1,0 +1,10 @@
+**
+!apps/
+!apps/*/
+!apps/*/dist/
+!apps/*/dist/**
+!apps/*/docker/
+!apps/*/docker/Dockerfile
+!apps/issus-db/docker/postgres/
+!apps/issus-db/docker/postgres/initdb/
+!apps/issus-db/docker/postgres/initdb/*.sql

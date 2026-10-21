@@ -1,0 +1,20 @@
+{
+  "name": "issus-db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0 <21 || >=22.12.0"
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-infra.mjs",
+    "test": "node ../../scripts/run-tests.mjs docker --allow-empty",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "tsx": "4.23.15"
+  }
+}

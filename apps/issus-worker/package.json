@@ -1,0 +1,28 @@
+{
+  "name": "issus-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0 <21 || >=22.12.0"
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-app.mjs",
+    "test": "node ../../scripts/run-tests.mjs src --allow-empty",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "issus_domain": "0.1.0",
+    "agent": "0.1.0-issus.1",
+    "issus_runtime": "0.1.0",
+    "express": "5.3.0",
+    "env-schema": "8.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "tsx": "4.23.15",
+    "esbuild": "0.28.2",
+    "@types/express": "5.0.6"
+  }
+}

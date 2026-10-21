@@ -1,0 +1,24 @@
+{
+  "name": "issus-root",
+  "private": true,
+  "packageManager": "npm@11.17.0",
+  "engines": {
+    "node": ">=20.19.0 <21 || >=22.12.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "deploy": "bash scripts/deploy.sh",
+    "test:integration": "turbo run test:integration",
+    "test:browser": "turbo run test:browser"
+  },
+  "devDependencies": {
+    "turbo": "2.11.10",
+    "typescript": "7.0.2"
+  }
+}

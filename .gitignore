@@ -9,3 +9,10 @@ dist/
 apps/*/docker/.env
 issue_watch.state.json
 compact_packet_*.md
+
+.docker/
+coverage/
+*.tsbuildinfo
+apps/*/docker/volumes/*
+!apps/*/docker/volumes/.gitkeep
+!.npmrc

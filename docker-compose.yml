@@ -1,0 +1,110 @@
+name: issus
+
+services:
+  issus-db:
+    container_name: issus-db
+    image: issus-db:local
+    build:
+      context: .
+      dockerfile: apps/issus-db/docker/Dockerfile
+    env_file:
+      - path: apps/issus-db/docker/env.defaults
+      - path: apps/issus-db/docker/.env
+        required: false
+    ports:
+      - "127.0.0.1:${ISSUS_DB_HOST_PORT:-15440}:5432"
+    volumes:
+      - issus_pgdata:/var/lib/postgresql
+    networks: [issus_internal]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" && psql -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" -tAc \"SELECT 1 FROM pg_extension WHERE extname='pgmq'\" | grep -qx 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+    stop_grace_period: 60s
+
+  issus:
+    container_name: issus
+    image: issus:local
+    build:
+      context: .
+      dockerfile: apps/issus/docker/Dockerfile
+    env_file:
+      - path: apps/issus/docker/env.defaults
+      - path: apps/issus/docker/.env
+        required: false
+    environment:
+      PORT: "${ISSUS_PORT:-18140}"
+    ports:
+      - "127.0.0.1:${ISSUS_HOST_PORT:-18140}:${ISSUS_PORT:-18140}"
+    depends_on:
+      issus-db:
+        condition: service_healthy
+    networks: [issus_internal]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:'+process.env.PORT+'/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    stop_grace_period: 30s
+    labels:
+      issus.deploy-health-path: /ready
+
+  issus-worker:
+    container_name: issus-worker
+    image: issus-worker:local
+    build:
+      context: .
+      dockerfile: apps/issus-worker/docker/Dockerfile
+    env_file:
+      - path: apps/issus-worker/docker/env.defaults
+      - path: apps/issus-worker/docker/.env
+        required: false
+    depends_on:
+      issus-db:
+        condition: service_healthy
+      issus:
+        condition: service_healthy
+    networks: [issus_internal]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:'+process.env.PORT+'/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    stop_grace_period: 30s
+
+  issus-scheduler:
+    container_name: issus-scheduler
+    image: issus-scheduler:local
+    build:
+      context: .
+      dockerfile: apps/issus-scheduler/docker/Dockerfile
+    env_file:
+      - path: apps/issus-scheduler/docker/env.defaults
+      - path: apps/issus-scheduler/docker/.env
+        required: false
+    depends_on:
+      issus-db:
+        condition: service_healthy
+      issus:
+        condition: service_healthy
+    networks: [issus_internal]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:'+process.env.PORT+'/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    stop_grace_period: 30s
+
+networks:
+  issus_internal:
+    name: issus_internal
+    internal: true
+
+volumes:
+  issus_pgdata:
+    name: issus_pgdata

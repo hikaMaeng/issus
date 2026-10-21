@@ -1,0 +1,3 @@
+# constraints
+
+포트는 검증된 환경값 10000–59999를 사용한다. 골격 /ready는 DB·큐 초기화를 보증하지 않는다. UI는 main 랜드마크 1개와 이름 issus인 level-1 heading을 노출한다. getByRole(main), getByRole(heading, {name: issus, level: 1})를 사용한다.

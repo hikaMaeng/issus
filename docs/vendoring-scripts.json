@@ -1,0 +1,32 @@
+{
+  "sourceRepo": "hikaMaeng/ndx_business",
+  "sourceRoot": "F:\\dev\\ndx_business",
+  "sourceHead": "d52c71e92493ec33584c09d679c789e15cf70086",
+  "copiedAt": "2026-10-21T04:42:37.877831+00:00",
+  "files": [
+    {
+      "source": "F:\\dev\\ndx_business\\scripts\\deploy.sh",
+      "destination": "scripts/deploy.sh",
+      "sourceSha256": "d230a72cee20eda541ba054cfa37480a2de3a71d11e10bbc0706868d6873b6f6",
+      "destinationSha256": "0519f0cb6a982ce18d47494a433d29f01d73de26b630d7bcb8c6a98c06cfe033"
+    },
+    {
+      "source": "F:\\dev\\ndx_business\\scripts\\dependency-fingerprint.sh",
+      "destination": "scripts/dependency-fingerprint.sh",
+      "sourceSha256": "1d73c38cafc3989f30260da41f6c021c6f3bb2664a7072482f3293e93185e0d6",
+      "destinationSha256": "1d73c38cafc3989f30260da41f6c021c6f3bb2664a7072482f3293e93185e0d6"
+    },
+    {
+      "source": "F:\\dev\\ndx_business\\scripts\\node-range.mjs",
+      "destination": "scripts/node-range.mjs",
+      "sourceSha256": "889803c1906f854909a7e6530c429bbb5e8889d9c6388620c5cb88001f51ca6d",
+      "destinationSha256": "889803c1906f854909a7e6530c429bbb5e8889d9c6388620c5cb88001f51ca6d"
+    },
+    {
+      "source": "F:\\dev\\ndx_business\\scripts\\run-tests.mjs",
+      "destination": "scripts/run-tests.mjs",
+      "sourceSha256": "a0a59f61998ab32806e65b9577700ab6270695f766a04c7f0ad5aabb7a1f5b7d",
+      "destinationSha256": "22c1b169ce64a28658370164381fbd641d925c40ee3afe9b0867f455952c0b08"
+    }
+  ]
+}
