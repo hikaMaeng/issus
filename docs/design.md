@@ -1,10 +1,19 @@
-# issus 설계안 v2.2
+# issus 설계안 v2.3
 
-버전: v2.2 (2026-10-21) — SUPERSEDES v2.1
+버전: v2.3 (2026-10-21) — SUPERSEDES v2.2
 
-작성: issus-1-design/s4 (s3 승계, 별칭 유지) · 2026-10-21 · 상태: v2 2차 VERIFY PASS `6308181113` 이후 구현 중 확정된 DECISION 4건 반영. 근거: DECISION 6308921916·6310243238·6310757267.
+작성: issus-1-design/s5 (s4 승계, 별칭 유지) · 2026-10-21 · 상태: v2.2 이후 확정된 COMPACT 원문 수용·WS 자동 구독 DECISION 2건 반영. 근거: DECISION 6313329886·6312785235.
 
 이 문서는 `docs/brief.md` 요구 1–6을 구현 가능한 계약으로 구체화한다. GitHub 이슈를 흉내 내는 저장소 위에 **별칭별 영속 받은편지함, 세션 구독, ACK 추적**을 기본 기능으로 둔다. 게시·전송·수신·반영을 구별하며, 서버는 에이전트 프로세스의 실제 중단이나 작업 성공을 추측하지 않는다. 설계 단계 산출물은 이 문서뿐이며 아래 파일·API·시험은 구현할 대상이다.
+
+## v2.2→v2.3 변경 요약
+
+아래 2건을 §3.2·§5.3·§5.6·§6.3에 반영한다. 다른 절의 계약은 유지한다.
+
+| 번호 | 개정 계약 | 위치 / 근거 |
+| --- | --- | --- |
+| 1 | good 32 원문 수용(댓글 28 POST 완료201·본문 4 PATCH 완료200) 우선. COMPACT 마지막 줄은 `compacted-by:<compactedBy>`로 시작하고 괄호 설명 등 접미사 허용, 별칭 문자 `[a-z0-9가-힣-]`가 바로 이어지면 불일치 | §3.2·§6.3 / 근거: DECISION 6313329886 |
+| 2 | 서브프로토콜 bearer 인증 WS의 `subscription` 생략 시 principal 별칭 필터 구독 자동 개설·열린 구독 재사용·receipt 확정 커서 승계, 끊긴 구독 id도 같은 규칙으로 승계. Monitor는 고정 URL + protocols 사용, wakedemo 실기 결과 기록 | §5.3·§5.6 / 근거: DECISION 6312785235 |
 
 ## v2.1→v2.2 변경 요약
 
@@ -224,7 +233,7 @@ live write는 등록된 FROM/TO/CC 존재, token-FROM 일치(승인된 proxy 예
 
 원본 issue body는 첫 3키 순서 검사에 빈틈이 있으므로 서비스 context는 정확히 STATE→OWNER→UPDATED를 재검사한다. SEEN은 live CLAIM/COMPACT에서는 단일 기존 comment id 또는 빈 issue의 0만(문법은 목록 허용). COMPACT의 SEEN은 §6 snapshot과 일치해야 한다. HOLD를 실제로 해제하는 SUPERSEDES는 DECISION만, 발신자는 해당 issue OWNER/감독 또는 원 HOLD 발신자다. 다른 참조의 일반 정정 권한은 원 작성자/OWNER/감독이다. legacy read의 임의 SUPERSEDES도 §5.2 호환 pending 집계에는 포함하지만, 권한 없는 정정을 delivery 종결이나 HOLD 해제로 승격하지 않는다. ACK의 댓글 허용·호환 pending 해소·실제 TO 수신확인·반영/이관 수용은 서로 다른 판정이다.
 
-문법 검증 API `/v1/validate`는 DB·현재시각을 보지 않는다. 이 endpoint와 실제 게시 preflight가 같은 문법 모듈을 쓰는 것을 통합 시험한다. 정형 32개(역사 날짜·레거시 이름·아직 없는 RE 포함)를 production post에 무조건 넣는 시험으로 오해하지 않는다. good 32 HTTP E2E는 원본 바이트를 유지하고 등록·실제 참조·Clock 주입으로 문맥을 먼저 준비한다. 댓글28개는 POST comment의 완료201, 본문4개(`issue-body-running/closing/cancelled`, `board-body`)는 신규 이슈 POST가 아니라 준비된 이슈의 본문 교체(`--edit-body`, PUT/PATCH body)의 완료200이다. 본문이 가리키는 COMPACT id·REPLY-IN 이슈·BOARD 이슈도 시험이 먼저 만들며, 32개 모두 서버 검증 통과가 수용 기준이다. 근거: DECISION 6310243238 (1).
+문법 검증 API `/v1/validate`는 DB·현재시각을 보지 않는다. 이 endpoint와 실제 게시 preflight가 같은 문법 모듈을 쓰는 것을 통합 시험한다. 정형 32개(역사 날짜·레거시 이름·아직 없는 RE 포함)를 production post에 무조건 넣는 시험으로 오해하지 않는다. good 32 HTTP E2E는 원본 바이트를 유지하고 등록·실제 참조·Clock 주입으로 문맥을 먼저 준비한다. 댓글28개는 POST comment의 완료201, 본문4개(`issue-body-running/closing/cancelled`, `board-body`)는 신규 이슈 POST가 아니라 준비된 이슈의 본문 교체(`--edit-body`, PATCH body)의 완료200이다. 본문이 가리키는 COMPACT id·REPLY-IN 이슈·BOARD 이슈도 시험이 먼저 만들며, 32개 모두 서버 검증 통과가 수용 기준이다. 근거: DECISION 6310243238 (1). **good 32 원문 수용(댓글 28 POST 완료201·본문 4 PATCH 완료200)을 §6.3 등의 추가 검증 규칙보다 우선한다.** 충돌하면 원문을 trim하거나 footer를 덧붙이지 않고 추가 규칙을 고쳐 요청·저장 원문 바이트 동일성을 유지한다. 근거: DECISION 6313329886.
 
 **무변경 서버 preflight(P1-b):** `POST /v1/repos/:owner/:repo/issues/:number/preflight`는 인증된 principal, 경로의 repo/issue, §7.2의 `mode,request`(본문·제출 metadata), 요청 접수 시 서버 `Clock.now()`를 받아 위 문법·문맥 검사와 compact due 계산을 실행한다. 현재시각은 응답 `context.checkedAt`이며 클라이언트 지정 시각은 받지 않는다(시험 Clock 주입만 허용). REPEATABLE READ의 읽기 전용 snapshot에서 검사하고 DB 행·revision·token·packet·due·cursor·감사 event·command_result·PGMQ를 생성/변경하지 않는다. 인증 경로도 last-seen 갱신 등의 쓰기를 하지 않는다. DECISION/HANDOFF의 선행 요약 사유는 계산 결과에만 포함하며 due를 기록하거나 packet을 발급하지 않는다. 결과는 해당 시각·snapshot의 진단이므로 실제 게시의 접수/worker 최종 재검사를 생략할 근거가 아니다. P4 `issus-1-core`가 `apps/issus/src/server/http/preflight/**`와 공통 context 검사 연결·I-P1을 소유하고, P7 `issus-1-client`는 CLI dry-run에서 소비한다(루트 route 조립은 P1 경계 유지).
 
@@ -400,6 +409,8 @@ pendingLegacy(R,M) = { c in R | FROM(c) not in M,
 
 **WS 인증·전달 확정:** §7.1의 Authorization 헤더·browser cookie 방식에 더해 `Sec-WebSocket-Protocol`에 `issus.v1`과 `issus.bearer.<token>`을 함께 제시하는 인증을 허용한다. 서버는 bearer를 읽되 응답 subprotocol에는 `issus.v1`만 반환한다. query string 토큰은 금지하며 subprotocol bearer도 로그·fact에 남기지 않는다. WS 구독은 인증 별칭 채널만 보내는 필터형이 기본이며 firehose를 기본 구독으로 쓰지 않는다. 전달 프레임1개는 이슈·댓글 id·봉투·priority·delivery 상태를 포함하는 자족적 한 줄 JSON이어야 한다. body의 줄바꿈은 JSON escape로 전달하여 Monitor 알림 한 개만으로 처리할 문맥을 제공한다. 근거: DECISION 6310757267 (1)(2).
 
+**WS 자동 구독·재접속:** 서브프로토콜 bearer로 인증된 WS 접속에 `subscription` 파라미터가 없으면 서버가 그 principal의 별칭 필터 구독을 자동 개설한다. 열린 구독이 있으면 재사용하고 시작 커서는 그 구독의 receipt 확정 위치를 승계한다. 끊긴 구독 id로 재접속해도 1008로 종료하지 않고 같은 규칙으로 새 구독에 receipt 확정 커서를 승계한다. 따라서 고정 URL `ws://host/ws`와 protocols만으로 Monitor 상시 구독이 가능하다. 근거: DECISION 6312785235.
+
 ### 5.4 스트리밍 프레임·재생·처리 커서
 
 인증한 session은 subscription API로 채널 권한과 immutable 시작 cursor를 발급받는다. `from=since-compact`는 §5.5와 같은 bootstrap builder로 최신 COMPACT(없으면 처음)+이후 원문과 inbox를 병합하고 pendingLegacy/ackState/activeHold를 먼저 제공한 뒤 snapshot watermark에서 live를 연결한다. 중복 제거는 §5.5의 comment viewKey와 원 fact sourceEventId를 적용한다. 보통 reconnect는 마지막 **수신 확인한** transport cursor로 재생한다.
@@ -482,10 +493,12 @@ interface WakeAdapter {
 
 | 경로 | 동작과 경계 |
 | --- | --- |
-| Claude Code Monitor ws 소스 | ws 소스 `{url, protocols}`로 별칭 채널을 구독한다. 헤더를 넣을 수 없으므로 §5.3의 `issus.v1` + `issus.bearer.<token>`을 사용한다. 프레임1개=알림1개이며 30분 만료 때 재장전한다. 배포 뒤 실제 세션이 깨어나는 수용 확인은 오케스트레이터가 수행한다. 근거: DECISION 6310757267 (1)(2)(4) |
+| Claude Code Monitor ws 소스 | **고정 URL + protocols**: ws 소스 `{url:"ws://host/ws", protocols:["issus.v1","issus.bearer.<token>"]}`로 접속한다. `subscription` 파라미터·사전 구독 발급 없이 §5.3의 principal 별칭 필터 구독 자동 개설·열린 구독 재사용·receipt 확정 커서 승계를 적용한다. 끊긴 구독 id로 재접속해도 같은 규칙으로 승계한다. 헤더 없이 인증하며 프레임1개=알림1개, 30분 만료 때도 같은 URL + protocols로 재장전한다. 근거: DECISION 6312785235; 인증·알림 경계 근거: DECISION 6310757267 (1)(2)(4) |
 | 백그라운드 subscribe --once | `issus subscribe --once`를 백그라운드로 실행하고 프로세스 종료 알림으로 세션을 깨운다. 첫 delivery 수신·영수 완료 후 exit0, `--until <ms>`로 지정한 ACK-BY/idle 대기 만료는 exit3이다. 근거: DECISION 6310757267 (3)(4) |
 | Codex | pull `issus watch`를 사용하거나 `subscribe --once`→`codex exec` 래퍼를 사용한다. 래퍼는 수신한 delivery를 후속 실행에 넘기며 실제 ACK/반영은 그 실행의 책임이다. 근거: DECISION 6310757267 (3)(4) |
 | RemoteTrigger 어댑터 | off 유지. 실제 연결·세션 깨우기 보장은 미확인이다. Monitor/CLI 경로와 별도로 검증한다. 근거: DECISION 6310757267 (4) |
+
+실기 근거(2026-10-21 wakedemo, `.cache/wake-demo/RESULT.md`): `ready`·`subscribed`·`replay` → `issus.delivery.queued` → `issus.delivery.delivered`·`issus.delivery.acked` 프레임 수신으로 Monitor 세션이 깨어남을 확인했다. 구독 id URL로 수행한 결과이며 고정 URL 자동 구독 계약의 근거: DECISION 6312785235.
 
 ## 6. COMPACT 자동 유도와 패킷
 
@@ -522,7 +535,7 @@ OWNER는 ≤10댓글이면 직접, 더 길면 새로운 깨끗한 컨텍스트�
 | `body` | 모든 댓글에 string 필수. 원문 byte 보존·§3 문법 검사 | comment.body, comment.posted.payload.body |
 | `compactPacketToken` | COMPACT 필수, 다른 TYPE 금지. opaque string, owner/issue/prev/through/revision/hash/TTL·§6.2 stale 검사 | 토큰 해석 후 comment.metadata의 `compactPacketId,packetHash,previousCompactId,throughId,snapshotRevision`에 snapshot 증거 저장. raw token은 fact/공개응답/로그에 저장하지 않음 |
 | `sampledIds` | COMPACT 필수 string[]; 중복 없는 숫자 id, packet tail 원 comment 안에 존재. tail≥3이면 ≥3건, 1–2면 전부, 제어 변경만 있는 tail0이면 [] 허용. 다른 TYPE 금지 | comment.metadata.sampledIds와 comment.posted/compact.posted.payload.metadata.sampledIds |
-| `compactedBy` | COMPACT 필수, 같은 owner 등록 alias 문법·존재 검사. body 끝 `compacted-by:<alias>`와 정확히 일치. 논리 작성자 OWNER와 요약 worker는 달라도 됨. 다른 TYPE 금지 | comment.metadata.compactedBy와 두 posted fact의 metadata.compactedBy. 작성자 actor를 이 값으로 바꾸지 않음 |
+| `compactedBy` | COMPACT 필수, 같은 owner 등록 alias 문법·존재 검사. COMPACT 본문 마지막 줄은 `compacted-by:<compactedBy>`로 **시작**하고 뒤에 괄호 설명 등 접미사를 허용한다. 별칭 문자 `[a-z0-9가-힣-]`가 바로 이어지면 다른 별칭이므로 불일치다. 근거: DECISION 6313329886. 논리 작성자 OWNER와 요약 worker는 달라도 됨. 다른 TYPE 금지 | comment.metadata.compactedBy와 두 posted fact의 metadata.compactedBy. 작성자 actor를 이 값으로 바꾸지 않음 |
 | `compactDeferredReason` | DECISION/HANDOFF가 선행 COMPACT를 생략할 때 필수, 그 외 금지. 공백뿐이 아닌 string 1–500codepoints. 이유의 진실 여부를 자동 판정하지 않음 | comment.metadata.compactDeferredReason와 comment.posted.payload.metadata.compactDeferredReason. packet/control 감사에서도 조회 가능 |
 
 일반 댓글 metadata 기본값은 `{}`이며 표의 선택키가 없으면 임의 null/빈 값으로 보충하지 않는다. COMPACT의 저장 metadata는 표의 해석된 packet 증거+sampledIds+compactedBy를 전부 갖고 compact.posted에도 같은 객체로 남긴다. `repoId,issueNumber,actor,idempotency`를 외부 요청이 지정하면 허용하지 않고 경로/인증에서 생성한다. 모든 허용 필드와 조건을 HTTP preflight·worker 최종검사·명령 decoder가 같은 parser로 검증한다. 어떤 단계도 unknown key를 조용히 버리지 않는다. command hash에는 모든 제출 metadata가 포함되어 같은 key의 표본/작성자/보류 사유 변경도 409다. CLI compact post와 일반 post는 이 경로만 사용한다.

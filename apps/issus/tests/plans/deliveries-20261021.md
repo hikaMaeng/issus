@@ -34,6 +34,11 @@ P4 UoW·intake/auth/HTTP와 P2 agent transport가 설치돼 있어야 한다. sc
 | I-14 | board NOTE/CLAIM/제3자ACK모두댓글허용·TO효력0. B REPORT RE로legacy0/ackStatewaiting, retry0·close강화gate유지. mention은ME우선·ACK의무없음 |
 | scheduling | producer경합·같은slot중복0, 재시도3회상한·15분digest·전구간RE취소·mention-only정보성digest |
 | Monitor 추가결정 | issus.v1+issus.bearer credential 제안, public protocol만 응답, subscribe client frame0·자기alias1개 자동구독·ASK 알림. local revoke1008·3초 이내, token event노출0. 외부 Claude 실제기동은 후속 운영 검증 |
+| wave3 전체 연결 | production createBroker/createIssusWorker/createIssusScheduler를 각 실제 listener로 기동. public repo/alias/session API로 A/B 생성→두 WS 구독→ASK의 UUIDv8 deliveryId 그대로 WS receipt→delivered/ACK/acked/REPORT/apply/applied→HOLD attempt1/2와 OWNER경보→ACK·DECISION 해제→25댓글 native compact-due→실 packet API→COMPACT 게시→STATEdone→닫기. 수동 drain/tick·packet fixture 없음 |
+| wave3 알림 투영 | queued/delivered/acked/applied/redelivered 각각 한 줄 JSON 하나만 역직렬화해 issue/commentId/envelope/priority/delivery/content 검증. 저장 fact strict decoder 통과·투영 필드 저장0·과거 frame 재투영 불변·타별칭 거부 |
+| wave3 ready | 두 앱 엔트리의 정상200→migration0003 기록 누락503→복구200→필수 큐 제거503→복구200. 접속불가 DB로 초기화 실패해도 health200/ready503. producer 최신 실패·복구·종료도 단위 검증 |
+| Monitor 고정 URL | DECISION6312785235: 파라미터 없는 /ws+subprotocol bearer→alias-only subscribed→댓글 frame. 열린 구독 재사용, 미영수 연결종료→새 id 재생, 영수 확정 queued 재생0, 닫힌 id 접속도 새 id 승계. 뒤 알림 영수로 앞 미영수 gap 건너뛰기0 |
+| canonical history | 작성자 GET I/comments는 자기 댓글 전문 포함, 자기 inbox/watch에는 own-FROM 생략 유지. 두 cursor scope 혼용409. 기존 frozen page/refresh/COMPACT 경계 회귀 유지 |
 
 각 시험은 tests/integration/deliveries/* 및 각 소유 패키지의 src tests에 있다. 패키지/앱별 npm test·lint를 실행한다. sandbox의 test-worker/tsx spawn EPERM이면 명령/실패 로그를 보존하고 tsc emit+node --test --test-isolation=none을 실행하며 원시험을 PASS로 쓰지 않는다. esbuild 서버 bundle은 보조 검증이다.
 
@@ -44,6 +49,8 @@ P4 UoW·intake/auth/HTTP와 P2 agent transport가 설치돼 있어야 한다. sc
 ## Logs To Capture
 
 .cache/p5/{typecheck,integration,npm-*,bundle-*,cleanup,barrier}.log 및 tests/reports/deliveries/<stamp>.md. report에 명령·exit/pass/fail/skip·namespace잔류를 적는다.
+
+wave3/s2는 .cache/deliver-s2/{source-typecheck,units,integration,npm-*,bundle-*}.log에 원 명령·결과를 보존한다. Node 격리 spawn EPERM이면 검증 스크립트 validate.py가 source 경계로 TS emit 후 node --test --test-isolation=none을 실행한다. 이 결과와 원 npm test 실패를 분리한다.
 
 ## Locator Contract
 
