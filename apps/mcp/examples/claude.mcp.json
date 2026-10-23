@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "issus": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["F:/dev/issus/apps/mcp/dist/index.js"],
+      "timeout": 1560000,
+      "env": {
+        "ISSUS_URL": "http://127.0.0.1:18140",
+        "ISSUS_PROFILE": "bridge-claude",
+        "ISSUS_REPO": "hikaMaeng/issus",
+        "ISSUS_ISSUES": "4",
+        "ISSUS_BOARDS": "2",
+        "ISSUS_BRIDGE_STATE_DIR": "F:/dev/issus/.cache/mcp/claude"
+      }
+    }
+  }
+}

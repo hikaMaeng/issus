@@ -1,0 +1,25 @@
+{
+  "name": "@issus/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {"issus-mcp": "dist/index.js"},
+  "engines": {"node": ">=22.12.0"},
+  "scripts": {
+    "build": "node build.mjs",
+    "pretest": "tsc -p tsconfig.tests.json",
+    "test": "node --test --test-isolation=none .cache/test/server/config/config.test.js .cache/test/server/journal/journal.test.js .cache/test/server/tools/bridge.test.js .cache/test/server/transport/stdio.test.js",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "issus_domain": "0.1.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}

@@ -58,3 +58,7 @@ Codex는 `issus watch --repo o/r --me alias --since-compact --peek N`으로 먼�
 브라우저는 /repos의 세션 연결에 token을 한 번 입력한다. HttpOnly cookie로 전환하고 bearer를 local/session storage에 저장하지 않는다. CSRF proof만 탭 sessionStorage에 둔다. `/inbox?repo=o/r&issues=N`에서 posted/delivered/acked/applied·ACK-BY 경과를 확인하고 수신 확인 작성 미리보기 뒤 ACK를 게시한다. close는 최종 REPORT·terminal state·최신 COMPACT·미ACK/HOLD/CLAIM/HANDOFF 해소가 필요하며 실패 dialog가 blocker id를 표시한다.
 
 매일 외부 저장소에 pg_dump custom 형식과 PG major/image tag·설정 hash를 보관한다. 복구는 격리 volume restore→migration→projection 대조→read/write·미ACK 재전달 순서다. volume 복사만으로 복구 PASS를 선언하지 않는다. O-01 재배포·충돌·SIGTERM/WS1001·30초 종료와 I-12 복구는 [호스트 시험](testing.md)에서 증거를 남긴다.
+
+## 에이전트 브리지(데스크톱 세션·네이티브 CLI)
+
+Claude Code·Codex 데스크톱 세션은 stdio MCP 서버 `@issus/mcp`(`issus_subscribe`·`issus_wait`·`issus_inbox`·`issus_ack`·`issus_post`…)로, 일회성 `codex exec`·`muse exec`·`claude -p`는 호스트 실행기 `issus runner --me <alias> --exec codex|muse|claude`로 연결한다. 설치 예시·세션 지시문·실기 절차는 [브리지 명세](bridge.md)와 [apps/mcp](../apps/mcp/README.md)·[runner usage](../apps/cli/docs/usage.md#runner)가 소유한다. Codex는 `mcp_servers.<name>.default_tools_approval_mode = "approve"`가 없으면 `approval_policy=never`에서 모든 MCP 도구 호출을 거부한다.

@@ -1,0 +1,3 @@
+import type {RunnerOptions} from '../../options/index.js';
+/** Explicit tool set removes Bash/PowerShell even when inherited permission rules allow them. */
+export const claudeArguments=(o:RunnerOptions,dir:string):string[]=>['-p','--model',o.model,'--effort',o.effort,'--restricted','--permission-mode',o.sandbox==='read-only'?'plan':'acceptEdits','--tools',o.sandbox==='read-only'?'Read,Grep,Glob':'Read,Grep,Glob,Edit,Write,NotebookEdit','--disallowedTools','Bash,PowerShell,Agent,Skill','--settings',dir+'/runner-permissions.json','--mcp-config',dir+'/empty-mcp.json','--strict-mcp-config','--output-format','json'];

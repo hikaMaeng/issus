@@ -1,0 +1,1279 @@
+[
+  {
+    "type": "event",
+    "event": {
+      "eventId": "8aded354-1785-88b0-86fe-92f4a6744b53",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "1",
+      "action": "issus.delivery.queued",
+      "transactionKey": "96861255-ce57-8c19-a30a-c5bc10a91b58",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "96861255-ce57-8c19-a30a-c5bc10a91b58",
+      "correlationId": "96861255-ce57-8c19-a30a-c5bc10a91b58",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:14:27.548Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:issus-1-orch/by-bridge-system TO:ALL TYPE:ALIAS\nissus-1-orch | 저장소 예약 별칭 | service | bootstrap | srv\n---\n근거: repo bootstrap",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-1-orch/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "ordinal": "1",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000007",
+        "deliveryId": "f3696b44-3a79-8af1-ba5a-f8d1d192fb4c",
+        "ackRequired": false,
+        "sourceEventId": "96861255-ce57-8c19-a30a-c5bc10a91b58",
+        "classification": "ALL",
+        "sourceSequence": "1",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-1-orch/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "f3696b44-3a79-8af1-ba5a-f8d1d192fb4c",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "1",
+          "ackRequired": false,
+          "aliasEventSequence": "1"
+        }
+      }
+    },
+    "cursor": "0dcf4e34-ea3b-40bb-bc94-eff507754607"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "381f8cbf-69d6-85a2-8afc-46c0d678e9ce",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "2",
+      "action": "issus.delivery.queued",
+      "transactionKey": "dec2d94d-2e96-89a8-ba49-f51930ceb631",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "dec2d94d-2e96-89a8-ba49-f51930ceb631",
+      "correlationId": "dec2d94d-2e96-89a8-ba49-f51930ceb631",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:14:27.824Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:bridge-system/by-bridge-system TO:ALL TYPE:ALIAS\nbridge-system | 저장소 예약 별칭 | service | bootstrap | srv\n---\n근거: repo bootstrap",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "bridge-system/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "ordinal": "2",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000006",
+        "deliveryId": "8b2f4d5e-f1fb-8a35-bcf2-060d11e0dd3c",
+        "ackRequired": false,
+        "sourceEventId": "dec2d94d-2e96-89a8-ba49-f51930ceb631",
+        "classification": "ALL",
+        "sourceSequence": "2",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "bridge-system/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "8b2f4d5e-f1fb-8a35-bcf2-060d11e0dd3c",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "2",
+          "ackRequired": false,
+          "aliasEventSequence": "2"
+        }
+      }
+    },
+    "cursor": "214780a0-9362-40eb-80ab-dfe69655fbc8"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "6642026b-c999-8d5a-97e7-9194562208ac",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "3",
+      "action": "issus.delivery.queued",
+      "transactionKey": "7618f188-6d65-84c2-b89b-6c002776850a",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "7618f188-6d65-84c2-b89b-6c002776850a",
+      "correlationId": "7618f188-6d65-84c2-b89b-6c002776850a",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:14:28.483Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "{\"action\":\"issus.board.created\",\"body\":\"STATE:running OWNER:issus-1-orch UPDATED:2026-10-23T08:14:25+00:00 BOARD:#1\\nGOAL: 저장소 공통 게시판.\\nROSTER: issus-1-orch\",\"title\":\"[BOARD] 저장소 공통 게시판\",\"repoId\":\"686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239\",\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"issueNumber\":1,\"ownerAliasId\":\"7d261ebd-67c9-4618-8492-6b238cb2611b\"}"
+        },
+        "ordinal": "3",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "deliveryId": "ad6e3e89-80ed-8993-84f4-18207e7b30a6",
+        "ackRequired": false,
+        "sourceEventId": "7618f188-6d65-84c2-b89b-6c002776850a",
+        "classification": "ALL",
+        "sourceSequence": "2",
+        "sourceStreamId": "channel:repo:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:all",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": null,
+        "envelope": null,
+        "priority": "ALL",
+        "delivery": {
+          "id": "ad6e3e89-80ed-8993-84f4-18207e7b30a6",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "3",
+          "ackRequired": false,
+          "aliasEventSequence": "3"
+        }
+      }
+    },
+    "cursor": "fc51ec26-94db-4d12-b3c2-02b43154ba02"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "c35bbf4d-360f-81c3-beae-ebcb707c9cfd",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "4",
+      "action": "issus.delivery.queued",
+      "transactionKey": "43910041-29c9-842c-a5f7-0d601a5bdc20",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "43910041-29c9-842c-a5f7-0d601a5bdc20",
+      "correlationId": "43910041-29c9-842c-a5f7-0d601a5bdc20",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:14:29.262Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:issus-4-muse/by-bridge-system TO:ALL TYPE:ALIAS\nissus-4-muse | 실행기 muse | Muse | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-muse/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "ordinal": "4",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000009",
+        "deliveryId": "3402d6ca-682a-82af-a374-534b65958dc7",
+        "ackRequired": false,
+        "sourceEventId": "43910041-29c9-842c-a5f7-0d601a5bdc20",
+        "classification": "ALL",
+        "sourceSequence": "4",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-muse/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "3402d6ca-682a-82af-a374-534b65958dc7",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "4",
+          "ackRequired": false,
+          "aliasEventSequence": "4"
+        }
+      }
+    },
+    "cursor": "73f4c79e-4742-42de-ba2c-d1cd9cce24f0"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "e6fa9e61-a129-86f8-a6e9-a26977696add",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "5",
+      "action": "issus.delivery.queued",
+      "transactionKey": "49854afb-9d83-8aba-ba14-6a765bf8d016",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "49854afb-9d83-8aba-ba14-6a765bf8d016",
+      "correlationId": "49854afb-9d83-8aba-ba14-6a765bf8d016",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:14:29.791Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:issus-4-claude/by-bridge-system TO:ALL TYPE:ALIAS\nissus-4-claude | Claude Code 데스크톱 | Claude | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-claude/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "ordinal": "5",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000010",
+        "deliveryId": "8b8cea60-5b26-87fd-976e-9ebaa69ba51c",
+        "ackRequired": false,
+        "sourceEventId": "49854afb-9d83-8aba-ba14-6a765bf8d016",
+        "classification": "ALL",
+        "sourceSequence": "5",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-claude/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "8b8cea60-5b26-87fd-976e-9ebaa69ba51c",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "5",
+          "ackRequired": false,
+          "aliasEventSequence": "5"
+        }
+      }
+    },
+    "cursor": "85d02548-2be4-40ba-9a34-0f8e7a9acbb1"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "5680fadc-02a3-84a4-9684-6303c5d4fb95",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "6",
+      "action": "issus.delivery.queued",
+      "transactionKey": "1a74987a-73d6-8914-a907-910db2fef11a",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "1a74987a-73d6-8914-a907-910db2fef11a",
+      "correlationId": "1a74987a-73d6-8914-a907-910db2fef11a",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:14:29.895Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:issus-5-codexapp/by-bridge-system TO:ALL TYPE:ALIAS\nissus-5-codexapp | Codex 데스크톱 | Codex | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-5-codexapp/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "ordinal": "6",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000011",
+        "deliveryId": "4c93432e-b123-8be0-9b62-7e3a28757483",
+        "ackRequired": false,
+        "sourceEventId": "1a74987a-73d6-8914-a907-910db2fef11a",
+        "classification": "ALL",
+        "sourceSequence": "9",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-5-codexapp/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "4c93432e-b123-8be0-9b62-7e3a28757483",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "6",
+          "ackRequired": false,
+          "aliasEventSequence": "6"
+        }
+      }
+    },
+    "cursor": "db98e8ef-6eb9-4c1e-b00e-14a48e526092"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "f444c90f-5d6f-86fd-88ca-ba56dd74fb8c",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "19",
+      "action": "issus.delivery.queued",
+      "transactionKey": "e46970e9-1721-8fc6-9f31-353cefe7f9db",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "e46970e9-1721-8fc6-9f31-353cefe7f9db",
+      "correlationId": "e46970e9-1721-8fc6-9f31-353cefe7f9db",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:15:27.678Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:issus-4-sender/by-bridge-system TO:ALL TYPE:ALIAS\nissus-4-sender | 오케스트레이터(발신자) | Claude | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-sender/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "ordinal": "7",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000012",
+        "deliveryId": "8aa8ba77-9741-8c7a-8963-39aa22b5d53e",
+        "ackRequired": false,
+        "sourceEventId": "e46970e9-1721-8fc6-9f31-353cefe7f9db",
+        "classification": "ALL",
+        "sourceSequence": "43",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-sender/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "8aa8ba77-9741-8c7a-8963-39aa22b5d53e",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "7",
+          "ackRequired": false,
+          "aliasEventSequence": "19"
+        }
+      }
+    },
+    "cursor": "dbc983dd-6937-4def-9079-3c3c06819e64"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "00a1fa52-966e-8cf4-afa8-c89e24483821",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "20",
+      "action": "issus.delivery.queued",
+      "transactionKey": "e5b2b412-03fe-80ae-b37a-4708a0d6651d",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "e5b2b412-03fe-80ae-b37a-4708a0d6651d",
+      "correlationId": "e5b2b412-03fe-80ae-b37a-4708a0d6651d",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:15:29.142Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "{\"action\":\"issus.issue.opened\",\"body\":\"STATE:running OWNER:issus-4-sender UPDATED:2026-10-23T17:15:27+09:00 BOARD:#1\\nGOAL: 에이전트 브리지(실행기 codex/muse, MCP, 데스크톱) 실기 확인\\nSCOPE: bridgedemo 시험 이슈\\nNON-SCOPE: 운영 반영\\nDECISIONS: 없음\\nOPEN-ASK: 없음\\nNEXT: orch가 각 역할에 ASK 게시 -> ACK/REPORT 확인\\nROSTER: issus-4-sender | 오케스트레이터(발신자) | Claude | bridge 시험 | s1\\nROSTER: issus-4-codex | 실행기 codex | Codex | bridge 시험 | s1\\nROSTER: issus-4-muse | 실행기 muse | Muse | bridge 시험 | s1\\nROSTER: issus-4-claude | Claude Code 데스크톱 | Claude | bridge 시험 | s1\\nROSTER: issus-5-codexapp | Codex 데스크톱 | Codex | bridge 시험 | s1\\n\",\"actor\":{\"sid\":\"s1\",\"alias\":\"issus-4-sender\",\"aliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\",\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"sessionId\":\"d5adb8f9-cba7-4c1d-852d-325e18ac0fdf\"},\"state\":\"running\",\"title\":\"bridge: 실행기·MCP 실기\",\"number\":2,\"repoId\":\"686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239\",\"isBoard\":false,\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"revision\":1,\"issueNumber\":2,\"ownerAliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\"}"
+        },
+        "ordinal": "8",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "deliveryId": "d805e205-0513-8410-98f0-9b5ef46b2c87",
+        "ackRequired": false,
+        "sourceEventId": "e5b2b412-03fe-80ae-b37a-4708a0d6651d",
+        "classification": "ALL",
+        "sourceSequence": "1",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:2",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 2
+        },
+        "commentId": null,
+        "envelope": null,
+        "priority": "ALL",
+        "delivery": {
+          "id": "d805e205-0513-8410-98f0-9b5ef46b2c87",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "8",
+          "ackRequired": false,
+          "aliasEventSequence": "20"
+        }
+      }
+    },
+    "cursor": "b853ef9a-fa89-4f12-8f97-60a0938c0ec6"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "a1fc440e-55e5-86c3-ac62-c07ca7739674",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "23",
+      "action": "issus.delivery.queued",
+      "transactionKey": "59ecae51-36b7-83f0-b2a5-06177419a5ac",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "59ecae51-36b7-83f0-b2a5-06177419a5ac",
+      "correlationId": "59ecae51-36b7-83f0-b2a5-06177419a5ac",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:15:30.754Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:issus-4-sender/s1 TO:ALL TYPE:NOTE\nbridge-demo 배선 확인용 NOTE(응답 불필요) 17:15:29\n---\n근거: .cache/bridge-demo/setup.mjs\n",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-sender/s1",
+            "TYPE": "NOTE"
+          }
+        },
+        "ordinal": "9",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000013",
+        "deliveryId": "597f65da-7866-8f30-9a6d-ad5ffbc17f08",
+        "ackRequired": false,
+        "sourceEventId": "59ecae51-36b7-83f0-b2a5-06177419a5ac",
+        "classification": "ALL",
+        "sourceSequence": "4",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:2",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 2
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-sender/s1",
+          "TYPE": "NOTE"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "597f65da-7866-8f30-9a6d-ad5ffbc17f08",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "9",
+          "ackRequired": false,
+          "aliasEventSequence": "23"
+        }
+      }
+    },
+    "cursor": "4f5f501d-3681-406c-b2b1-de25ed4b7686"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "6e60811c-2877-8019-80da-9b947611022d",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "24",
+      "action": "issus.delivery.queued",
+      "transactionKey": "f1910cfb-e653-805e-81e1-bd95694b91f5",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "f1910cfb-e653-805e-81e1-bd95694b91f5",
+      "correlationId": "f1910cfb-e653-805e-81e1-bd95694b91f5",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T08:15:31.029Z",
+      "payload": {
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "{\"action\":\"issus.issue.opened\",\"body\":\"STATE:running OWNER:issus-4-sender UPDATED:2026-10-23T17:15:28+09:00 BOARD:#1\\nGOAL: HOLD 수신·중단 반영 실기 확인\\nSCOPE: bridgedemo 시험 이슈\\nNON-SCOPE: 운영 반영\\nDECISIONS: 없음\\nOPEN-ASK: 없음\\nNEXT: orch가 HOLD 게시 -> 수신자 중단 확인\\nROSTER: issus-4-sender | 오케스트레이터(발신자) | Claude | bridge 시험 | s1\\nROSTER: issus-4-codex | 실행기 codex | Codex | bridge 시험 | s1\\nROSTER: issus-4-muse | 실행기 muse | Muse | bridge 시험 | s1\\nROSTER: issus-4-claude | Claude Code 데스크톱 | Claude | bridge 시험 | s1\\nROSTER: issus-5-codexapp | Codex 데스크톱 | Codex | bridge 시험 | s1\\n\",\"actor\":{\"sid\":\"s1\",\"alias\":\"issus-4-sender\",\"aliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\",\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"sessionId\":\"d5adb8f9-cba7-4c1d-852d-325e18ac0fdf\"},\"state\":\"running\",\"title\":\"bridge: HOLD 시험\",\"number\":3,\"repoId\":\"686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239\",\"isBoard\":false,\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"revision\":1,\"issueNumber\":3,\"ownerAliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\"}"
+        },
+        "ordinal": "10",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "deliveryId": "b7345dec-b17a-8a96-bff4-bdd9641798cb",
+        "ackRequired": false,
+        "sourceEventId": "f1910cfb-e653-805e-81e1-bd95694b91f5",
+        "classification": "ALL",
+        "sourceSequence": "1",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:3",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 3
+        },
+        "commentId": null,
+        "envelope": null,
+        "priority": "ALL",
+        "delivery": {
+          "id": "b7345dec-b17a-8a96-bff4-bdd9641798cb",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "10",
+          "ackRequired": false,
+          "aliasEventSequence": "24"
+        }
+      }
+    },
+    "cursor": "3ceb9fee-8c8d-47a1-afd1-919b9f20547c"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "e3321a1f-5c1c-86d6-903b-353e1fe374ab",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "31",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "dec2d94d-2e96-89a8-ba49-f51930ceb631",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "8b2f4d5e-f1fb-8a35-bcf2-060d11e0dd3c",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": "1000006",
+        "sourceEventId": "dec2d94d-2e96-89a8-ba49-f51930ceb631",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "sourceSequence": "2",
+        "content": {
+          "body": "FROM:bridge-system/by-bridge-system TO:ALL TYPE:ALIAS\nbridge-system | 저장소 예약 별칭 | service | bootstrap | srv\n---\n근거: repo bootstrap",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "bridge-system/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "bridge-system/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "8b2f4d5e-f1fb-8a35-bcf2-060d11e0dd3c",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "2",
+          "ackRequired": false,
+          "aliasEventSequence": "31"
+        }
+      }
+    },
+    "cursor": "6e2160f0-7028-4a1b-82db-628e065551fb"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "e55f3afe-85cc-8244-b8e5-d59327a86418",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "32",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "96861255-ce57-8c19-a30a-c5bc10a91b58",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "f3696b44-3a79-8af1-ba5a-f8d1d192fb4c",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": "1000007",
+        "sourceEventId": "96861255-ce57-8c19-a30a-c5bc10a91b58",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "sourceSequence": "1",
+        "content": {
+          "body": "FROM:issus-1-orch/by-bridge-system TO:ALL TYPE:ALIAS\nissus-1-orch | 저장소 예약 별칭 | service | bootstrap | srv\n---\n근거: repo bootstrap",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-1-orch/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-1-orch/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "f3696b44-3a79-8af1-ba5a-f8d1d192fb4c",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "1",
+          "ackRequired": false,
+          "aliasEventSequence": "32"
+        }
+      }
+    },
+    "cursor": "c64ea0c1-beac-4b50-a53f-335167aa3c20"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "87140178-0d51-80dd-bfda-048a4b19ee17",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "33",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "43910041-29c9-842c-a5f7-0d601a5bdc20",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "3402d6ca-682a-82af-a374-534b65958dc7",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": "1000009",
+        "sourceEventId": "43910041-29c9-842c-a5f7-0d601a5bdc20",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "sourceSequence": "4",
+        "content": {
+          "body": "FROM:issus-4-muse/by-bridge-system TO:ALL TYPE:ALIAS\nissus-4-muse | 실행기 muse | Muse | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-muse/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-muse/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "3402d6ca-682a-82af-a374-534b65958dc7",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "4",
+          "ackRequired": false,
+          "aliasEventSequence": "33"
+        }
+      }
+    },
+    "cursor": "d3c8d996-8ca8-4633-8db2-822cd37e2389"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "0555bcca-d4da-820b-80c6-e581ec020d3a",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "34",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "49854afb-9d83-8aba-ba14-6a765bf8d016",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "8b8cea60-5b26-87fd-976e-9ebaa69ba51c",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": "1000010",
+        "sourceEventId": "49854afb-9d83-8aba-ba14-6a765bf8d016",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "sourceSequence": "5",
+        "content": {
+          "body": "FROM:issus-4-claude/by-bridge-system TO:ALL TYPE:ALIAS\nissus-4-claude | Claude Code 데스크톱 | Claude | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-claude/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-claude/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "8b8cea60-5b26-87fd-976e-9ebaa69ba51c",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "5",
+          "ackRequired": false,
+          "aliasEventSequence": "34"
+        }
+      }
+    },
+    "cursor": "704e1750-b142-42d0-99e7-227236326c62"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "93f8e629-8e5b-8351-87c0-d165323ad962",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "35",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "1a74987a-73d6-8914-a907-910db2fef11a",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "4c93432e-b123-8be0-9b62-7e3a28757483",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": "1000011",
+        "sourceEventId": "1a74987a-73d6-8914-a907-910db2fef11a",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "sourceSequence": "9",
+        "content": {
+          "body": "FROM:issus-5-codexapp/by-bridge-system TO:ALL TYPE:ALIAS\nissus-5-codexapp | Codex 데스크톱 | Codex | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-5-codexapp/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-5-codexapp/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "4c93432e-b123-8be0-9b62-7e3a28757483",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "6",
+          "ackRequired": false,
+          "aliasEventSequence": "35"
+        }
+      }
+    },
+    "cursor": "476c7bc8-329a-4156-9922-32c9fef899e3"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "9d02a63a-fac8-8c8c-a00d-d3e854c26420",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "36",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "e46970e9-1721-8fc6-9f31-353cefe7f9db",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "8aa8ba77-9741-8c7a-8963-39aa22b5d53e",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": "1000012",
+        "sourceEventId": "e46970e9-1721-8fc6-9f31-353cefe7f9db",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:1",
+        "sourceSequence": "43",
+        "content": {
+          "body": "FROM:issus-4-sender/by-bridge-system TO:ALL TYPE:ALIAS\nissus-4-sender | 오케스트레이터(발신자) | Claude | bridge-demo 시험 | s1\n---\nalias_check -> OK 0건",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-sender/by-bridge-system",
+            "TYPE": "ALIAS"
+          }
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-sender/by-bridge-system",
+          "TYPE": "ALIAS"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "8aa8ba77-9741-8c7a-8963-39aa22b5d53e",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "7",
+          "ackRequired": false,
+          "aliasEventSequence": "36"
+        }
+      }
+    },
+    "cursor": "3ef2cf56-1c1a-4f11-8a8b-73f48818964f"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "a53ca85e-d3bc-80f3-ac23-8dfcca836456",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "37",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "59ecae51-36b7-83f0-b2a5-06177419a5ac",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "597f65da-7866-8f30-9a6d-ad5ffbc17f08",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 2
+        },
+        "commentId": "1000013",
+        "sourceEventId": "59ecae51-36b7-83f0-b2a5-06177419a5ac",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:2",
+        "sourceSequence": "4",
+        "content": {
+          "body": "FROM:issus-4-sender/s1 TO:ALL TYPE:NOTE\nbridge-demo 배선 확인용 NOTE(응답 불필요) 17:15:29\n---\n근거: .cache/bridge-demo/setup.mjs\n",
+          "envelope": {
+            "TO": "ALL",
+            "FROM": "issus-4-sender/s1",
+            "TYPE": "NOTE"
+          }
+        },
+        "envelope": {
+          "TO": "ALL",
+          "FROM": "issus-4-sender/s1",
+          "TYPE": "NOTE"
+        },
+        "priority": "ALL",
+        "delivery": {
+          "id": "597f65da-7866-8f30-9a6d-ad5ffbc17f08",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "9",
+          "ackRequired": false,
+          "aliasEventSequence": "37"
+        }
+      }
+    },
+    "cursor": "e742a491-f456-4cc4-a8e5-fc2aede742db"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "c1bd1cfc-8d29-8522-9bdb-7d1008ad6646",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "38",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "7618f188-6d65-84c2-b89b-6c002776850a",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "ad6e3e89-80ed-8993-84f4-18207e7b30a6",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 1
+        },
+        "commentId": null,
+        "sourceEventId": "7618f188-6d65-84c2-b89b-6c002776850a",
+        "sourceStreamId": "channel:repo:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:all",
+        "sourceSequence": "2",
+        "content": {
+          "body": "{\"action\":\"issus.board.created\",\"body\":\"STATE:running OWNER:issus-1-orch UPDATED:2026-10-23T08:14:25+00:00 BOARD:#1\\nGOAL: 저장소 공통 게시판.\\nROSTER: issus-1-orch\",\"title\":\"[BOARD] 저장소 공통 게시판\",\"repoId\":\"686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239\",\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"issueNumber\":1,\"ownerAliasId\":\"7d261ebd-67c9-4618-8492-6b238cb2611b\"}"
+        },
+        "envelope": null,
+        "priority": "ALL",
+        "delivery": {
+          "id": "ad6e3e89-80ed-8993-84f4-18207e7b30a6",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "3",
+          "ackRequired": false,
+          "aliasEventSequence": "38"
+        }
+      }
+    },
+    "cursor": "b14f59a4-ffa1-4fc3-b57e-7fa276e6ebb9"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "761781b5-495c-8975-ab49-766adc147c82",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "39",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "e5b2b412-03fe-80ae-b37a-4708a0d6651d",
+      "correlationId": "fcf19968-9ef3-4ad3-85fc-0b4eecad1f5e",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:01.616Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "d805e205-0513-8410-98f0-9b5ef46b2c87",
+        "receivedAt": "2026-10-23T09:24:01.616Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 2
+        },
+        "commentId": null,
+        "sourceEventId": "e5b2b412-03fe-80ae-b37a-4708a0d6651d",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:2",
+        "sourceSequence": "1",
+        "content": {
+          "body": "{\"action\":\"issus.issue.opened\",\"body\":\"STATE:running OWNER:issus-4-sender UPDATED:2026-10-23T17:15:27+09:00 BOARD:#1\\nGOAL: 에이전트 브리지(실행기 codex/muse, MCP, 데스크톱) 실기 확인\\nSCOPE: bridgedemo 시험 이슈\\nNON-SCOPE: 운영 반영\\nDECISIONS: 없음\\nOPEN-ASK: 없음\\nNEXT: orch가 각 역할에 ASK 게시 -> ACK/REPORT 확인\\nROSTER: issus-4-sender | 오케스트레이터(발신자) | Claude | bridge 시험 | s1\\nROSTER: issus-4-codex | 실행기 codex | Codex | bridge 시험 | s1\\nROSTER: issus-4-muse | 실행기 muse | Muse | bridge 시험 | s1\\nROSTER: issus-4-claude | Claude Code 데스크톱 | Claude | bridge 시험 | s1\\nROSTER: issus-5-codexapp | Codex 데스크톱 | Codex | bridge 시험 | s1\\n\",\"actor\":{\"sid\":\"s1\",\"alias\":\"issus-4-sender\",\"aliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\",\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"sessionId\":\"d5adb8f9-cba7-4c1d-852d-325e18ac0fdf\"},\"state\":\"running\",\"title\":\"bridge: 실행기·MCP 실기\",\"number\":2,\"repoId\":\"686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239\",\"isBoard\":false,\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"revision\":1,\"issueNumber\":2,\"ownerAliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\"}"
+        },
+        "envelope": null,
+        "priority": "ALL",
+        "delivery": {
+          "id": "d805e205-0513-8410-98f0-9b5ef46b2c87",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "8",
+          "ackRequired": false,
+          "aliasEventSequence": "39"
+        }
+      }
+    },
+    "cursor": "1069cf29-3029-4242-b28d-c5273aedd2fd"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "139939dc-1daf-8984-97e3-2b94ac547fa9",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "40",
+      "action": "issus.delivery.queued",
+      "transactionKey": "498dec4c-3033-841d-94d6-f24913be8994",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "498dec4c-3033-841d-94d6-f24913be8994",
+      "correlationId": "498dec4c-3033-841d-94d6-f24913be8994",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:24:27.312Z",
+      "payload": {
+        "ackBy": "2026-10-23T18:54+09:00",
+        "aliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "attempt": 0,
+        "content": {
+          "body": "FROM:issus-4-sender/s1 TO:issus-4-codex TYPE:ASK ACK-BY:2026-10-23T18:54+09:00\nbridge-demo 18:24:26: 작업 디렉터리 안에 hello-codex.txt 파일을 만들고 그 안에 'bridge ok'와 현재 UTC 시각 한 줄을 써라. 그 밖의 파일은 만들지 마라.\nASK @issus-4-codex: 수행 뒤 TYPE:ACK RE:로 수신을 확인하고, 결과는 TYPE:REPORT로 남겨라.\nNEXT: ACK 확인. 다음 확인 2026-10-23T18:54+09:00.\n---\n근거: 이슈 #2 본문 GOAL\n",
+          "envelope": {
+            "TO": "issus-4-codex",
+            "FROM": "issus-4-sender/s1",
+            "TYPE": "ASK",
+            "ACK-BY": "2026-10-23T18:54+09:00"
+          }
+        },
+        "ordinal": "11",
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "commentId": "1000021",
+        "deliveryId": "5a55ad7c-2c28-8fc0-8850-895d677ec484",
+        "ackRequired": true,
+        "sourceEventId": "498dec4c-3033-841d-94d6-f24913be8994",
+        "classification": "ME",
+        "sourceSequence": "11",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:2",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 2
+        },
+        "envelope": {
+          "TO": "issus-4-codex",
+          "FROM": "issus-4-sender/s1",
+          "TYPE": "ASK",
+          "ACK-BY": "2026-10-23T18:54+09:00"
+        },
+        "priority": "ME",
+        "delivery": {
+          "id": "5a55ad7c-2c28-8fc0-8850-895d677ec484",
+          "state": "posted",
+          "attempt": 0,
+          "ordinal": "11",
+          "ackRequired": true,
+          "ackBy": "2026-10-23T09:54:00.000Z",
+          "aliasEventSequence": "40"
+        }
+      }
+    },
+    "cursor": "ced6d0d3-0213-4656-a0c0-d15c80f9bb72"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "e186d74f-84c0-8030-abb3-78026a5ac160",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "43",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "a030ad96-cb64-4f90-af7e-ca6732d6c2d1",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "498dec4c-3033-841d-94d6-f24913be8994",
+      "correlationId": "a030ad96-cb64-4f90-af7e-ca6732d6c2d1",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:25:13.169Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "http",
+        "deliveryId": "5a55ad7c-2c28-8fc0-8850-895d677ec484",
+        "receivedAt": "2026-10-23T09:25:13.169Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 2
+        },
+        "commentId": "1000021",
+        "sourceEventId": "498dec4c-3033-841d-94d6-f24913be8994",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:2",
+        "sourceSequence": "11",
+        "content": {
+          "body": "FROM:issus-4-sender/s1 TO:issus-4-codex TYPE:ASK ACK-BY:2026-10-23T18:54+09:00\nbridge-demo 18:24:26: 작업 디렉터리 안에 hello-codex.txt 파일을 만들고 그 안에 'bridge ok'와 현재 UTC 시각 한 줄을 써라. 그 밖의 파일은 만들지 마라.\nASK @issus-4-codex: 수행 뒤 TYPE:ACK RE:로 수신을 확인하고, 결과는 TYPE:REPORT로 남겨라.\nNEXT: ACK 확인. 다음 확인 2026-10-23T18:54+09:00.\n---\n근거: 이슈 #2 본문 GOAL\n",
+          "envelope": {
+            "TO": "issus-4-codex",
+            "FROM": "issus-4-sender/s1",
+            "TYPE": "ASK",
+            "ACK-BY": "2026-10-23T18:54+09:00"
+          }
+        },
+        "envelope": {
+          "TO": "issus-4-codex",
+          "FROM": "issus-4-sender/s1",
+          "TYPE": "ASK",
+          "ACK-BY": "2026-10-23T18:54+09:00"
+        },
+        "priority": "ME",
+        "delivery": {
+          "id": "5a55ad7c-2c28-8fc0-8850-895d677ec484",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "11",
+          "ackRequired": true,
+          "ackBy": "2026-10-23T09:54:00.000Z",
+          "aliasEventSequence": "43"
+        }
+      }
+    },
+    "cursor": "78441204-72e8-4a21-b69e-a4bfff819380"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "6d05dfcf-83e6-8ea5-961c-c7355520d122",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "44",
+      "action": "issus.delivery.acked",
+      "transactionKey": "3a8c8a9e-adb5-8630-ab68-b5b0b919b571",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "498dec4c-3033-841d-94d6-f24913be8994",
+      "correlationId": "3a8c8a9e-adb5-8630-ab68-b5b0b919b571",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:25:15.537Z",
+      "payload": {
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "ackAliasId": "c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+        "deliveryId": "5a55ad7c-2c28-8fc0-8850-895d677ec484",
+        "directiveId": "1000021",
+        "ackCommentId": "1000022",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 2
+        },
+        "commentId": "1000021",
+        "sourceEventId": "498dec4c-3033-841d-94d6-f24913be8994",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:2",
+        "sourceSequence": "11",
+        "content": {
+          "body": "FROM:issus-4-sender/s1 TO:issus-4-codex TYPE:ASK ACK-BY:2026-10-23T18:54+09:00\nbridge-demo 18:24:26: 작업 디렉터리 안에 hello-codex.txt 파일을 만들고 그 안에 'bridge ok'와 현재 UTC 시각 한 줄을 써라. 그 밖의 파일은 만들지 마라.\nASK @issus-4-codex: 수행 뒤 TYPE:ACK RE:로 수신을 확인하고, 결과는 TYPE:REPORT로 남겨라.\nNEXT: ACK 확인. 다음 확인 2026-10-23T18:54+09:00.\n---\n근거: 이슈 #2 본문 GOAL\n",
+          "envelope": {
+            "TO": "issus-4-codex",
+            "FROM": "issus-4-sender/s1",
+            "TYPE": "ASK",
+            "ACK-BY": "2026-10-23T18:54+09:00"
+          }
+        },
+        "envelope": {
+          "TO": "issus-4-codex",
+          "FROM": "issus-4-sender/s1",
+          "TYPE": "ASK",
+          "ACK-BY": "2026-10-23T18:54+09:00"
+        },
+        "priority": "ME",
+        "delivery": {
+          "id": "5a55ad7c-2c28-8fc0-8850-895d677ec484",
+          "state": "acked",
+          "attempt": 0,
+          "ordinal": "11",
+          "ackRequired": true,
+          "ackBy": "2026-10-23T09:54:00.000Z",
+          "aliasEventSequence": "44"
+        }
+      }
+    },
+    "cursor": "13ba2642-1697-434d-a6ac-b4026c35097d"
+  },
+  {
+    "type": "event",
+    "event": {
+      "eventId": "fb0fea8e-4e15-894b-bfe3-4c5858c1c1da",
+      "streamId": "channel:alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "sequence": "47",
+      "action": "issus.delivery.delivered",
+      "transactionKey": "623baf50-8f3c-405a-9155-d3d022a1129d",
+      "kind": "fact",
+      "channel": "alias:b810fdd2-1d14-4235-88ac-4666fe9594a8:c2be2485-fb78-4281-b56b-f7f9c1a7fa44",
+      "causationEventId": "f1910cfb-e653-805e-81e1-bd95694b91f5",
+      "correlationId": "623baf50-8f3c-405a-9155-d3d022a1129d",
+      "source": "worker",
+      "eventVersion": 1,
+      "audience": "client",
+      "createdAt": "2026-10-23T09:27:06.884Z",
+      "payload": {
+        "attempt": 0,
+        "ownerId": "b810fdd2-1d14-4235-88ac-4666fe9594a8",
+        "sessionId": "b277b9e5-0004-49fc-a5f6-e9f9c2045621",
+        "transport": "websocket",
+        "deliveryId": "b7345dec-b17a-8a96-bff4-bdd9641798cb",
+        "receivedAt": "2026-10-23T09:27:06.884Z",
+        "issue": {
+          "repoId": "686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239",
+          "issueNumber": 3
+        },
+        "commentId": null,
+        "sourceEventId": "f1910cfb-e653-805e-81e1-bd95694b91f5",
+        "sourceStreamId": "channel:issue:686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239:3",
+        "sourceSequence": "1",
+        "content": {
+          "body": "{\"action\":\"issus.issue.opened\",\"body\":\"STATE:running OWNER:issus-4-sender UPDATED:2026-10-23T17:15:28+09:00 BOARD:#1\\nGOAL: HOLD 수신·중단 반영 실기 확인\\nSCOPE: bridgedemo 시험 이슈\\nNON-SCOPE: 운영 반영\\nDECISIONS: 없음\\nOPEN-ASK: 없음\\nNEXT: orch가 HOLD 게시 -> 수신자 중단 확인\\nROSTER: issus-4-sender | 오케스트레이터(발신자) | Claude | bridge 시험 | s1\\nROSTER: issus-4-codex | 실행기 codex | Codex | bridge 시험 | s1\\nROSTER: issus-4-muse | 실행기 muse | Muse | bridge 시험 | s1\\nROSTER: issus-4-claude | Claude Code 데스크톱 | Claude | bridge 시험 | s1\\nROSTER: issus-5-codexapp | Codex 데스크톱 | Codex | bridge 시험 | s1\\n\",\"actor\":{\"sid\":\"s1\",\"alias\":\"issus-4-sender\",\"aliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\",\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"sessionId\":\"d5adb8f9-cba7-4c1d-852d-325e18ac0fdf\"},\"state\":\"running\",\"title\":\"bridge: HOLD 시험\",\"number\":3,\"repoId\":\"686b7c2b-aaa1-4c2b-8ef5-17b4ae71f239\",\"isBoard\":false,\"ownerId\":\"b810fdd2-1d14-4235-88ac-4666fe9594a8\",\"revision\":1,\"issueNumber\":3,\"ownerAliasId\":\"e3c58036-a19e-4646-bc8b-1954e9d0dccd\"}"
+        },
+        "envelope": null,
+        "priority": "ALL",
+        "delivery": {
+          "id": "b7345dec-b17a-8a96-bff4-bdd9641798cb",
+          "state": "delivered",
+          "attempt": 0,
+          "ordinal": "10",
+          "ackRequired": false,
+          "aliasEventSequence": "47"
+        }
+      }
+    },
+    "cursor": "58287acc-f355-4da8-81d8-c1cef036404b"
+  }
+]

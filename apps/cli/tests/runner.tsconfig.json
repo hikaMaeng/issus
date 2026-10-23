@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {"noEmit":false,"rootDir":"../src","outDir":"../../../.cache/runner-implementation/emitted","types":["node"]},
+  "include": ["../src/commands/runner/**/*.ts"]
+}

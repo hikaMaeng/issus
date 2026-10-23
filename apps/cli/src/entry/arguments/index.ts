@@ -4,6 +4,7 @@ export interface Arguments {command:string;action:string;positionals:string[];va
 type Spec={values?:string[];repeat?:string[];flags?:string[]};
 const common:Spec={values:['server','profile','profiles-file','token-file'],flags:['json','no-color','help']};
 const specs:Record<string,Spec>={
+ runner:{values:['me','exec','model','effort','cwd','sandbox','max-parallel','repo','issue','config','exec-path','timeout','until'],repeat:['board'],flags:['once','record-info']},
  post:{values:['repo','issue','body-file','timeout','packet-file','sampled','compacted-by','compact-deferred-reason'],flags:['edit-body','dry-run']},
  watch:{values:['repo','state','limit','show','page-size','processed-file'],repeat:['me','mine','board'],flags:['full','peek','since-compact','compact-due','all-history']},
  subscribe:{values:['repo','issue','me','transport','cursor','until'],repeat:['board'],flags:['once','since-compact']},

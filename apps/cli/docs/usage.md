@@ -1,5 +1,46 @@
 # usage
 
+runner는 `SUBSCRIBED`·`DELIVERY_ACCEPTED`·`ACK_POSTED`·`SPAWN pid=…`·`CHILD_EXIT`·`REPORT_POSTED`·`PROCESS`·`PROCESSED`를 각 한 줄로 출력한다. `--json`이면 같은 단계를 `{event,commentId?,deliveryId?,pid?,exit?,reason?,…}` JSONL로 출력한다. 구독 이후 받은 서버 frame에서만 subscribed를 출력하며 spawn은 실제 PID 생성 시점이다. ACK/REPORT 근거는 설정한 실제 evidenceRoot 경로를 사용하고 토큰은 마스킹한다.
+
+## runner
+
+관리자가 비밀 없는 절대경로 config 파일을 만든다. allowedSenders는 필수이며 빈 배열은 거부한다. token은 기존 env/profile credential provider에서 읽는다.
+
+```json
+{
+  "version": 1,
+  "profile": "bridge-runner-codex",
+  "repo": "hikaMaeng/issus",
+  "issue": 4,
+  "boards": [2],
+  "cwd": "F:/dev/issus",
+  "allowedSenders": ["issus-1-orch"],
+  "allowedTypes": ["ASK", "DECISION", "HANDOFF", "HOLD"],
+  "maxParallel": 1,
+  "recordInfo": true,
+  "timeoutMs": 1200000,
+  "evidenceRoot": "F:/dev/issus/.cache/runner",
+  "executables": {
+    "codex": "codex",
+    "muse": "C:/Users/hika0/AppData/Local/Programs/muse/muse.cmd",
+    "claude": "claude"
+  }
+}
+```
+
+`issus runner --config F:/dev/issus/.cache/runner.json --me issus-4-runner/s1 --exec codex --once --until 120000 --timeout 20m`.
+
+`--me`·`--exec` 필수, `--board`만 반복 허용. repo/issue는 CLI→config→ISSUS_REPO/ISSUS_ISSUES(단일 issue), cwd는 CLI→config→시작 cwd다. `--model`, `--effort`, `--sandbox`, `--exec-path`는 관리자 인자이며 댓글에서 바꾸지 않는다. 기본 모델 codex=gpt-6.1-sol, muse=muse-spark-1.3, claude=sonnet; effort=high. codex sandbox=workspace-write/read-only, Muse=edits만, Claude=edits/read-only. max-parallel은1만 허용한다.
+
+| 실행 파일 기본값 | Windows 해석 |
+| --- | --- |
+| codex=`codex`, claude=`claude` | `codex`·`claude`도 npm shim이므로 PATH의 PATHEXT 순서로 해석하거나 `.cmd` 절대경로를 지정한다. 확장자 없는 PATH 파일은 제외한다. |
+| muse=`C:/Users/hika0/AppData/Local/Programs/muse/muse.cmd` | 기본 절대경로를 사용한다. |
+
+`--once`는 정보·상태 fact를 세지 않고 수락한 지시의 ACK/REPORT/application/process를 마친 뒤 종료한다. exit0=성공,1=작업 실패/정책 거부,2=설정/인증/파일/서버 장애,3=첫 대상 대기 만료/게시 미확정. 실행 시작 후 대기 상한은 timeout이다. Ctrl-C는 새 spawn을 막고 자신이 만든 자식만 종료하며 미게시 outbox를 보존한다.
+
+lock 잔류는 자동 탈취하지 않는다. 운영자가 PID·creationTime·실행 파일·cwd를 확인하고 해당 runner의 종료를 입증한 뒤 자기 lock만 수동 정리한다. 저널 삭제나 새 key 발급으로 불명확한 작업을 재실행하지 않는다. 복구가 blocked면 새 DECISION으로 재배정한다.
+
 빌드: domain build 후 `npm run build --workspace @issus/cli`. 실행: `node apps/cli/dist/index.js` 또는 설치된 `issus`. `npm install -g ./apps/cli`/workspace 설치·Windows shim 갱신은 호스트에서 수행한다. 스킬 원본은 수정하지 않고 호출 명령만 아래처럼 바꾼다. GitHub로 미러하지 않으므로 대상 repo/issue가 issus 서버에 있어야 한다.
 
 | 기존 호출 | 대체 |

@@ -1,0 +1,16 @@
+# 기존 사용자 config.toml에 관리자 병합. 토큰 값을 저장하지 않는다.
+[mcp_servers.issus]
+command = "node"
+args = ["F:/dev/issus/apps/mcp/dist/index.js"]
+startup_timeout_sec = 20
+tool_timeout_sec = 1560
+default_tools_approval_mode = "approve"
+env_vars = ["ISSUS_TOKEN"]
+
+[mcp_servers.issus.env]
+ISSUS_URL = "http://127.0.0.1:18140"
+ISSUS_PROFILE = "bridge-codex"
+ISSUS_REPO = "hikaMaeng/issus"
+ISSUS_ISSUES = "4"
+ISSUS_BOARDS = "2"
+ISSUS_BRIDGE_STATE_DIR = "F:/dev/issus/.cache/mcp/codex"

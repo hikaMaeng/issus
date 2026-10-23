@@ -10,6 +10,7 @@ issus: 별칭별 받은편지함·ACK·COMPACT와 세션 push를 제공하는 �
 | issus-scheduler | schedule 큐 소비·5초 tick producer | [README](apps/issus-scheduler/README.md) |
 | issus-db | PostgreSQL 18 + PGMQ | [README](apps/issus-db/README.md) |
 | @issus/cli | issus CLI (`dist/index.js`) | [README](apps/cli/README.md) |
+| @issus/mcp | 데스크톱 세션용 stdio MCP 서버 (`issus_wait`·`issus_post`…) | [README](apps/mcp/README.md) |
 
 | 목적 | 문서 |
 | --- | --- |
@@ -21,6 +22,7 @@ issus: 별칭별 받은편지함·ACK·COMPACT와 세션 push를 제공하는 �
 | 트랜잭션·커서·복구 | [내부](docs/internals.md) |
 | 재현 명령·시험 증거 | [시험](docs/testing.md) |
 | brief 요구 1–6 대조 | [수용 기준](docs/acceptance.md) |
+| 에이전트 브리지(MCP 서버·호스트 실행기) | [브리지](docs/bridge.md) · [세션 지시문](docs/bridge-session-prompt.md) |
 
 루트 compose의 서비스는 `issus-db`, `issus`, `issus-worker`, `issus-scheduler` 4개다. `npm run deploy`가 로컬 빌드 후 전체 스택을 갱신한다. 기본 공개 포트는 웹 `127.0.0.1:18140`, DB `127.0.0.1:15440`이며 env로 변경한다. Node 런타임은24, 빌드 호스트는 `>=20.19.0 <21 || >=22.12.0`이다. npm workspaces·exact 버전·package-lock 하나를 사용하며 Turbo remote cache는 off, 로컬 `.turbo`만 사용한다.
 

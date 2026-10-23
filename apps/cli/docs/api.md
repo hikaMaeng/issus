@@ -1,5 +1,19 @@
 # api
 
+## runner
+
+`runnerCommand(ctx): Promise<number>`는 config·session principal을 검증하고 `HostRunner.run()`에 연결한다. `RunnerDependencies`의 client/socket/clock 간격/자식·Git adapter는 시험 주입 경계다. 프로덕션은 native 파이프와 기존 Node WS adapter를 사용한다.
+
+| 순서 | 기존 API |
+| --- | --- |
+| 인증·장벽 | GET /v1/auth/me, /v1/inbox, issue detail, immutable comments |
+| 수신 | POST /v1/subscriptions, WS /ws, /v1/deliveries/receipts |
+| ACK·REPORT | POST issue/preflight 후 issue/comments, 동일 durable UUID |
+| 이관 수용 | POST source/handoffs/:commentId/accept, target ACK id |
+| 업무 반영·영수 | POST delivery/application, /v1/inbox/process |
+
+HANDOFF ACK·REPORT는 같은 repo의 REPLY-IN target, source NOTE RE는 호환 pending 연결이다. complete는 원 OWNER 소유다. 다른 repo target은 blocked로 보존한다. HTTP 202/응답 유실은 같은 outbox key를 유지한다.
+
 전송은 `/v1`, JSON UTF-8, bearer header다. repo path component는 encode한다. 쓰기는 body와 별개 `Idempotency-Key` UUID를 먼저 journal에 저장한다. 연결 재시도는 같은 key이고 202는 operation을 poll한다. operation id도 journal에 보관한다.
 
 | 명령 | API |

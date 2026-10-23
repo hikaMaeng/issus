@@ -7,6 +7,7 @@ import {compact} from '../../commands/compact/index.js';
 import {handoff} from '../../commands/handoff/index.js';
 import {issue} from '../../commands/issue/index.js';
 import {post} from '../../commands/post/index.js';
+import {runnerCommand} from '../../commands/runner/index.js';
 import {session} from '../../commands/session/index.js';
 import {subscribeCommand} from '../../commands/subscribe/index.js';
 import {watch} from '../../commands/watch/index.js';
@@ -19,6 +20,7 @@ post --repo o/r --issue N --body-file FILE [--edit-body] [--dry-run]
 watch --repo o/r [--me ALIAS ...] [--mine TEXT ...] [--board ISSUE ...] [--peek] ISSUE...
 watch --repo o/r --show ID
 subscribe --repo o/r --issue N [--me ALIAS/sid] [--transport ws|sse] [--once] [--until MS]
+runner --me ALIAS[/sid] --exec codex|muse|claude --repo o/r [--issue N ...] [--board N] [--cwd DIR] [--model M] [--effort E] [--sandbox S] [--exec-path P] [--config FILE] [--once] [--until MS]
 compact [prepare|status|post] --repo o/r --issue N [--out FILE]
 alias [check] --owner OWNER [--deep] [--repos o/r,o/r] ALIAS
 alias register --owner O --repo o/r --name A --role R --model M --scope S --body-file F [--sid SID]
@@ -48,7 +50,7 @@ export async function run(argv:string[],options:Partial<ContextOptions>={}):Prom
   try {
     const args=parseArguments(argv);ctx=new CommandContext(args,{...options,out});
     if(args.command==='help'||args.flags.has('help')) {await out.line(help.trimEnd());return 0;}
-    const commands:Record<string,(ctx:CommandContext)=>Promise<number>>={post,watch,subscribe:subscribeCommand,compact,alias,board,session,issue,handoff,auth,admin};
+    const commands:Record<string,(ctx:CommandContext)=>Promise<number>>={post,watch,subscribe:subscribeCommand,runner:runnerCommand,compact,alias,board,session,issue,handoff,auth,admin};
     return await commands[args.command](ctx);
   } catch(error) {
     if(ctx) return ctx.reportError(error);
